@@ -11,7 +11,7 @@ local Test = window:AddTab("Test")
 local test = {} -- Assuming you have a test object already
 local seconds = 0
 local running = false
-local label = test:AddLabel("Amount of time killing players: 00:00")
+local label = Test:AddLabel("Amount of time killing players: 00:00")
 
 local function updateTimer()
     while running do
@@ -23,7 +23,7 @@ local function updateTimer()
     end
 end
 
-local switch = test:AddSwitch("test toggle", function(bool)
+local switch = Test:AddSwitch("test toggle", function(bool)
     running = bool
     if running then
         seconds = 0 -- Reset timer when toggled on
