@@ -1,7 +1,7 @@
 local library = loadstring(game:HttpGet("https://raw.githubusercontent.com/memejames/elerium-v2-ui-library//main/Library", true))()
 local window = library:AddWindow("Kill auta test", {
 	main_color = Color3.fromRGB(41, 74, 122), -- Color
-	min_size = Vector2.new(250, 346), -- Size of the gui
+	min_size = Vector2.new(650, 600), -- Size of the gui
 	can_resize = false, -- true or false
 })
 
@@ -17,7 +17,7 @@ local switch = Killing:AddSwitch("Auto Kill test", function(bool)
     radiusVisual.CanCollide = false
     radiusVisual.Transparency = 1 -- Fully invisible
     radiusVisual.Size = Vector3.new(1, 0.1, 1)
-    radiusVisual.Parent = nil -- Only added to workspace when needed
+    radiusVisual.Parent = nil -- Only added when needed
 
     task.spawn(function()
         while getgenv().killNearby do
@@ -26,8 +26,7 @@ local switch = Killing:AddSwitch("Auto Kill test", function(bool)
                 local myRoot = myCharacter and myCharacter:FindFirstChild("HumanoidRootPart")
                 if not myRoot then return end
                 
-                -- Keep radiusVisual off-screen unless needed
-                radiusVisual.Parent = workspace
+                -- Keep radiusVisual out of workspace unless needed
                 radiusVisual.Size = Vector3.new(currentRadius * 2, 0.1, currentRadius * 2)
                 radiusVisual.CFrame = myRoot.CFrame * CFrame.new(0, -2, 0)
 
@@ -46,9 +45,8 @@ local switch = Killing:AddSwitch("Auto Kill test", function(bool)
                                 killEffect.Anchored = true
                                 killEffect.CanCollide = false
                                 killEffect.Transparency = 1 -- Fully invisible
-                                killEffect.CFrame = root.CFrame
-                                killEffect.Size = Vector3.new(0, 0, 0) -- No visual size
-                                killEffect.Parent = nil -- Not added to workspace
+                                killEffect.Size = Vector3.new(0, 0, 0) -- No visible size
+                                killEffect.Parent = workspace -- Needs to be in workspace to trigger interactions
 
                                 -- Perform the kill interaction
                                 firetouchinterest(root, myCharacter.LeftHand, 0)
@@ -56,6 +54,9 @@ local switch = Killing:AddSwitch("Auto Kill test", function(bool)
                                 firetouchinterest(root, myCharacter.LeftHand, 1)
 
                                 gettool()
+
+                                -- Cleanup effect
+                                game:GetService("Debris"):AddItem(killEffect, 0.1)
                             end
                         end
                     end
