@@ -1,0 +1,71 @@
+local library = loadstring(game:HttpGet("https://raw.githubusercontent.com/memejames/elerium-v2-ui-library//main/Library", true))()
+local window = library:AddWindow("Kill auta test", {
+	main_color = Color3.fromRGB(41, 74, 122), -- Color
+	min_size = Vector2.new(250, 346), -- Size of the gui
+	can_resize = false, -- true or false
+})
+
+local Killing = window:AddTab("Killing") -- Name of tab
+
+
+local switch = Killing:AddSwitch("Auto Kill test", function(bool)
+    getgenv().killNearby = bool
+
+    -- Create an invisible radius visual
+    local radiusVisual = Instance.new("Part")
+    radiusVisual.Anchored = true
+    radiusVisual.CanCollide = false
+    radiusVisual.Transparency = 1 -- Fully invisible
+    radiusVisual.Size = Vector3.new(1, 0.1, 1)
+    radiusVisual.Parent = nil -- Only added to workspace when needed
+
+    task.spawn(function()
+        while getgenv().killNearby do
+            local success, err = pcall(function()
+                local myCharacter = game.Players.LocalPlayer.Character
+                local myRoot = myCharacter and myCharacter:FindFirstChild("HumanoidRootPart")
+                if not myRoot then return end
+                
+                -- Keep radiusVisual off-screen unless needed
+                radiusVisual.Parent = workspace
+                radiusVisual.Size = Vector3.new(currentRadius * 2, 0.1, currentRadius * 2)
+                radiusVisual.CFrame = myRoot.CFrame * CFrame.new(0, -2, 0)
+
+                -- Loop through players efficiently
+                local players = game:GetService("Players"):GetPlayers()
+                for i = 1, #players do
+                    local player = players[i]
+                    if player ~= game.Players.LocalPlayer and not whitelist[player.Name] then
+                        local char = player.Character
+                        local root = char and char:FindFirstChild("HumanoidRootPart")
+                        if root and myRoot then
+                            local distance = (root.Position - myRoot.Position).Magnitude
+                            if distance <= currentRadius then
+                                -- Invisible kill effect
+                                local killEffect = Instance.new("Part")
+                                killEffect.Anchored = true
+                                killEffect.CanCollide = false
+                                killEffect.Transparency = 1 -- Fully invisible
+                                killEffect.CFrame = root.CFrame
+                                killEffect.Size = Vector3.new(0, 0, 0) -- No visual size
+                                killEffect.Parent = nil -- Not added to workspace
+
+                                -- Perform the kill interaction
+                                firetouchinterest(root, myCharacter.LeftHand, 0)
+                                task.wait(0.05) -- Slight delay for efficiency
+                                firetouchinterest(root, myCharacter.LeftHand, 1)
+
+                                gettool()
+                            end
+                        end
+                    end
+                end
+            end)
+            if not success then warn("Error in KillAura: " .. err) end
+
+            task.wait(0.2)  -- Slightly longer wait to reduce CPU strain
+        end
+
+        radiusVisual.Parent = nil -- Remove from workspace when turned off
+    end)
+end)
