@@ -11,11 +11,52 @@ local Test = window:AddTab("Test")
 local test = {} -- Assuming you have a test object already
 local seconds = 0
 local running = false
-local label = Test:AddLabel("Amount of time killing players: 00:00")
+local selectedPlayer = nil
+_G.autoPunchanim = false
 
+-- Dropdown to select a player (First)
+local dropdown = test:AddDropdown("Select Player", function(text)
+    selectedPlayer = text -- Store the selected player name
+    print(text .. " selected!")
+end)
+
+-- Populate dropdown with player names
+for _, player in ipairs(game.Players:GetPlayers()) do
+    if player.Name ~= game.Players.LocalPlayer.Name then
+        dropdown:Add(player.Name) -- Add players except local player
+    end
+end
+
+-- Toggle switch function (Second)
+local switch = test:AddSwitch("Kill Player's", function(bool)
+    running = bool
+    _G.autoPunchanim = bool
+
+    if running then
+        if not selectedPlayer then
+            warn("Please select a player first!")
+            return
+        end
+
+        seconds = 0 -- Reset timer
+        spawn(updateTimer) -- Start updating timer
+        spawn(startAutoPunch) -- Start auto punching
+        spawn(teleportAndHideSelectedPlayer) -- Start teleporting and hiding player
+    else
+        -- Reset timer when toggled off
+        seconds = 0
+        label.Text = "Amount of time killing players: 00:00"
+        _G.autoPunchanim = false
+    end
+end)
+
+-- Label for timer (Last)
+local label = test:AddLabel("Amount of time killing players: 00:00")
+
+-- Function to update the timer
 local function updateTimer()
     while running do
-        wait(1) -- Wait for 1 second
+        wait(1) -- Wait 1 second
         seconds = seconds + 1
         local minutes = math.floor(seconds / 60)
         local remainingSeconds = seconds % 60
@@ -23,10 +64,51 @@ local function updateTimer()
     end
 end
 
-local switch = Test:AddSwitch("test toggle", function(bool)
-    running = bool
-    if running then
-        seconds = 0 -- Reset timer when toggled on
-        spawn(updateTimer) -- Start updating the timer
+-- Function to start auto-punching
+local function startAutoPunch()
+    local player = game.Players.LocalPlayer
+    local punchTool = player.Backpack:FindFirstChild("Punch") or game.Workspace:FindFirstChild(player.Name):FindFirstChild("Punch")
+    
+    _G.autoPunchanim = true
+
+    while _G.autoPunchanim do
+        if punchTool then
+            if punchTool.Parent ~= game.Workspace:FindFirstChild(player.Name) then
+                punchTool.Parent = game.Workspace:FindFirstChild(player.Name) -- Equip the tool
+            end
+            game.Players.LocalPlayer.muscleEvent:FireServer("punch", "rightHand")
+            game.Players.LocalPlayer.muscleEvent:FireServer("punch", "leftHand")
+            wait() -- Adjust delay as needed
+        else
+            warn("Punch tool not found")
+            _G.autoPunchanim = false -- Stop if tool not found
+        end
     end
-end)
+end
+
+-- Function to teleport and hide selected player
+local function teleportAndHideSelectedPlayer()
+    if not selectedPlayer then
+        warn("No player selected!")
+        return
+    end
+
+    local player = game.Players.LocalPlayer
+    local targetPlayer = game.Players:FindFirstChild(selectedPlayer)
+
+    if targetPlayer and targetPlayer.Character then
+        local targetRootPart = targetPlayer.Character:FindFirstChild("HumanoidRootPart")
+        local myRootPart = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
+
+        if targetRootPart and myRootPart then
+            targetRootPart.CFrame = myRootPart.CFrame -- Teleport selected player to you
+        end
+
+        -- Make selected player invisible
+        for _, part in pairs(targetPlayer.Character:GetChildren()) do
+            if part:IsA("MeshPart") or part:IsA("Part") or part:IsA("Accessory") or part:IsA("Hat") or part:IsA("CharacterMesh") then
+                part.Transparency = 1 -- Make invisible
+            end
+        end
+    end
+end
