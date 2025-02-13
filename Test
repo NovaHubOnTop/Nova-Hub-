@@ -43,8 +43,8 @@ local switch = Test:AddSwitch("Kill Player's", function(bool)
 
         seconds = 0 -- Reset timer
         label.Text = "Amount of time killing players: 00:00" -- Reset label
-        spawn(updateTimer) -- Start updating timer
-        spawn(startAutoPunch) -- Start auto punching
+        spawn(updateTimer) -- Start updating timer in a new thread
+        spawn(startAutoPunch) -- Start auto punching in a new thread
         spawn(teleportAndHideSelectedPlayer) -- Start teleporting and hiding player
     else
         -- Reset timer when toggled off
