@@ -15,7 +15,7 @@ local selectedPlayer = nil
 _G.autoPunchanim = false
 
 -- Dropdown to select a player (First)
-local dropdown = test:AddDropdown("Select Player", function(text)
+local dropdown = Test:AddDropdown("Select Player", function(text)
     selectedPlayer = text -- Store the selected player name
     print(text .. " selected!")
 end)
@@ -28,7 +28,7 @@ for _, player in ipairs(game.Players:GetPlayers()) do
 end
 
 -- Toggle switch function (Second)
-local switch = test:AddSwitch("Kill Player's", function(bool)
+local switch = Test:AddSwitch("Kill Player's", function(bool)
     running = bool
     _G.autoPunchanim = bool
 
@@ -51,7 +51,7 @@ local switch = test:AddSwitch("Kill Player's", function(bool)
 end)
 
 -- Label for timer (Last)
-local label = test:AddLabel("Amount of time killing players: 00:00")
+local label = Test:AddLabel("Amount of time killing players: 00:00")
 
 -- Function to update the timer
 local function updateTimer()
