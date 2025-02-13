@@ -10,63 +10,62 @@ local Killing = window:AddTab("Killing") -- Name of tab
 
 local switch = Killing:AddSwitch("Auto Kill test", function(bool)
     getgenv().killNearby = bool
-
-    -- Create an invisible radius visual
     local radiusVisual = Instance.new("Part")
     radiusVisual.Anchored = true
     radiusVisual.CanCollide = false
-    radiusVisual.Transparency = 1 -- Fully invisible
+    radiusVisual.Transparency = 0.8
+    radiusVisual.Material = Enum.Material.ForceField
+    radiusVisual.Color = Color3.fromRGB(0, 255, 0)
     radiusVisual.Size = Vector3.new(1, 0.1, 1)
-    radiusVisual.Parent = nil -- Only added when needed
 
     task.spawn(function()
         while getgenv().killNearby do
-            local success, err = pcall(function()
+            pcall(function()
                 local myCharacter = game.Players.LocalPlayer.Character
                 local myRoot = myCharacter and myCharacter:FindFirstChild("HumanoidRootPart")
-                if not myRoot then return end
-                
-                -- Keep radiusVisual out of workspace unless needed
-                radiusVisual.Size = Vector3.new(currentRadius * 2, 0.1, currentRadius * 2)
-                radiusVisual.CFrame = myRoot.CFrame * CFrame.new(0, -2, 0)
+                if myRoot then
+                    radiusVisual.Parent = workspace
+                    radiusVisual.Size = Vector3.new(currentRadius * 2, 0.1, currentRadius * 2)
+                    radiusVisual.CFrame = myRoot.CFrame * CFrame.new(0, -2, 0)
+                    local effects = createParticles(myRoot)
 
-                -- Loop through players efficiently
-                local players = game:GetService("Players"):GetPlayers()
-                for i = 1, #players do
-                    local player = players[i]
-                    if player ~= game.Players.LocalPlayer and not whitelist[player.Name] then
-                        local char = player.Character
-                        local root = char and char:FindFirstChild("HumanoidRootPart")
-                        if root and myRoot then
-                            local distance = (root.Position - myRoot.Position).Magnitude
-                            if distance <= currentRadius then
-                                -- Invisible kill effect
-                                local killEffect = Instance.new("Part")
-                                killEffect.Anchored = true
-                                killEffect.CanCollide = false
-                                killEffect.Transparency = 1 -- Fully invisible
-                                killEffect.Size = Vector3.new(0, 0, 0) -- No visible size
-                                killEffect.Parent = workspace -- Needs to be in workspace to trigger interactions
-
-                                -- Perform the kill interaction
-                                firetouchinterest(root, myCharacter.LeftHand, 0)
-                                task.wait(0.05) -- Slight delay for efficiency
-                                firetouchinterest(root, myCharacter.LeftHand, 1)
-
-                                gettool()
-
-                                -- Cleanup effect
-                                game:GetService("Debris"):AddItem(killEffect, 0.1)
+                    for _, player in pairs(game:GetService("Players"):GetPlayers()) do
+                        if player ~= game.Players.LocalPlayer and not whitelist[player.Name] then
+                            local char = player.Character
+                            local root = char and char:FindFirstChild("HumanoidRootPart")
+                            if root and myRoot and myCharacter:FindFirstChild("LeftHand") then
+                                local distance = (root.Position - myRoot.Position).Magnitude
+                                if distance <= currentRadius then
+                                    local killEffect = Instance.new("Part")
+                                    killEffect.Anchored = true
+                                    killEffect.CanCollide = false
+                                    killEffect.Transparency = 0.5
+                                    killEffect.Material = Enum.Material.Neon
+                                    killEffect.Color = Color3.fromRGB(0, 255, 0)
+                                    killEffect.CFrame = root.CFrame
+                                    killEffect.Size = Vector3.new(5, 5, 5)
+                                    killEffect.Parent = workspace
+                                    game:GetService("TweenService"):Create(killEffect, TweenInfo.new(0.5), {
+                                        Size = Vector3.new(0, 0, 0),
+                                        Transparency = 1
+                                    }):Play()
+                                    game:GetService("Debris"):AddItem(killEffect, 0.5)
+                                    firetouchinterest(root, myCharacter.LeftHand, 0)
+                                    task.wait()
+                                    firetouchinterest(root, myCharacter.LeftHand, 1)
+                                    gettool()
+                                end
                             end
                         end
                     end
+                    task.wait(0.1)
+                    for _, effect in ipairs(effects) do
+                        effect:Destroy()
+                    end
                 end
             end)
-            if not success then warn("Error in KillAura: " .. err) end
-
-            task.wait(0.2)  -- Slightly longer wait to reduce CPU strain
+            task.wait(0.1)
         end
-
-        radiusVisual.Parent = nil -- Remove from workspace when turned off
+        radiusVisual:Destroy()
     end)
 end)
