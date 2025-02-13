@@ -14,11 +14,14 @@ local running = false
 local selectedPlayer = nil
 _G.autoPunchanim = false
 
--- Dropdown to select a player (First)
-local dropdown = Test:AddDropdown("Select Player", function(text)
-    selectedPlayer = text -- Store the selected player name
-    print(text .. " selected!")
-end)
+-- Create a dropdown for selecting a player (First)
+local dropdown = Test:AddDropdown("Select Player", {
+    values = {}, -- Initial empty list of players
+    callback = function(text)
+        selectedPlayer = text -- Store the selected player name
+        print(text .. " selected!")
+    end
+})
 
 -- Populate dropdown with player names
 for _, player in ipairs(game.Players:GetPlayers()) do
