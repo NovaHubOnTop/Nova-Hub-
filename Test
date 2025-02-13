@@ -1,6 +1,6 @@
 local library = loadstring(game:HttpGet("https://raw.githubusercontent.com/memejames/elerium-v2-ui-library//main/Library", true))()
 
-local window = library:AddWindow("Name GUI", {
+local window = library:AddWindow("Test Ig", {
     main_color = Color3.fromRGB(41, 74, 122), -- Color
     min_size = Vector2.new(650, 606), -- Size of the gui
     can_resize = false, -- true or false
@@ -8,59 +8,48 @@ local window = library:AddWindow("Name GUI", {
 
 local Test = window:AddTab("Test")
 
+local test = {} -- Assuming you have a test object already
+local selectedPlayerName = nil  -- Stores the selected player's name
 local seconds = 0
 local running = false
-local selectedPlayer = nil
 _G.autoPunchanim = false
 
--- Create a dropdown for selecting a player (First)
-local dropdown = Test:AddDropdown("Select Player", {
-    values = {}, -- Initial empty list of players
-    callback = function(text)
-        selectedPlayer = text -- Store the selected player name
-        print(text .. " selected!")
-    end
-})
+-- Dropdown for selecting a player
+local dropdown = Test:AddDropdown("Select Players", function(text)
+    selectedPlayerName = text  -- Store selected player name
+    print("Selected Player: " .. text)
+end)
 
 -- Populate dropdown with player names
 for _, player in ipairs(game.Players:GetPlayers()) do
     if player.Name ~= game.Players.LocalPlayer.Name then
-        dropdown:Add(player.Name) -- Add players except local player
+        dropdown:Add(player.Name)
     end
 end
 
--- Toggle switch function (Second)
-local switch = Test:AddSwitch("Kill Player's", function(bool)
-    running = bool
-    _G.autoPunchanim = bool
+-- Toggle switch
+local switch = Test:AddSwitch("Kill Players", function(state)
+    running = state
+    _G.autoPunchanim = state
 
     if running then
-        if not selectedPlayer then
-            warn("Please select a player first!")
-            switch:Set(false) -- Turn off toggle if no player is selected
-            return
-        end
-
         seconds = 0 -- Reset timer
-        label.Text = "Amount of time killing players: 00:00" -- Reset label
-        spawn(updateTimer) -- Start updating timer in a new thread
-        spawn(startAutoPunch) -- Start auto punching in a new thread
-        spawn(teleportAndHideSelectedPlayer) -- Start teleporting and hiding player
+        spawn(updateTimer) -- Start timer
+        spawn(startAutoPunch) -- Start punching
+        spawn(teleportAndHidePlayer) -- Teleport and hide player
     else
-        -- Reset timer when toggled off
-        seconds = 0
-        label.Text = "Amount of time killing players: 00:00"
         _G.autoPunchanim = false
+        restorePlayerVisibility() -- Restore player visibility when turned off
     end
 end)
 
--- Label for timer (Last)
+-- Label for time spent
 local label = Test:AddLabel("Amount of time killing players: 00:00")
 
--- Function to update the timer
+-- Timer update function
 local function updateTimer()
     while running do
-        wait(1) -- Wait 1 second
+        wait(1)
         seconds = seconds + 1
         local minutes = math.floor(seconds / 60)
         local remainingSeconds = seconds % 60
@@ -68,50 +57,63 @@ local function updateTimer()
     end
 end
 
--- Function to start auto-punching
+-- Auto Punch Function
 local function startAutoPunch()
     local player = game.Players.LocalPlayer
-    local punchTool = player.Backpack:FindFirstChild("Punch") or game.Workspace:FindFirstChild(player.Name):FindFirstChild("Punch")
-    
+    local punchTool = player.Backpack:FindFirstChild("Punch") or player.Character:FindFirstChild("Punch")
+
     _G.autoPunchanim = true
 
     while _G.autoPunchanim do
         if punchTool then
-            if punchTool.Parent ~= game.Workspace:FindFirstChild(player.Name) then
-                punchTool.Parent = game.Workspace:FindFirstChild(player.Name) -- Equip the tool
+            if punchTool.Parent ~= player.Character then
+                punchTool.Parent = player.Character  -- Equip the tool
             end
             game.Players.LocalPlayer.muscleEvent:FireServer("punch", "rightHand")
             game.Players.LocalPlayer.muscleEvent:FireServer("punch", "leftHand")
-            wait(0.5) -- Adjust delay as needed
+            wait() -- Adjust the delay as needed
         else
             warn("Punch tool not found")
-            _G.autoPunchanim = false -- Stop if tool not found
+            _G.autoPunchanim = false
         end
     end
 end
 
 -- Function to teleport and hide selected player
-local function teleportAndHideSelectedPlayer()
-    if not selectedPlayer then
+local function teleportAndHidePlayer()
+    if not selectedPlayerName then
         warn("No player selected!")
         return
     end
 
     local player = game.Players.LocalPlayer
-    local targetPlayer = game.Players:FindFirstChild(selectedPlayer)
+    local rootPart = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
+    local selectedPlayer = game.Players:FindFirstChild(selectedPlayerName)
 
-    if targetPlayer and targetPlayer.Character then
-        local targetRootPart = targetPlayer.Character:FindFirstChild("HumanoidRootPart")
-        local myRootPart = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
+    if not rootPart or not selectedPlayer or not selectedPlayer.Character then return end
 
-        if targetRootPart and myRootPart then
-            targetRootPart.CFrame = myRootPart.CFrame -- Teleport selected player to you
+    local selectedRootPart = selectedPlayer.Character:FindFirstChild("HumanoidRootPart")
+    if selectedRootPart then
+        selectedRootPart.CFrame = rootPart.CFrame * CFrame.new(2, 0, 0)  -- Move to right hand position
+    end
+
+    -- Hide character, hair, and accessories
+    for _, part in pairs(selectedPlayer.Character:GetChildren()) do
+        if part:IsA("MeshPart") or part:IsA("Part") or part:IsA("Accessory") or part:IsA("Hat") or part:IsA("CharacterMesh") then
+            part.Transparency = 1 -- Make invisible
         end
+    end
+end
 
-        -- Make selected player invisible
-        for _, part in pairs(targetPlayer.Character:GetChildren()) do
+-- Function to restore player's visibility
+local function restorePlayerVisibility()
+    if not selectedPlayerName then return end
+    local selectedPlayer = game.Players:FindFirstChild(selectedPlayerName)
+    
+    if selectedPlayer and selectedPlayer.Character then
+        for _, part in pairs(selectedPlayer.Character:GetChildren()) do
             if part:IsA("MeshPart") or part:IsA("Part") or part:IsA("Accessory") or part:IsA("Hat") or part:IsA("CharacterMesh") then
-                part.Transparency = 1 -- Make invisible
+                part.Transparency = 0 -- Make visible again
             end
         end
     end
