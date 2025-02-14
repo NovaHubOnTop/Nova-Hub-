@@ -14,21 +14,11 @@ local switch = Killing:AddSwitch("Kill Aura", function(state)
         local player = game.Players.LocalPlayer
         local playerName = player.Name
 
-        -- Find the Punch tool in the Backpack or Workspace (equipped in hand)
-        local punchTool =
-            player.Backpack:FindFirstChild("Punch") or
-            game.Workspace:FindFirstChild(playerName):FindFirstChild("Punch")
-
-        -- Equip the Punch tool to the hand if not already equipped
-        if punchTool and punchTool.Parent ~= game.Workspace:FindFirstChild(playerName) then
-            punchTool.Parent = game.Workspace:FindFirstChild(playerName) -- Equip the tool
-        end
-
-        -- Function to create an invisible hitbox
+        -- Create invisible hitboxes
         local function createHitbox(name)
             local hitbox = Instance.new("Part")
             hitbox.Name = name
-            hitbox.Size = Vector3.new(10, 10, 10) -- Small size, but we will teleport it
+            hitbox.Size = Vector3.new(10, 10, 10) -- Starting size of hitbox
             hitbox.Transparency = 1
             hitbox.CanCollide = false
             hitbox.Anchored = true -- So we can move it anywhere
@@ -36,19 +26,12 @@ local switch = Killing:AddSwitch("Kill Aura", function(state)
             return hitbox
         end
 
-        -- Create floating hitboxes
         local rightHitbox = createHitbox("RightHitbox")
         local leftHitbox = createHitbox("LeftHitbox")
 
         -- Kill Aura loop
         task.spawn(function()
             while _G.autoPunchanim do
-                -- Trigger both punch events
-                if punchTool then
-                    game.Players.LocalPlayer.muscleEvent:FireServer("punch", "rightHand")
-                    game.Players.LocalPlayer.muscleEvent:FireServer("punch", "leftHand")
-                end
-
                 -- Get players and exclude the local player
                 local players = {}
                 for _, targetPlayer in ipairs(game.Players:GetPlayers()) do
@@ -70,17 +53,17 @@ local switch = Killing:AddSwitch("Kill Aura", function(state)
                     rightHitbox.CFrame = rightTarget.Character.HumanoidRootPart.CFrame
                     leftHitbox.CFrame = leftTarget.Character.HumanoidRootPart.CFrame
 
-                    -- Fire touch event
-                    firetouchinterest(rightHitbox, rightTarget.Character.HumanoidRootPart, 1) -- Right Hand touch start
-                    firetouchinterest(leftHitbox, leftTarget.Character.HumanoidRootPart, 1) -- Left Hand touch start
+                    -- Change the size of the hitboxes for visual effect
+                    rightHitbox.Size = Vector3.new(10, 10, 10) -- Default size for right hand
+                    leftHitbox.Size = Vector3.new(10, 10, 10)  -- Default size for left hand
 
-                    task.wait(0.05)
+                    -- You can make the size bigger or smaller based on your preference
+                    rightHitbox.Size = Vector3.new(15, 15, 15)  -- Right hitbox gets larger
+                    leftHitbox.Size = Vector3.new(5, 5, 5)      -- Left hitbox gets smaller
 
-                    firetouchinterest(rightHitbox, rightTarget.Character.HumanoidRootPart, 0) -- Right Hand touch end
-                    firetouchinterest(leftHitbox, leftTarget.Character.HumanoidRootPart, 0) -- Left Hand touch end
+                    -- Wait for the next second
+                    task.wait(1)
                 end
-
-                task.wait(1) -- Wait 1 second before targeting new players
             end
         end)
     else
