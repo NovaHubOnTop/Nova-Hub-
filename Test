@@ -105,27 +105,40 @@ end)
 Killing:AddLabel("Targeting")
 
 -- Kill Target Dropdown
-local dropdown = Killing:AddDropdown("Select Target", function(selectedPlayer)
-    _G.selectedTarget = selectedPlayer
+local selectedTargetName = nil
+local selectTargetDropdown = Killing:AddDropdown("Select Target", function(playerName)
+    selectedTargetName = playerName
 end)
 
--- Add player names to the dropdown
-local function updatePlayerDropdown()
-    dropdown:Clear()  -- Clear previous options
-    for _, player in pairs(game.Players:GetPlayers()) do
-        if player.Name ~= game.Players.LocalPlayer.Name then
-            dropdown:Add(player.Name)  -- Add other players
-        end
+-- Populate the dropdown with players except for the local player
+for _, player in ipairs(game.Players:GetPlayers()) do
+    if player.Name ~= game.Players.LocalPlayer.Name then
+        selectTargetDropdown:Add(player.Name)
     end
 end
 
 -- Update dropdown list when players join or leave
-game.Players.PlayerAdded:Connect(updatePlayerDropdown)
-game.Players.PlayerRemoving:Connect(updatePlayerDropdown)
+game.Players.PlayerAdded:Connect(function()
+    selectTargetDropdown:Clear()  -- Clear previous options
+    for _, player in ipairs(game.Players:GetPlayers()) do
+        if player.Name ~= game.Players.LocalPlayer.Name then
+            selectTargetDropdown:Add(player.Name)  -- Add new player to dropdown
+        end
+    end
+end)
+
+game.Players.PlayerRemoving:Connect(function()
+    selectTargetDropdown:Clear()  -- Clear and update list when a player leaves
+    for _, player in ipairs(game.Players:GetPlayers()) do
+        if player.Name ~= game.Players.LocalPlayer.Name then
+            selectTargetDropdown:Add(player.Name)  -- Add remaining players to dropdown
+        end
+    end
+end)
 
 -- Kill Target Toggle
 local killTargetToggle = Killing:AddSwitch("Kill Target", function(state)
-    if _G.selectedTarget then
+    if selectedTargetName then
         _G.autoPunchanim = state
 
         if state then
@@ -133,7 +146,7 @@ local killTargetToggle = Killing:AddSwitch("Kill Target", function(state)
                 while _G.autoPunchanim do
                     local player = game.Players.LocalPlayer
                     local character = player.Character or player.CharacterAdded:Wait()
-                    local targetPlayer = game.Players:FindFirstChild(_G.selectedTarget)
+                    local targetPlayer = game.Players:FindFirstChild(selectedTargetName)
                     if targetPlayer and targetPlayer.Character then
                         local punchTool = player.Backpack:FindFirstChild("Punch") or character:FindFirstChild("Punch")
 
