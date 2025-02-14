@@ -22,6 +22,18 @@ for _, player in ipairs(game.Players:GetPlayers()) do
     end
 end
 
+-- Create Unwhitelist Textbox
+local unwhitelistTextbox = Killing:AddTextbox("Unwhitelist", function(inputText)
+    -- When a player name is typed in the textbox, remove them from the whitelist
+    local playerName = inputText
+    for i, name in ipairs(whitelist) do
+        if name == playerName then
+            table.remove(whitelist, i)
+            break
+        end
+    end
+end)
+
 -- Auto Kill Toggle
 local autoKillToggle = Killing:AddSwitch("Auto Kill", function(bool)
     local player = game.Players.LocalPlayer
