@@ -82,6 +82,7 @@ local dropdown = Killing:AddDropdown("Select Target", function(playerName)
     selectedTargetName = playerName
 end)
 
+-- Function to update the dropdown when players join or leave
 local function updateDropdown()
     dropdown:Clear()
     for _, player in ipairs(game.Players:GetPlayers()) do
@@ -91,9 +92,10 @@ local function updateDropdown()
     end
 end
 
+-- Update dropdown when players join or leave
 game.Players.PlayerAdded:Connect(updateDropdown)
 game.Players.PlayerRemoving:Connect(updateDropdown)
-updateDropdown()
+updateDropdown() -- Initial population of dropdown
 
 -- Kill Target Toggle
 _G.autoPunchanim = false
