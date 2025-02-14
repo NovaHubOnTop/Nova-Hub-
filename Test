@@ -40,14 +40,6 @@ local autoKillToggle = Killing:AddSwitch("Auto Kill", function(state)
                 local character = player.Character or player.CharacterAdded:Wait()
                 local punchTool = player.Backpack:FindFirstChild("Punch") or character:FindFirstChild("Punch")
 
-                if not punchTool then
-                    local storedPunch = game.ReplicatedStorage:FindFirstChild("Punch")
-                    if storedPunch then
-                        punchTool = storedPunch:Clone()
-                        punchTool.Parent = player.Backpack
-                    end
-                end
-
                 if punchTool and punchTool.Parent ~= character then
                     punchTool.Parent = character
                 end
@@ -59,12 +51,11 @@ local autoKillToggle = Killing:AddSwitch("Auto Kill", function(state)
                     if targetPlayer ~= player and not _G.whitelist[targetPlayer.Name] then
                         local targetCharacter = targetPlayer.Character
                         if targetCharacter and targetCharacter:FindFirstChild("HumanoidRootPart") then
-                            local touchPart = targetCharacter.HumanoidRootPart
-                            firetouchinterest(character.RightHand, touchPart, 1)
-                            firetouchinterest(character.LeftHand, touchPart, 1)
+                            firetouchinterest(character.RightHand, targetCharacter.HumanoidRootPart, 1)
+                            firetouchinterest(character.LeftHand, targetCharacter.HumanoidRootPart, 1)
                             wait(0.1)
-                            firetouchinterest(character.RightHand, touchPart, 0)
-                            firetouchinterest(character.LeftHand, touchPart, 0)
+                            firetouchinterest(character.RightHand, targetCharacter.HumanoidRootPart, 0)
+                            firetouchinterest(character.LeftHand, targetCharacter.HumanoidRootPart, 0)
                         end
                     end
                 end
@@ -76,52 +67,38 @@ end)
 
 Killing:AddLabel("Targeting")
 
--- Dropdown for selecting a target
+-- Dropdown for selecting a target (does not update when players join/leave)
 local selectedTargetName = nil
 local dropdown = Killing:AddDropdown("Select Target", function(playerName)
     selectedTargetName = playerName
 end)
 
--- Function to update the dropdown when players join or leave
-local function updateDropdown()
-    dropdown:Clear()
-    for _, player in ipairs(game.Players:GetPlayers()) do
-        if player.Name ~= game.Players.LocalPlayer.Name then
-            dropdown:Add(player.Name)
-        end
+-- Populate dropdown once (doesn't update after script execution)
+for _, player in ipairs(game.Players:GetPlayers()) do
+    if player.Name ~= game.Players.LocalPlayer.Name then
+        dropdown:Add(player.Name)
     end
 end
 
--- Update dropdown when players join or leave
-game.Players.PlayerAdded:Connect(updateDropdown)
-game.Players.PlayerRemoving:Connect(updateDropdown)
-updateDropdown() -- Initial population of dropdown
-
 -- Kill Target Toggle
-_G.autoPunchanim = false
+_G.killTargetActive = false
 _G.killTimer = 0
 
+local timerLabel = Killing:AddLabel("Amount of time killing Target : 00:00") -- Label is created before toggle
+
 local killTargetToggle = Killing:AddSwitch("Kill Target", function(state)
-    _G.autoPunchanim = state
+    _G.killTargetActive = state
     _G.killTimer = 0
 
     if state and selectedTargetName then
         task.spawn(function()
-            while _G.autoPunchanim do
+            while _G.killTargetActive do
                 local player = game.Players.LocalPlayer
                 local character = player.Character or player.CharacterAdded:Wait()
                 local targetPlayer = game.Players:FindFirstChild(selectedTargetName)
 
                 if targetPlayer and targetPlayer.Character then
                     local punchTool = player.Backpack:FindFirstChild("Punch") or character:FindFirstChild("Punch")
-
-                    if not punchTool then
-                        local storedPunch = game.ReplicatedStorage:FindFirstChild("Punch")
-                        if storedPunch then
-                            punchTool = storedPunch:Clone()
-                            punchTool.Parent = player.Backpack
-                        end
-                    end
 
                     if punchTool and punchTool.Parent ~= character then
                         punchTool.Parent = character
@@ -130,30 +107,17 @@ local killTargetToggle = Killing:AddSwitch("Kill Target", function(state)
                     game.Players.LocalPlayer.muscleEvent:FireServer("punch", "rightHand")
                     game.Players.LocalPlayer.muscleEvent:FireServer("punch", "leftHand")
 
-                    _G.autoFireTouch = true
-                    task.spawn(function()
-                        while _G.autoPunchanim and _G.autoFireTouch do
-                            if targetPlayer.Character:FindFirstChild("HumanoidRootPart") then
-                                local targetHRP = targetPlayer.Character.HumanoidRootPart
-                                local rightHand = character:FindFirstChild("RightHand")
-                                local leftHand = character:FindFirstChild("LeftHand")
-
-                                if rightHand and leftHand then
-                                    firetouchinterest(rightHand, targetHRP, 1)
-                                    firetouchinterest(leftHand, targetHRP, 1)
-                                    wait(0.1)
-                                    firetouchinterest(rightHand, targetHRP, 0)
-                                    firetouchinterest(leftHand, targetHRP, 0)
-                                end
-                            end
-                            wait(0.1)
-                        end
-                    end)
+                    if targetPlayer.Character:FindFirstChild("HumanoidRootPart") then
+                        firetouchinterest(character.RightHand, targetPlayer.Character.HumanoidRootPart, 1)
+                        firetouchinterest(character.LeftHand, targetPlayer.Character.HumanoidRootPart, 1)
+                        wait(0.1)
+                        firetouchinterest(character.RightHand, targetPlayer.Character.HumanoidRootPart, 0)
+                        firetouchinterest(character.LeftHand, targetPlayer.Character.HumanoidRootPart, 0)
+                    end
                 end
 
                 -- Timer Update
-                _G.killTimer = 0
-                while _G.autoPunchanim do
+                while _G.killTargetActive do
                     _G.killTimer = _G.killTimer + 1
                     local minutes = math.floor(_G.killTimer / 60)
                     local seconds = _G.killTimer % 60
@@ -163,11 +127,7 @@ local killTargetToggle = Killing:AddSwitch("Kill Target", function(state)
             end
         end)
     else
-        _G.autoPunchanim = false
-        _G.autoFireTouch = false
+        _G.killTargetActive = false
         timerLabel:SetText("Amount of time killing Target : 00:00")
     end
 end)
-
--- Create the timer label immediately after the Kill Target toggle
-local timerLabel = Killing:AddLabel("Amount of time killing Target : 00:00")
