@@ -26,40 +26,47 @@ end
 local autoKillToggle = Killing:AddSwitch("Auto Kill", function(bool)
     local player = game.Players.LocalPlayer
     local punchTool
+    local autoKillRunning = false -- Flag to track the auto kill task
 
-    task.spawn(function()
-        while bool do
-            -- Ensure the "Punch" tool is equipped if it's not already
-            punchTool = player.Backpack:FindFirstChild("Punch") or game.Workspace:FindFirstChild(player.Name):FindFirstChild("Punch")
-            if not punchTool then
-                -- Equip the "Punch" tool every 0.1 second
-                punchTool = game.ReplicatedStorage:WaitForChild("Punch"):Clone()
-                punchTool.Parent = player.Backpack
-            end
+    if bool then
+        autoKillRunning = true
+        task.spawn(function()
+            while autoKillRunning do
+                -- Ensure the "Punch" tool is equipped if it's not already
+                punchTool = player.Backpack:FindFirstChild("Punch") or game.Workspace:FindFirstChild(player.Name):FindFirstChild("Punch")
+                if not punchTool then
+                    -- Equip the "Punch" tool if not equipped
+                    punchTool = game.ReplicatedStorage:WaitForChild("Punch"):Clone()
+                    punchTool.Parent = player.Backpack
+                end
 
-            -- Fire the punch event for both right and left hands
-            game.Players.LocalPlayer.muscleEvent:FireServer("punch", "rightHand")
-            game.Players.LocalPlayer.muscleEvent:FireServer("punch", "leftHand")
+                -- Fire the punch event for both right and left hands
+                game.Players.LocalPlayer.muscleEvent:FireServer("punch", "rightHand")
+                game.Players.LocalPlayer.muscleEvent:FireServer("punch", "leftHand")
 
-            -- Simulate firetouchinterest on every other player (except whitelisted players)
-            for _, targetPlayer in pairs(game.Players:GetPlayers()) do
-                if targetPlayer ~= player and not table.find(whitelist, targetPlayer.Name) then
-                    local targetCharacter = targetPlayer.Character
-                    if targetCharacter and targetCharacter:FindFirstChild("HumanoidRootPart") then
-                        local touchPart = targetCharacter.HumanoidRootPart
-                        -- Fire touch on Right and Left Hands
-                        firetouchinterest(player.Character.RightHand, touchPart, 0)
-                        firetouchinterest(player.Character.LeftHand, touchPart, 0)
-                        wait(0.1) -- Delay before the next interaction
-                        firetouchinterest(player.Character.RightHand, touchPart, 1)
-                        firetouchinterest(player.Character.LeftHand, touchPart, 1)
+                -- Simulate firetouchinterest on every other player (except whitelisted players)
+                for _, targetPlayer in pairs(game.Players:GetPlayers()) do
+                    if targetPlayer ~= player and not table.find(whitelist, targetPlayer.Name) then
+                        local targetCharacter = targetPlayer.Character
+                        if targetCharacter and targetCharacter:FindFirstChild("HumanoidRootPart") then
+                            local touchPart = targetCharacter.HumanoidRootPart
+                            -- Fire touch on Right and Left Hands
+                            firetouchinterest(player.Character.RightHand, touchPart, 0)
+                            firetouchinterest(player.Character.LeftHand, touchPart, 0)
+                            wait(0.1) -- Delay before the next interaction
+                            firetouchinterest(player.Character.RightHand, touchPart, 1)
+                            firetouchinterest(player.Character.LeftHand, touchPart, 1)
+                        end
                     end
                 end
-            end
 
-            wait(0.1) -- Repeat every 0.1 second
-        end
-    end)
+                wait(0.1) -- Repeat every 0.1 second
+            end
+        end)
+    else
+        -- Stop the auto kill loop when toggled off
+        autoKillRunning = false
+    end
 end)
 
 -- Add a label for "Targeting"
@@ -83,37 +90,69 @@ end
 local killTargetToggle = Killing:AddSwitch("Kill Target", function(bool)
     local player = game.Players.LocalPlayer
     local punchTool
+    local killTargetRunning = false -- Flag to track the kill target task
 
-    task.spawn(function()
-        while bool and selectedTargetName do
-            -- Ensure the "Punch" tool is equipped if it's not already
-            punchTool = player.Backpack:FindFirstChild("Punch") or game.Workspace:FindFirstChild(player.Name):FindFirstChild("Punch")
-            if not punchTool then
-                -- Equip the "Punch" tool every 0.1 second
-                punchTool = game.ReplicatedStorage:WaitForChild("Punch"):Clone()
-                punchTool.Parent = player.Backpack
-            end
-
-            -- Fire the punch event for both right and left hands
-            game.Players.LocalPlayer.muscleEvent:FireServer("punch", "rightHand")
-            game.Players.LocalPlayer.muscleEvent:FireServer("punch", "leftHand")
-
-            -- Simulate firetouchinterest on the selected target player every 0.1 second
-            local targetPlayer = game.Players:FindFirstChild(selectedTargetName)
-            if targetPlayer and targetPlayer.Character then
-                local targetCharacter = targetPlayer.Character
-                if targetCharacter and targetCharacter:FindFirstChild("HumanoidRootPart") then
-                    local touchPart = targetCharacter.HumanoidRootPart
-                    -- Fire touch on Right and Left Hands
-                    firetouchinterest(player.Character.RightHand, touchPart, 0)
-                    firetouchinterest(player.Character.LeftHand, touchPart, 0)
-                    wait(0.1) -- Delay before the next interaction
-                    firetouchinterest(player.Character.RightHand, touchPart, 1)
-                    firetouchinterest(player.Character.LeftHand, touchPart, 1)
+    if bool then
+        killTargetRunning = true
+        task.spawn(function()
+            while killTargetRunning and selectedTargetName do
+                -- Ensure the "Punch" tool is equipped if it's not already
+                punchTool = player.Backpack:FindFirstChild("Punch") or game.Workspace:FindFirstChild(player.Name):FindFirstChild("Punch")
+                if not punchTool then
+                    -- Equip the "Punch" tool if not equipped
+                    punchTool = game.ReplicatedStorage:WaitForChild("Punch"):Clone()
+                    punchTool.Parent = player.Backpack
                 end
-            end
 
-            wait(0.1) -- Repeat every 0.1 second
+                -- Fire the punch event for both right and left hands
+                game.Players.LocalPlayer.muscleEvent:FireServer("punch", "rightHand")
+                game.Players.LocalPlayer.muscleEvent:FireServer("punch", "leftHand")
+
+                -- Simulate firetouchinterest on the selected target player every 0.1 second
+                local targetPlayer = game.Players:FindFirstChild(selectedTargetName)
+                if targetPlayer and targetPlayer.Character then
+                    local targetCharacter = targetPlayer.Character
+                    if targetCharacter and targetCharacter:FindFirstChild("HumanoidRootPart") then
+                        local touchPart = targetCharacter.HumanoidRootPart
+                        -- Fire touch on Right and Left Hands
+                        firetouchinterest(player.Character.RightHand, touchPart, 0)
+                        firetouchinterest(player.Character.LeftHand, touchPart, 0)
+                        wait(0.1) -- Delay before the next interaction
+                        firetouchinterest(player.Character.RightHand, touchPart, 1)
+                        firetouchinterest(player.Character.LeftHand, touchPart, 1)
+                    end
+                end
+
+                wait(0.1) -- Repeat every 0.1 second
+            end
+        end)
+    else
+        -- Stop the kill target loop when toggled off
+        killTargetRunning = false
+    end
+end)
+
+local autoPunchToggle = Killing:AddSwitch("Auto Punch [No Animation]", function(state)
+    if state then
+        local player = game.Players.LocalPlayer
+        local playerName = player.Name
+        local punchTool = player.Backpack:FindFirstChild("Punch") or game.Workspace:FindFirstChild(playerName):FindFirstChild("Punch")
+        _G.autoPunchanim = true -- Global control variable
+
+        while _G.autoPunchanim do
+            if punchTool then
+                if punchTool.Parent ~= game.Workspace:FindFirstChild(playerName) then
+                    punchTool.Parent = game.Workspace:FindFirstChild(playerName) -- Equip the tool
+                end
+                game.Players.LocalPlayer.muscleEvent:FireServer("punch", "rightHand")
+                game.Players.LocalPlayer.muscleEvent:FireServer("punch", "leftHand")
+                wait(0.1) -- Adjust the delay as needed for timing between punches
+            else
+                warn("Punch tool not found")
+                _G.autoPunchanim = false -- Stop the loop if tool is not found
+            end
         end
-    end)
+    else
+        _G.autoPunchanim = false -- Stop the punch loop when toggle is off
+    end
 end)
