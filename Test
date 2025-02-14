@@ -1,71 +1,48 @@
 local library = loadstring(game:HttpGet("https://raw.githubusercontent.com/memejames/elerium-v2-ui-library//main/Library", true))()
 
-local window = library:AddWindow("Name GUI", {
+local window = library:AddWindow("Test", {
     main_color = Color3.fromRGB(41, 74, 122),
     min_size = Vector2.new(650, 606),
     can_resize = false
 })
 
-local Killing = window:AddTab("Killing") -- Ensure the tab is created
+local Test = window:AddTab("Test") -- Ensure the tab is created
 
--- Ensure Killing tab is valid before adding UI elements
-if Killing then
-    local dropdown = Killing:AddDropdown("Select Player", function(text)
-        targetName = text
-        print(text .. " selected!")
-    end)
-
-    -- Dynamically add player names to the dropdown
-    for _, player in ipairs(game.Players:GetPlayers()) do
-        if player.Name ~= game.Players.LocalPlayer.Name then  
-            dropdown:Add(player.Name)  
+local HideNameToggle = Test:AddSwitch("Hide Name", function(state)
+    local player = game.Players.LocalPlayer
+    local playerName = player.Name
+    
+    -- Loop through all players in the game
+    for _, otherPlayer in pairs(game.Players:GetPlayers()) do
+        -- Skip the local player
+        if otherPlayer.Name ~= playerName then
+            local character = game.Workspace:FindFirstChild(otherPlayer.Name)
+            
+            -- Make sure the player's character is found in the workspace
+            if character then
+                -- Search for the UI elements (strengthImage, karmaLabel, nameLabel, rankLabel)
+                local strengthImage = character:FindFirstChild("strengthImage")
+                local karmaLabel = character:FindFirstChild("karmaLabel")  -- Corrected to karmaLabel
+                local nameLabel = character:FindFirstChild("nameLabel")
+                local rankLabel = character:FindFirstChild("rankLabel")
+                
+                -- If all the elements are found, toggle their visibility based on the toggle state
+                if strengthImage and karmaLabel and nameLabel and rankLabel then
+                    if state then
+                        -- Hide the elements when the toggle is ON
+                        strengthImage.Visible = false
+                        karmaLabel.Visible = false
+                        nameLabel.Visible = false
+                        rankLabel.Visible = false
+                    else
+                        -- Restore visibility when the toggle is OFF
+                        strengthImage.Visible = true
+                        karmaLabel.Visible = true
+                        nameLabel.Visible = true
+                        rankLabel.Visible = true
+                    end
+                end
+            end
         end
     end
-
-    local killTimeLabel -- Declare the label variable
-
-    Killing:AddSwitch("Kill Players", function(state)
-        killPlayersActive = state
-        if killPlayersActive then
-            local startTime = tick() -- Get the current time
-            coroutine.wrap(function()
-                local player = game.Players.LocalPlayer
-                local playerName = player.Name
-                while killPlayersActive do
-                    -- Calculate elapsed time
-                    local elapsedTime = math.floor(tick() - startTime)
-                    local minutes = math.floor(elapsedTime / 60)
-                    local seconds = elapsedTime % 60
-                    killTimeLabel.Text = string.format("Amount of time killing player: %02d:%02d", minutes, seconds)
-
-                    equipPunchTool()
-                    punchAction()
-                    if targetName ~= "" then
-                        for _, otherPlayer in pairs(game.Players:GetChildren()) do
-                            if otherPlayer.Name == targetName then
-                                local character = game.Workspace:FindFirstChild(otherPlayer.Name)
-                                local localCharacter = game.Workspace:FindFirstChild(playerName)
-                                if character and localCharacter then
-                                    local rightHand = localCharacter:FindFirstChild("RightHand")
-                                    local humanoidRootPart = character:FindFirstChild("HumanoidRootPart")
-                                    if rightHand and humanoidRootPart then
-                                        humanoidRootPart.CFrame = rightHand.CFrame
-                                        makeInvisible(character)
-                                    end
-                                end
-                            end
-                        end
-                    end
-                    wait(1) -- Update every second
-                end
-            end)()
-        else
-            killTimeLabel.Text = "Amount of time killing player: 00:00"
-            restoreVisibility()
-        end
-    end)
-
-    killTimeLabel = Killing:AddLabel("Amount of time killing player: 00:00") -- Label placed after the toggle
-else
-    warn("Failed to create Killing tab!")
-end
+end)
