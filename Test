@@ -9,47 +9,53 @@ local window = library:AddWindow("Test", {
 local Killing = window:AddTab("Killing")
 
 local switch = Killing:AddSwitch("Auto Kill", function(state)
-    _G.autoPunchanim = state -- Global variable to control the loop
+    _G.autoPunchanim = state -- Global toggle
 
     if state then  
         local player = game.Players.LocalPlayer  
         local playerName = player.Name  
-        local punchTool =  
-            player.Backpack:FindFirstChild("Punch") or  
-            game.Workspace:FindFirstChild(playerName):FindFirstChild("Punch")  
-        
-        while _G.autoPunchanim do  
-            if punchTool then  
-                if punchTool.Parent ~= game.Workspace:FindFirstChild(playerName) then  
-                    punchTool.Parent = game.Workspace:FindFirstChild(playerName) -- Equip the tool  
-                end  
-                
-                -- Fire punch events
-                game.Players.LocalPlayer.muscleEvent:FireServer("punch", "rightHand")  
-                game.Players.LocalPlayer.muscleEvent:FireServer("punch", "leftHand")  
-                
-                -- Use firetouchinterest on all players
-                for _, targetPlayer in pairs(game.Players:GetPlayers()) do
-                    if targetPlayer ~= player and targetPlayer.Character then
-                        local targetCharacter = targetPlayer.Character
-                        local rightHand = punchTool:FindFirstChild("RightHand")  
-                        local leftHand = punchTool:FindFirstChild("LeftHand")  
+        local character = player.Character or player.CharacterAdded:Wait()
 
-                        if rightHand and leftHand then
-                            firetouchinterest(rightHand, targetCharacter.PrimaryPart, 1) -- Start touch
-                            firetouchinterest(leftHand, targetCharacter.PrimaryPart, 1) -- Start touch
-                            wait(0.1) -- Small delay to register the touch
-                            firetouchinterest(rightHand, targetCharacter.PrimaryPart, 0) -- Stop touch
-                            firetouchinterest(leftHand, targetCharacter.PrimaryPart, 0) -- Stop touch
-                        end
+        local punchTool = player.Backpack:FindFirstChild("Punch") or character:FindFirstChild("Punch")
+        
+        if not punchTool then
+            warn("Punch tool not found")
+            return
+        end
+
+        -- Equip the tool if needed
+        if punchTool.Parent ~= character then  
+            punchTool.Parent = character
+        end  
+
+        while _G.autoPunchanim do  
+            if not punchTool or punchTool.Parent ~= character then
+                warn("Punch tool missing or unequipped")
+                _G.autoPunchanim = false
+                return
+            end
+
+            -- Fire punch events
+            game.Players.LocalPlayer.muscleEvent:FireServer("punch", "rightHand")  
+            game.Players.LocalPlayer.muscleEvent:FireServer("punch", "leftHand")  
+
+            -- Apply firetouchinterest to all players
+            for _, targetPlayer in pairs(game.Players:GetPlayers()) do
+                if targetPlayer ~= player and targetPlayer.Character and targetPlayer.Character:FindFirstChild("HumanoidRootPart") then
+                    local targetHRP = targetPlayer.Character.HumanoidRootPart
+                    local punchHitbox = punchTool:FindFirstChildWhichIsA("Part") -- Try to find a hitbox part
+
+                    if punchHitbox then
+                        firetouchinterest(punchHitbox, targetHRP, 1) -- Start touch
+                        wait(0.1)
+                        firetouchinterest(punchHitbox, targetHRP, 0) -- Stop touch
+                    else
+                        warn("No hitbox found in Punch tool")
                     end
                 end
-                
-                wait() -- Adjust delay as needed for timing
-            else  
-                warn("Punch tool not found")  
-                _G.autoPunchanim = false -- Stop if tool is missing  
-            end  
+            end
+
+            wait() -- Adjust timing for better performance
         end  
     else  
         _G.autoPunchanim = false  
