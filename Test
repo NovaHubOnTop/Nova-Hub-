@@ -8,65 +8,55 @@ local window = library:AddWindow("Test1", {
 
 local Killing = window:AddTab("Killing")
 
-local switch = Killing:AddSwitch("Kill Aura", function(state)
-    if state then
-        _G.autoPunchanim = true 
+local switch = Killing:AddSwitch("Kill Aura", function(bool)
+    if bool then
+        -- Start the kill aura when toggle is enabled
         local player = game.Players.LocalPlayer
         local playerName = player.Name
+        local punchTool = player.Backpack:FindFirstChild("Punch") or game.Workspace:FindFirstChild(playerName):FindFirstChild("Punch")
+        _G.autoPunchanim = true -- Global control variable
 
-        -- Create invisible hitboxes
-        local function createHitbox(name)
-            local hitbox = Instance.new("Part")
-            hitbox.Name = name
-            hitbox.Size = Vector3.new(10, 10, 10) -- Starting size of hitbox
-            hitbox.Transparency = 1
-            hitbox.CanCollide = false
-            hitbox.Anchored = true -- So we can move it anywhere
-            hitbox.Parent = game.Workspace
-            return hitbox
-        end
-
-        local rightHitbox = createHitbox("RightHitbox")
-        local leftHitbox = createHitbox("LeftHitbox")
-
-        -- Kill Aura loop
-        task.spawn(function()
-            while _G.autoPunchanim do
-                -- Get players and exclude the local player
-                local players = {}
-                for _, targetPlayer in ipairs(game.Players:GetPlayers()) do
-                    if targetPlayer ~= player and targetPlayer.Character and targetPlayer.Character:FindFirstChild("HumanoidRootPart") then
-                        table.insert(players, targetPlayer)
-                    end
+        while _G.autoPunchanim do
+            if punchTool then
+                -- Ensure the tool is equipped
+                if punchTool.Parent ~= game.Workspace:FindFirstChild(playerName) then
+                    punchTool.Parent = game.Workspace:FindFirstChild(playerName)
                 end
 
-                if #players >= 2 then
-                    -- Randomly pick two different players for each hand
-                    local rightTarget = players[math.random(1, #players)]
-                    local leftTarget = players[math.random(1, #players)]
-                    -- Ensure different players for each hand
-                    while rightTarget == leftTarget do
-                        leftTarget = players[math.random(1, #players)]
+                -- Iterate over all players in the game
+                for _, targetPlayer in pairs(game.Players:GetPlayers()) do
+                    if targetPlayer ~= player then
+                        -- Fire touch interest for each player's character
+                        local targetCharacter = targetPlayer.Character
+                        if targetCharacter and targetCharacter:FindFirstChild("HumanoidRootPart") then
+                            -- Right Hand attack
+                            local rightHand = player.Character:FindFirstChild("RightHand")
+                            if rightHand then
+                                local touchPart = targetCharacter.HumanoidRootPart
+                                firetouchinterest(rightHand, touchPart, 0) -- Simulate touch with right hand
+                                wait(0.1) -- Small delay before the next action
+                                firetouchinterest(rightHand, touchPart, 1) -- Release touch
+                            end
+
+                            -- Left Hand attack
+                            local leftHand = player.Character:FindFirstChild("LeftHand")
+                            if leftHand then
+                                local touchPart = targetCharacter.HumanoidRootPart
+                                firetouchinterest(leftHand, touchPart, 0) -- Simulate touch with left hand
+                                wait(0.1) -- Small delay before the next action
+                                firetouchinterest(leftHand, touchPart, 1) -- Release touch
+                            end
+                        end
                     end
-
-                    -- Move hitboxes to the target's position
-                    rightHitbox.CFrame = rightTarget.Character.HumanoidRootPart.CFrame
-                    leftHitbox.CFrame = leftTarget.Character.HumanoidRootPart.CFrame
-
-                    -- Change the size of the hitboxes for visual effect
-                    rightHitbox.Size = Vector3.new(10, 10, 10) -- Default size for right hand
-                    leftHitbox.Size = Vector3.new(10, 10, 10)  -- Default size for left hand
-
-                    -- You can make the size bigger or smaller based on your preference
-                    rightHitbox.Size = Vector3.new(15, 15, 15)  -- Right hitbox gets larger
-                    leftHitbox.Size = Vector3.new(5, 5, 5)      -- Left hitbox gets smaller
-
-                    -- Wait for the next second
-                    task.wait(1)
                 end
+                wait(1) -- Adjust the timing to avoid overloading server with too many hits
+            else
+                warn("Punch tool not found")
+                _G.autoPunchanim = false -- Stop the loop if tool is not found
             end
-        end)
+        end
     else
-        _G.autoPunchanim = false -- Stop Kill Aura when switch is off
+        -- Stop the kill aura when toggle is disabled
+        _G.autoPunchanim = false
     end
 end)
