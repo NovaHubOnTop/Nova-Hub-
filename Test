@@ -1,20 +1,30 @@
-local library = loadstring(game:HttpGet("https://raw.githubusercontent.com/memejames/elerium-v2-ui-library//main/Library", true))()
 
-local window = library:AddWindow("Test", {
-    main_color = Color3.fromRGB(41, 74, 122),
-    min_size = Vector2.new(650, 600),
-    can_resize = false,
+
+
+
+
+
+
+
+
+--Main Script
+local library = loadstring(game:HttpGet("https://raw.githubusercontent.com/Marwanleprodu91670/muscle-legend-lite-hub-elerium-library-/refs/heads/main/library", true))()
+
+local window = library:AddWindow("Nova Hub V1 Free Version | Encrypted Script", {
+    main_color = Color3.fromRGB(75,0,130), -- Color
+    min_size = Vector2.new(700, 640), -- Size of the gui
+    can_resize = false, -- true or false
 })
 
 local Client = window:AddTab("Client")
 Client:AddLabel("Local Player")
 
 Client:AddButton("Hide Pets",function()
-    local args = {
-        [1] = "hidePets"
-    }
+	local args = {
+    [1] = "hidePets"
+}
 
-    game:GetService("ReplicatedStorage"):WaitForChild("rEvents"):WaitForChild("showPetsEvent"):FireServer(unpack(args))
+game:GetService("ReplicatedStorage"):WaitForChild("rEvents"):WaitForChild("showPetsEvent"):FireServer(unpack(args))
 
 end)
 
@@ -177,6 +187,9 @@ Maintab:AddButton("Destroy Ad teleport", function()
     end
 end)
 
+
+
+
 -- Brawl Things
 local folder3 = Maintab:AddFolder("Brawl")
 
@@ -210,26 +223,26 @@ end)
 
 Maintab:AddLabel("Scripts Hub:")
 Maintab:AddButton("Infinite yield",function()
-    loadstring(game:HttpGet('https://raw.githubusercontent.com/EdgeIY/infiniteyield/master/source'))()
+	loadstring(game:HttpGet('https://raw.githubusercontent.com/EdgeIY/infiniteyield/master/source'))()
 end)
 
 Maintab:AddButton("Dex Eplorer",function()
-    loadstring(game:HttpGet("https://raw.githubusercontent.com/AhmadV99/Main/refs/heads/main/Dex-Explorer"))()
+	loadstring(game:HttpGet("https://raw.githubusercontent.com/AhmadV99/Main/refs/heads/main/Dex-Explorer"))()
 end)
 
 Maintab:AddButton("Chat Spy",function()
-    loadstring(game:HttpGet('https://raw.githubusercontent.com/doIIa/Script/refs/heads/master/ChatSpy.lua'))()
+	loadstring(game:HttpGet('https://raw.githubusercontent.com/doIIa/Script/refs/heads/master/ChatSpy.lua'))()
 end)
 
 Maintab:AddButton("Chat Bypass",function()
-    loadstring(game:HttpGet('https://raw.githubusercontent.com/CrystalDMC/roblox-chat-bypass/refs/heads/main/script.lua'))()
+	loadstring(game:HttpGet('https://raw.githubusercontent.com/CrystalDMC/roblox-chat-bypass/refs/heads/main/script.lua'))()
 end)
 
 Maintab:AddButton("Permanent shiftlock",function()
-    loadstring(game:HttpGet('https://pastebin.com/raw/CjNsnSDy'))()
+	loadstring(game:HttpGet('https://pastebin.com/raw/CjNsnSDy'))()
 end)
 
--- Auto Farm Tab (Continued)
+-- Auto Farm Tab
 local AutoFarm = window:AddTab("Auto Farm")
 
 AutoFarm:AddLabel("Reps")
@@ -338,50 +351,50 @@ local switchSitups = AutoFarm:AddSwitch("Auto Situps", function(bool)
     end
 end)
 
--- Auto Eggs Tab
-local AutoEggs = window:AddTab("Auto Eggs")
+local AutoEggs = window:AddTab("Auto Eggs") -- Create the tab
 
-AutoEggs:AddLabel("Eggs")
+local selectedCrystal = "Galaxy Oracle Crystal" -- Default selected crystal
+local autoCrystalRunning = false
 
-local switchEggs = AutoEggs:AddSwitch("Auto Hatch", function(bool)
-    _G.autoEggHatch = bool
+-- Dropdown for selecting a crystal
+local dropdown = AutoEggs:AddDropdown("Select Crystal", function(text)
+    selectedCrystal = text  -- Store selected crystal name
+    print("Selected Crystal: " .. text)
+end)
 
-    if bool then
-        while _G.autoEggHatch do
-            -- Assuming there is a Hatch function or event to trigger the egg hatching
-            game.ReplicatedStorage:WaitForChild("EggHatchEvent"):FireServer()  -- Replace with actual event
+-- Add crystal options to dropdown
+local crystalNames = {
+    "Blue Crystal", "Green Crystal", "Frozen Crystal", "Mythical Crystal",
+    "Inferno Crystal", "Legends Crystal", "Muscle Elite Crystal",
+    "Galaxy Oracle Crystal", "Sky Eclipse Crystal", "Jungle Crystal"
+}
 
-            -- Delay for the next hatch attempt
-            wait(1)
-        end
-    else
-        _G.autoEggHatch = false
+for _, name in ipairs(crystalNames) do
+    dropdown:Add(name)
+end
+
+-- Function to auto open selected crystal
+local function autoOpenCrystal()
+    while autoCrystalRunning do
+        local args = {
+            [1] = "openCrystal",
+            [2] = selectedCrystal
+        }
+
+        game:GetService("ReplicatedStorage"):WaitForChild("rEvents"):WaitForChild("openCrystalRemote"):InvokeServer(unpack(args))
+        wait(0.1) -- 0.1-second delay before opening again
+    end
+end
+
+-- Toggle switch
+local switch = AutoEggs:AddSwitch("Auto Crystal", function(state)
+    autoCrystalRunning = state
+
+    if autoCrystalRunning then
+        spawn(autoOpenCrystal) -- Start auto-opening crystals
     end
 end)
 
--- Teleport Tab
-local Teleport = window:AddTab("Teleport")
-
-local locations = {
-    {"Beach", Vector3.new(-11, 5, -178)},
-    {"Legends Island", Vector3.new(4603, 989, -3898)},
-    {"Muscle King Gym", Vector3.new(-8626, 15, -5730)},
-    {"Tiny Island", Vector3.new(-38, 5, 1884)},
-    {"Secret Location", Vector3.new(-2596, -1, 5738)},
-    {"Inferno Island", Vector3.new(-6759, 5, -1285)},
-    {"Frost Island", Vector3.new(-2623, 5, -409)},
-    {"Mythical Island", Vector3.new(2251, 5, 1073)}
-}
-
--- Iterate over each location and create a button for it
-for _, location in ipairs(locations) do
-    local name, position = location[1], location[2]
-    Teleport:AddButton(name, function()
-        game.Players.LocalPlayer.Character:SetPrimaryPartCFrame(CFrame.new(position))
-    end)
-end
-
--- Auto Rebirthing Tab
 local Rebirth = window:AddTab("Auto Rebirthing") -- Create the tab
 Rebirth:AddLabel("Rebirth Features:")
 local rebirthCount = 0 -- Variable to store the desired number of rebirths
@@ -454,6 +467,9 @@ Rebirth:AddSwitch("Auto rebirth+set size 2+Auto teleport muscle king", function(
         end)()
     end
 end)
+
+
+
 
 -- Killing Tab
 local Killing = window:AddTab("Killing")
@@ -771,11 +787,39 @@ local textbox = PlayerTab:AddTextBox("Player Name", function(playerName)
             removePlayerLabels(currentSelectedPlayer)
         end
         createPlayerLabels(player)
-        currentSelectedPlayer = playerName
+    notFoundLabel    currentSelectedPlayer = playerName
     else
         notFoundLabel = PlayerTab:AddLabel("Player not found!")
     end
 end)
+
+
+
+-- Teleport Tab
+local Teleport = window:AddTab("Teleport")
+
+local locations = {
+    {"Beach", Vector3.new(-11, 5, -178)},
+    {"Legends Island", Vector3.new(4603, 989, -3898)},
+    {"Muscle King Gym", Vector3.new(-8626, 15, -5730)},
+    {"Tiny Island", Vector3.new(-38, 5, 1884)},
+    {"Secret Location", Vector3.new(-2596, -1, 5738)},
+    {"Inferno Island", Vector3.new(-6759, 5, -1285)},
+    {"Frost Island", Vector3.new(-2623, 5, -409)},
+    {"Mythical Island", Vector3.new(2251, 5, 1073)}
+}
+
+-- Iterate over each location and create a button for it
+for _, location in ipairs(locations) do
+    local name, position = location[1], location[2]
+    Teleport:AddButton(name, function()
+        game.Players.LocalPlayer.Character:SetPrimaryPartCFrame(CFrame.new(position))
+    end)
+end
+
+                             
+        
+
 
 -- Server Tab
 local Server = window:AddTab("Server")
@@ -904,8 +948,9 @@ createMyLabels()
 
 -- The credit tab
 local Credit = window:AddTab("Credit")
-Credit:AddLabel("Script Made By Encrypted with help of Ahamd and Lucky")
-Credit:AddLabel("Best friends: CwmoKai, Aabis, blackyy, Ahmad, D3ATH, Lucky")
+Credit:AddLabel("Script Made By Encrypted")
+Credit:AddLabel("Best friends: CwmoKai, Aabis, blackyy, Ahmad")
+Credit:AddLabel("Big thanks to KLN, who was the biggest victim during testing the script, much respect to him <3")
 Credit:AddLabel("Discord Server: https://discord.gg/fzKFQ2vw")
 
 -- Show the window
