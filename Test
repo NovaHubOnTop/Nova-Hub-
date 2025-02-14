@@ -61,3 +61,5 @@ Killing:AddSwitch("Kill Players", function(state)
         restoreVisibility()
     end
 end)
+
+Killing:AddLabel("Amount of time killing player: 00:00")
