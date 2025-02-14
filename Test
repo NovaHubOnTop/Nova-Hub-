@@ -1,6 +1,6 @@
 local library = loadstring(game:HttpGet("https://raw.githubusercontent.com/memejames/elerium-v2-ui-library//main/Library", true))()
 
-local window = library:AddWindow("Test2", {
+local window = library:AddWindow("Test1", {
 	main_color = Color3.fromRGB(41, 74, 122), -- Color
 	min_size = Vector2.new(650, 606), -- Size of the gui
 	can_resize = false, -- true or false
@@ -151,25 +151,15 @@ local killTargetToggle = Killing:AddSwitch("Kill Target", function(bool)
                         end
                     end
                 end
-
-                -- Update the kill timer
-                killTime = killTime + 1
-                local minutes = math.floor(killTime / 60)
-                local seconds = killTime % 60
-                timeLabel:SetText(string.format("Amount of time killing target: %02d:%02d", minutes, seconds))
-                
-                wait(1) -- Wait 1 second before updating the time and continuing the loop
             else
                 -- If target player is no longer available, stop the loop
                 isKillingTarget = false
-                timeLabel:SetText("Amount of time killing target: 00:00")
             end
+            wait(1) -- Wait 1 second before continuing the loop
         end
     else
         -- Stop killing the target when toggle is disabled
         isKillingTarget = false
-        killTime = 0 -- Reset the timer
-        timeLabel:SetText("Amount of time killing target: 00:00")
     end
 end)
 
@@ -208,4 +198,32 @@ local autoPunchNoAnimSwitch = Killing:AddSwitch("Auto Punch [No Animation]", fun
         end
     else
         -- Stop the auto punch when the toggle is turned off
-        _G.autoPunchanim =
+        _G.autoPunchanim = false
+    end
+end)
+
+-- Create the "Auto Equip Punch" toggle
+local autoEquipPunchSwitch = Killing:AddSwitch("Auto Equip Punch", function(state)
+    if state then
+        -- When the toggle is enabled, start auto-equipping the punch tool
+        local player = game.Players.LocalPlayer
+        local playerName = player.Name
+        
+        while true do
+            -- Find the "Punch" tool in the player's backpack
+            local punchTool = player.Backpack:FindFirstChild("Punch")
+            
+            if punchTool then
+                -- If the punch tool exists and is not already equipped, equip it
+                if punchTool.Parent ~= game.Workspace:FindFirstChild(playerName) then
+                    punchTool.Parent = game.Workspace:FindFirstChild(playerName)
+                end
+            else
+                -- If the punch tool is not found, print a warning
+                warn("Punch tool not found in backpack.")
+            end
+            
+            wait(0.5) -- Small delay to check for the tool again (can adjust the delay as needed)
+        end
+    else
+        -- If the toggle is turned
