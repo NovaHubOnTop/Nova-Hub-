@@ -8,46 +8,38 @@ local window = library:AddWindow("Test", {
 
 local Killing = window:AddTab("Killing")
 
-_G.whitelist = {}  -- Stores names of whitelisted players
-_G.autoPunchanim = false
-_G.selectedTarget = nil  -- Store the selected target name
-_G.killTimer = 0  -- Timer variable
-
--- Whitelist & Unwhitelist
+-- Labels and textboxes for whitelisting
 Killing:AddLabel("Whitelisting")
-Killing:AddTextBox("Whitelist", function(text)
-    if text and text ~= "" then
-        table.insert(_G.whitelist, text)
-        print(text .. " has been whitelisted.")
+
+_G.whitelist = {}
+
+local whitelistBox = Killing:AddTextBox("Whitelist", function(name)
+    if name and name ~= "" then
+        _G.whitelist[name] = true
     end
 end)
 
-Killing:AddTextBox("Unwhitelist", function(text)
-    if text and text ~= "" then
-        for i, v in pairs(_G.whitelist) do
-            if v == text then
-                table.remove(_G.whitelist, i)
-                print(text .. " has been unwhitelisted.")
-                break
-            end
-        end
+local unwhitelistBox = Killing:AddTextBox("Unwhitelist", function(name)
+    if name and _G.whitelist[name] then
+        _G.whitelist[name] = nil
     end
 end)
 
 Killing:AddLabel("Killing Features")
 
 -- Auto Kill Toggle
-local switch = Killing:AddSwitch("Auto Kill", function(state)
-    _G.autoPunchanim = state  
+_G.autoKill = false
+
+local autoKillToggle = Killing:AddSwitch("Auto Kill", function(state)
+    _G.autoKill = state
 
     if state then
         task.spawn(function()
-            while _G.autoPunchanim do
+            while _G.autoKill do
                 local player = game.Players.LocalPlayer
                 local character = player.Character or player.CharacterAdded:Wait()
                 local punchTool = player.Backpack:FindFirstChild("Punch") or character:FindFirstChild("Punch")
 
-                -- Ensure the punch tool is always equipped
                 if not punchTool then
                     local storedPunch = game.ReplicatedStorage:FindFirstChild("Punch")
                     if storedPunch then
@@ -56,162 +48,124 @@ local switch = Killing:AddSwitch("Auto Kill", function(state)
                     end
                 end
 
-                -- Re-equip if needed
                 if punchTool and punchTool.Parent ~= character then
                     punchTool.Parent = character
                 end
 
-                -- Fire punch events
                 game.Players.LocalPlayer.muscleEvent:FireServer("punch", "rightHand")
                 game.Players.LocalPlayer.muscleEvent:FireServer("punch", "leftHand")
 
-                -- FireTouchInterest loop
-                _G.autoFireTouch = true
-                task.spawn(function()
-                    while _G.autoPunchanim and _G.autoFireTouch do
-                        for _, targetPlayer in pairs(game.Players:GetPlayers()) do
-                            if targetPlayer ~= player and targetPlayer.Character and targetPlayer.Character:FindFirstChild("HumanoidRootPart") then
-                                -- Check if player is whitelisted
-                                if not table.find(_G.whitelist, targetPlayer.Name) then
-                                    local targetHRP = targetPlayer.Character.HumanoidRootPart
-                                    local rightHand = character:FindFirstChild("RightHand")
-                                    local leftHand = character:FindFirstChild("LeftHand")
-
-                                    if rightHand and leftHand then
-                                        firetouchinterest(rightHand, targetHRP, 1)  -- Start touch
-                                        firetouchinterest(leftHand, targetHRP, 1)  -- Start touch
-                                        wait(0.1)
-                                        firetouchinterest(rightHand, targetHRP, 0)  -- Stop touch
-                                        firetouchinterest(leftHand, targetHRP, 0)  -- Stop touch
-                                    else
-                                        warn("RightHand or LeftHand not found in character")
-                                    end
-                                end
-                            end
+                for _, targetPlayer in pairs(game.Players:GetPlayers()) do
+                    if targetPlayer ~= player and not _G.whitelist[targetPlayer.Name] then
+                        local targetCharacter = targetPlayer.Character
+                        if targetCharacter and targetCharacter:FindFirstChild("HumanoidRootPart") then
+                            local touchPart = targetCharacter.HumanoidRootPart
+                            firetouchinterest(character.RightHand, touchPart, 1)
+                            firetouchinterest(character.LeftHand, touchPart, 1)
+                            wait(0.1)
+                            firetouchinterest(character.RightHand, touchPart, 0)
+                            firetouchinterest(character.LeftHand, touchPart, 0)
                         end
-                        wait(0.1) -- Small delay for performance
                     end
-                end)
-
-                wait(0.1)  -- Small delay for better performance
+                end
+                wait(0.1)
             end
         end)
-    else  
-        _G.autoPunchanim = false  
-        _G.autoFireTouch = false  -- Stops FireTouchInterest loop
     end
 end)
 
--- Label after Auto Kill
 Killing:AddLabel("Targeting")
 
--- Kill Target Dropdown
+-- Dropdown for selecting a target
 local selectedTargetName = nil
 local dropdown = Killing:AddDropdown("Select Target", function(playerName)
     selectedTargetName = playerName
-    print(playerName .. " selected!")  -- You can remove or use this line for testing
 end)
 
--- Dynamically add player names to the dropdown
-for _, player in ipairs(game.Players:GetPlayers()) do
-    if player.Name ~= game.Players.LocalPlayer.Name then  -- Exclude the local player
-        dropdown:Add(player.Name)  -- Add each player's name to the dropdown
-    end
-end
-
--- Function to update the dropdown when players join or leave
 local function updateDropdown()
-    dropdown:Clear()  -- Clear existing options
+    dropdown:Clear()
     for _, player in ipairs(game.Players:GetPlayers()) do
         if player.Name ~= game.Players.LocalPlayer.Name then
-            dropdown:Add(player.Name)  -- Add each player's name
+            dropdown:Add(player.Name)
         end
     end
 end
 
--- Update dropdown list when players join or leave
-game.Players.PlayerAdded:Connect(function()
-    updateDropdown()
-end)
-
-game.Players.PlayerRemoving:Connect(function()
-    updateDropdown()
-end)
+game.Players.PlayerAdded:Connect(updateDropdown)
+game.Players.PlayerRemoving:Connect(updateDropdown)
+updateDropdown()
 
 -- Kill Target Toggle
+_G.autoPunchanim = false
+_G.killTimer = 0
+
 local killTargetToggle = Killing:AddSwitch("Kill Target", function(state)
-    if selectedTargetName then
-        _G.autoPunchanim = state
-        _G.killTimer = 0  -- Reset the timer when Kill Target is enabled
+    _G.autoPunchanim = state
+    _G.killTimer = 0
 
-        -- Label for timer display
-        local timeLabel = Killing:AddLabel("Amount of time killing Target : 00:00")
+    if state and selectedTargetName then
+        task.spawn(function()
+            while _G.autoPunchanim do
+                local player = game.Players.LocalPlayer
+                local character = player.Character or player.CharacterAdded:Wait()
+                local targetPlayer = game.Players:FindFirstChild(selectedTargetName)
 
-        if state then
-            task.spawn(function()
-                while _G.autoPunchanim do
-                    local player = game.Players.LocalPlayer
-                    local character = player.Character or player.CharacterAdded:Wait()
-                    local targetPlayer = game.Players:FindFirstChild(selectedTargetName)
-                    if targetPlayer and targetPlayer.Character then
-                        local punchTool = player.Backpack:FindFirstChild("Punch") or character:FindFirstChild("Punch")
+                if targetPlayer and targetPlayer.Character then
+                    local punchTool = player.Backpack:FindFirstChild("Punch") or character:FindFirstChild("Punch")
 
-                        -- Ensure the punch tool is always equipped
-                        if not punchTool then
-                            local storedPunch = game.ReplicatedStorage:FindFirstChild("Punch")
-                            if storedPunch then
-                                punchTool = storedPunch:Clone()
-                                punchTool.Parent = player.Backpack
-                            end
+                    if not punchTool then
+                        local storedPunch = game.ReplicatedStorage:FindFirstChild("Punch")
+                        if storedPunch then
+                            punchTool = storedPunch:Clone()
+                            punchTool.Parent = player.Backpack
                         end
-                        
-                        -- Re-equip if needed
-                        if punchTool and punchTool.Parent ~= character then
-                            punchTool.Parent = character
-                        end
-
-                        -- Fire punch events
-                        game.Players.LocalPlayer.muscleEvent:FireServer("punch", "rightHand")
-                        game.Players.LocalPlayer.muscleEvent:FireServer("punch", "leftHand")
-
-                        -- FireTouchInterest loop
-                        _G.autoFireTouch = true
-                        task.spawn(function()
-                            while _G.autoPunchanim and _G.autoFireTouch do
-                                if targetPlayer.Character:FindFirstChild("HumanoidRootPart") then
-                                    local targetHRP = targetPlayer.Character.HumanoidRootPart
-                                    local rightHand = character:FindFirstChild("RightHand")
-                                    local leftHand = character:FindFirstChild("LeftHand")
-
-                                    if rightHand and leftHand then
-                                        firetouchinterest(rightHand, targetHRP, 1)  -- Start touch
-                                        firetouchinterest(leftHand, targetHRP, 1)  -- Start touch
-                                        wait(0.1)
-                                        firetouchinterest(rightHand, targetHRP, 0)  -- Stop touch
-                                        firetouchinterest(leftHand, targetHRP, 0)  -- Stop touch
-                                    else
-                                        warn("RightHand or LeftHand not found in character")
-                                    end
-                                end
-                                wait(0.1) -- Small delay for performance
-                            end
-                        end)
                     end
 
-                    -- Update the timer every second
+                    if punchTool and punchTool.Parent ~= character then
+                        punchTool.Parent = character
+                    end
+
+                    game.Players.LocalPlayer.muscleEvent:FireServer("punch", "rightHand")
+                    game.Players.LocalPlayer.muscleEvent:FireServer("punch", "leftHand")
+
+                    _G.autoFireTouch = true
+                    task.spawn(function()
+                        while _G.autoPunchanim and _G.autoFireTouch do
+                            if targetPlayer.Character:FindFirstChild("HumanoidRootPart") then
+                                local targetHRP = targetPlayer.Character.HumanoidRootPart
+                                local rightHand = character:FindFirstChild("RightHand")
+                                local leftHand = character:FindFirstChild("LeftHand")
+
+                                if rightHand and leftHand then
+                                    firetouchinterest(rightHand, targetHRP, 1)
+                                    firetouchinterest(leftHand, targetHRP, 1)
+                                    wait(0.1)
+                                    firetouchinterest(rightHand, targetHRP, 0)
+                                    firetouchinterest(leftHand, targetHRP, 0)
+                                end
+                            end
+                            wait(0.1)
+                        end
+                    end)
+                end
+
+                -- Timer Update
+                _G.killTimer = 0
+                while _G.autoPunchanim do
                     _G.killTimer = _G.killTimer + 1
                     local minutes = math.floor(_G.killTimer / 60)
                     local seconds = _G.killTimer % 60
-                    timeLabel:SetText(string.format("Amount of time killing Target : %02d:%02d", minutes, seconds))
-
-                    wait(1)  -- Update every second
+                    timerLabel:SetText(string.format("Amount of time killing Target : %02d:%02d", minutes, seconds))
+                    wait(1)
                 end
-            end)
-        else
-            _G.autoPunchanim = false
-            _G.autoFireTouch = false  -- Stops FireTouchInterest loop
-        end
+            end
+        end)
     else
-        print("No target selected!")
+        _G.autoPunchanim = false
+        _G.autoFireTouch = false
+        timerLabel:SetText("Amount of time killing Target : 00:00")
     end
 end)
+
+-- Create the timer label immediately after the Kill Target toggle
+local timerLabel = Killing:AddLabel("Amount of time killing Target : 00:00")
