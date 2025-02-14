@@ -10,44 +10,66 @@ local Killing = window:AddTab("Killing")
 
 local switch = Killing:AddSwitch("Kill Aura", function(state)
     if state then
+        _G.autoPunchanim = true 
         local player = game.Players.LocalPlayer
-        local playerName = player.Name
-        local punchTool = player.Backpack:FindFirstChild("Punch") or game.Workspace:FindFirstChild(playerName):FindFirstChild("Punch")
-        _G.autoPunchanim = true -- Global control variable
+        local char = player.Character or player.CharacterAdded:Wait()
+        local punchTool = player.Backpack:FindFirstChild("Punch") or char:FindFirstChild("Punch")
 
-        while _G.autoPunchanim do
-            if punchTool then
-                local char = game.Workspace:FindFirstChild(playerName)
-                if punchTool.Parent ~= char then
-                    punchTool.Parent = char -- Equip the tool
+        -- Ensure the tool is equipped
+        if punchTool and punchTool.Parent ~= char then
+            punchTool.Parent = char
+        end
+
+        -- Get or create the hitbox
+        local punchHandle = punchTool and punchTool:FindFirstChild("Handle")
+        if not punchHandle then
+            punchHandle = Instance.new("Part")
+            punchHandle.Name = "Handle"
+            punchHandle.Size = Vector3.new(5, 5, 5) -- Size of hitbox
+            punchHandle.Transparency = 1
+            punchHandle.CanCollide = false
+            punchHandle.Anchored = false
+            punchHandle.Parent = punchTool
+        end
+
+        -- Position hitbox at player's hands
+        local rightHand = char:FindFirstChild("RightHand") or char:FindFirstChild("Right Arm")
+        if rightHand then
+            punchHandle.CFrame = rightHand.CFrame
+            local weld = Instance.new("Weld")
+            weld.Part0 = punchHandle
+            weld.Part1 = rightHand
+            weld.C0 = CFrame.new(0, 0, 0)
+            weld.Parent = punchHandle
+        end
+
+        -- Loop to keep attacking
+        task.spawn(function()
+            while _G.autoPunchanim do
+                if punchTool and punchTool.Parent ~= char then
+                    punchTool.Parent = char -- Re-equip if needed
                 end
 
-                -- Fire the punch event
+                -- Fire muscle event for animation
                 game.Players.LocalPlayer.muscleEvent:FireServer("punch", "rightHand")
                 game.Players.LocalPlayer.muscleEvent:FireServer("punch", "leftHand")
 
-                -- Simulate touch for every player
-                for _, targetPlayer in pairs(game.Players:GetPlayers()) do
-                    if targetPlayer ~= player then -- Avoid touching yourself
+                -- Touch all players
+                for _, targetPlayer in ipairs(game.Players:GetPlayers()) do
+                    if targetPlayer ~= player then
                         local targetChar = targetPlayer.Character
                         if targetChar and targetChar:FindFirstChild("HumanoidRootPart") then
-                            local punchHandle = punchTool:FindFirstChild("Handle") -- Assuming Punch tool has a Handle
-                            if punchHandle then
-                                firetouchinterest(punchHandle, targetChar.HumanoidRootPart, 1) -- Simulate touch start
-                                task.wait(0.05) -- Small delay to register the touch
-                                firetouchinterest(punchHandle, targetChar.HumanoidRootPart, 0) -- Simulate touch end
-                            end
+                            firetouchinterest(punchHandle, targetChar.HumanoidRootPart, 1) -- Touch start
+                            task.wait(0.05)
+                            firetouchinterest(punchHandle, targetChar.HumanoidRootPart, 0) -- Touch end
                         end
                     end
                 end
 
-                wait() -- Adjust the delay as needed for timing between punches
-            else
-                warn("Punch tool not found")
-                _G.autoPunchanim = false -- Stop the loop if the tool is not found
+                task.wait(0.1) -- Small delay for smoother execution
             end
-        end
+        end)
     else
-        _G.autoPunchanim = false -- Stop Kill Aura when the switch is turned off
+        _G.autoPunchanim = false -- Stop Kill Aura when the switch is off
     end
 end)
