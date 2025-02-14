@@ -10,11 +10,11 @@ local Client = window:AddTab("Client")
 Client:AddLabel("Local Player")
 
 Client:AddButton("Hide Pets",function()
-	local args = {
-    [1] = "hidePets"
-}
+    local args = {
+        [1] = "hidePets"
+    }
 
-game:GetService("ReplicatedStorage"):WaitForChild("rEvents"):WaitForChild("showPetsEvent"):FireServer(unpack(args))
+    game:GetService("ReplicatedStorage"):WaitForChild("rEvents"):WaitForChild("showPetsEvent"):FireServer(unpack(args))
 
 end)
 
@@ -210,26 +210,26 @@ end)
 
 Maintab:AddLabel("Scripts Hub:")
 Maintab:AddButton("Infinite yield",function()
-	loadstring(game:HttpGet('https://raw.githubusercontent.com/EdgeIY/infiniteyield/master/source'))()
+    loadstring(game:HttpGet('https://raw.githubusercontent.com/EdgeIY/infiniteyield/master/source'))()
 end)
 
 Maintab:AddButton("Dex Eplorer",function()
-	loadstring(game:HttpGet("https://raw.githubusercontent.com/AhmadV99/Main/refs/heads/main/Dex-Explorer"))()
+    loadstring(game:HttpGet("https://raw.githubusercontent.com/AhmadV99/Main/refs/heads/main/Dex-Explorer"))()
 end)
 
 Maintab:AddButton("Chat Spy",function()
-	loadstring(game:HttpGet('https://raw.githubusercontent.com/doIIa/Script/refs/heads/master/ChatSpy.lua'))()
+    loadstring(game:HttpGet('https://raw.githubusercontent.com/doIIa/Script/refs/heads/master/ChatSpy.lua'))()
 end)
 
 Maintab:AddButton("Chat Bypass",function()
-	loadstring(game:HttpGet('https://raw.githubusercontent.com/CrystalDMC/roblox-chat-bypass/refs/heads/main/script.lua'))()
+    loadstring(game:HttpGet('https://raw.githubusercontent.com/CrystalDMC/roblox-chat-bypass/refs/heads/main/script.lua'))()
 end)
 
 Maintab:AddButton("Permanent shiftlock",function()
-	loadstring(game:HttpGet('https://pastebin.com/raw/CjNsnSDy'))()
+    loadstring(game:HttpGet('https://pastebin.com/raw/CjNsnSDy'))()
 end)
 
--- Auto Farm Tab
+-- Auto Farm Tab (Continued)
 local AutoFarm = window:AddTab("Auto Farm")
 
 AutoFarm:AddLabel("Reps")
@@ -338,47 +338,24 @@ local switchSitups = AutoFarm:AddSwitch("Auto Situps", function(bool)
     end
 end)
 
-local AutoEggs = window:AddTab("Auto Eggs") -- Create the tab
+-- Auto Eggs Tab
+local AutoEggs = window:AddTab("Auto Eggs")
 
-local selectedCrystal = "Galaxy Oracle Crystal" -- Default selected crystal
-local autoCrystalRunning = false
+AutoEggs:AddLabel("Eggs")
 
--- Dropdown for selecting a crystal
-local dropdown = AutoEggs:AddDropdown("Select Crystal", function(text)
-    selectedCrystal = text  -- Store selected crystal name
-    print("Selected Crystal: " .. text)
-end)
+local switchEggs = AutoEggs:AddSwitch("Auto Hatch", function(bool)
+    _G.autoEggHatch = bool
 
--- Add crystal options to dropdown
-local crystalNames = {
-    "Blue Crystal", "Green Crystal", "Frozen Crystal", "Mythical Crystal",
-    "Inferno Crystal", "Legends Crystal", "Muscle Elite Crystal",
-    "Galaxy Oracle Crystal", "Sky Eclipse Crystal", "Jungle Crystal"
-}
+    if bool then
+        while _G.autoEggHatch do
+            -- Assuming there is a Hatch function or event to trigger the egg hatching
+            game.ReplicatedStorage:WaitForChild("EggHatchEvent"):FireServer()  -- Replace with actual event
 
-for _, name in ipairs(crystalNames) do
-    dropdown:Add(name)
-end
-
--- Function to auto open selected crystal
-local function autoOpenCrystal()
-    while autoCrystalRunning do
-        local args = {
-            [1] = "openCrystal",
-            [2] = selectedCrystal
-        }
-
-        game:GetService("ReplicatedStorage"):WaitForChild("rEvents"):WaitForChild("openCrystalRemote"):InvokeServer(unpack(args))
-        wait(0.1) -- 0.1-second delay before opening again
-    end
-end
-
--- Toggle switch
-local switch = AutoEggs:AddSwitch("Auto Crystal", function(state)
-    autoCrystalRunning = state
-
-    if autoCrystalRunning then
-        spawn(autoOpenCrystal) -- Start auto-opening crystals
+            -- Delay for the next hatch attempt
+            wait(1)
+        end
+    else
+        _G.autoEggHatch = false
     end
 end)
 
@@ -404,6 +381,7 @@ for _, location in ipairs(locations) do
     end)
 end
 
+-- Auto Rebirthing Tab
 local Rebirth = window:AddTab("Auto Rebirthing") -- Create the tab
 Rebirth:AddLabel("Rebirth Features:")
 local rebirthCount = 0 -- Variable to store the desired number of rebirths
@@ -477,6 +455,7 @@ Rebirth:AddSwitch("Auto rebirth+set size 2+Auto teleport muscle king", function(
     end
 end)
 
+-- Killing Tab
 local Killing = window:AddTab("Killing")
 
 -- Labels and textboxes for whitelisting
@@ -658,14 +637,7 @@ PlayerTab:AddButton("Teleport to player", function()
     end
 end)
 
-Playertab:AddLabel("View Stats")
-
-
-
-local playerData = {}
-local currentSelectedPlayer = nil
-local notFoundLabel = nil
-local selectedPlayerName = nil
+PlayerTab:AddLabel("View Stats")
 
 -- Helper function to abbreviate large numbers
 local function abbreviateNumber(value)
@@ -698,23 +670,23 @@ local function createPlayerLabels(player)
 
     -- Create labels for stats
     local labels = {
-        StrengthLabel = Playertab:AddLabel("Strength: " .. abbreviateNumber(leaderstats.Strength and leaderstats.Strength.Value or 0)),
-        DurabilityLabel = Playertab:AddLabel("Durability: " .. abbreviateNumber(player.Durability and player.Durability.Value or 0)),
-        KillsLabel = Playertabab:AddLabel("Kills: " .. abbreviateNumber(leaderstats.Kills and leaderstats.Kills.Value or 0)),
-        BrawlsLabel = Playertab:AddLabel("Brawls: " .. abbreviateNumber(leaderstats.Brawls and leaderstats.Brawls.Value or 0)),
-        AgilityLabel = Playeryab:AddLabel("Agility: " .. abbreviateNumber(player.Agility and player.Agility.Value or 0)),
-        EvilKarmaLabel = Playertab:AddLabel("evilKarma: " .. abbreviateNumber(player.evilKarma and player.evilKarma.Value or 0)),
-        GoodKarmaLabel = Playertab:AddLabel("goodKarma: " .. abbreviateNumber(player.goodKarma and player.goodKarma.Value or 0)),
-        MapLabel = Playertab:AddLabel("Map: " .. (player.currentMap and player.currentMap.Value or "N/A")),
-        KingTimeLabel = Playertab:AddLabel("KingTime: " .. abbreviateNumber(player.muscleKingTime and player.muscleKingTime.Value or 0)),
-        PremiumLabel = Playertab:AddLabel("Premium: " .. (player.MembershipType == Enum.MembershipType.Premium and "true" or "false")),
+        StrengthLabel = PlayerTab:AddLabel("Strength: " .. abbreviateNumber(leaderstats.Strength and leaderstats.Strength.Value or 0)),
+        DurabilityLabel = PlayerTab:AddLabel("Durability: " .. abbreviateNumber(player.Durability and player.Durability.Value or 0)),
+        KillsLabel = PlayerTab:AddLabel("Kills: " .. abbreviateNumber(leaderstats.Kills and leaderstats.Kills.Value or 0)),
+        BrawlsLabel = PlayerTab:AddLabel("Brawls: " .. abbreviateNumber(leaderstats.Brawls and leaderstats.Brawls.Value or 0)),
+        AgilityLabel = PlayerTab:AddLabel("Agility: " .. abbreviateNumber(player.Agility and player.Agility.Value or 0)),
+        EvilKarmaLabel = PlayerTab:AddLabel("evilKarma: " .. abbreviateNumber(player.evilKarma and player.evilKarma.Value or 0)),
+        GoodKarmaLabel = PlayerTab:AddLabel("goodKarma: " .. abbreviateNumber(player.goodKarma and player.goodKarma.Value or 0)),
+        MapLabel = PlayerTab:AddLabel("Map: " .. (player.currentMap and player.currentMap.Value or "N/A")),
+        KingTimeLabel = PlayerTab:AddLabel("KingTime: " .. abbreviateNumber(player.muscleKingTime and player.muscleKingTime.Value or 0)),
+        PremiumLabel = PlayerTab:AddLabel("Premium: " .. (player.MembershipType == Enum.MembershipType.Premium and "true" or "false")),
     }
 
     -- Add pet labels (ensure equippedPets exists)
     if equippedPets then
         for i = 1, 5 do
             local petValue = equippedPets:FindFirstChild("pet" .. i) and equippedPets["pet" .. i].Value or "N/A"
-            labels["Pet" .. i .. "Label"] = Playertab:AddLabel("Pet" .. i .. ": " .. tostring(petValue))
+            labels["Pet" .. i .. "Label"] = PlayerTab:AddLabel("Pet" .. i .. ": " .. tostring(petValue))
         end
     end
 
@@ -727,7 +699,7 @@ local function createPlayerLabels(player)
     end
 
     local gamepassesText = #gamepassList > 0 and table.concat(gamepassList, ", ") or "N/A"
-    labels.GamepassesLabel = Playertab:AddLabel("ownedGamepasses: " .. gamepassesText)
+    labels.GamepassesLabel = PlayerTab:AddLabel("ownedGamepasses: " .. gamepassesText)
 
     playerData[playerName] = labels
 
@@ -786,7 +758,7 @@ local function removePlayerLabels(playerName)
 end
 
 -- Adding a textbox for player name input
-local textbox = Playertab:AddTextBox("Player Name", function(playerName)
+local textbox = PlayerTab:AddTextBox("Player Name", function(playerName)
     selectedPlayerName = playerName
     if notFoundLabel then
         notFoundLabel:Remove()
@@ -801,10 +773,113 @@ local textbox = Playertab:AddTextBox("Player Name", function(playerName)
         createPlayerLabels(player)
         currentSelectedPlayer = playerName
     else
-        notFoundLabel = Playertab:AddLabel("Player not found!")
+        notFoundLabel = PlayerTab:AddLabel("Player not found!")
     end
 end)
 
+-- Server Tab
+local Server = window:AddTab("Server")
+
+-- Initialize the time spent variable
+local timeSpent = 0
+
+-- Create the label (only once)
+local label = Server:AddLabel("Amount Of Time Spent In Server: 0 weeks, 0 days, 0 hours, 0 minutes, 0 seconds")
+
+-- Function to convert total seconds into weeks, days, hours, minutes, and seconds
+local function convertTime(seconds)
+    local weeks = math.floor(seconds / (7 * 24 * 3600))
+    seconds = seconds - weeks * 7 * 24 * 3600
+    local days = math.floor(seconds / (24 * 3600))
+    seconds = seconds - days * 24 * 3600
+    local hours = math.floor(seconds / 3600)
+    seconds = seconds - hours * 3600
+    local minutes = math.floor(seconds / 60)
+    seconds = seconds - minutes * 60
+    return weeks, days, hours, minutes, seconds
+end
+
+-- Function to update the label's text
+local function updateLabel()
+    -- Convert the total time spent into weeks, days, hours, minutes, and seconds
+    local weeks, days, hours, minutes, seconds = convertTime(timeSpent)
+
+    -- Format the time into a readable string
+    local timeString = string.format(
+        "Amount Of Time Spent In Server: %d weeks, %d days, %d hours, %d minutes, %d seconds",
+        weeks, days, hours, minutes, seconds
+    )
+
+    -- Update the text of the label
+    label.Text = timeString
+end
+
+-- Start a loop to update the label every second
+spawn(function()
+    while true do
+        wait(1)  -- Wait for 1 second before updating again
+        timeSpent = timeSpent + 1  -- Increment the time spent by 1 second
+        updateLabel()  -- Update the label with the new time
+    end
+end)
+
+-- Helper function to abbreviate large numbers
+local function abbreviateNumber(value)
+    if value >= 1e15 then
+        return string.format("%.1fQa", value / 1e15)
+    elseif value >= 1e12 then
+        return string.format("%.1fT", value / 1e12)
+    elseif value >= 1e9 then
+        return string.format("%.1fB", value / 1e9)
+    elseif value >= 1e6 then
+        return string.format("%.1fM", value / 1e6)
+    elseif value >= 1e3 then
+        return string.format("%.1fK", value / 1e3)
+    else
+        return tostring(value)
+    end
+end
+
+-- Function to create labels for the local player's stats
+local function createMyLabels()
+    local player = game.Players.LocalPlayer
+    if not player then return end
+
+    local leaderstats = player:FindFirstChild("leaderstats")
+    if not leaderstats then return end
+
+    -- Create labels for the stats we want to track
+    local labels = {
+        StrengthGainedLabel = Server:AddLabel("Amount of strength gained in this server: 0"),
+        DurabilityGainedLabel = Server:AddLabel("Amount of durability gained in this server: 0"),
+        AgilityGainedLabel = Server:AddLabel("Amount of agility gained in this server: 0"),
+        KillsGainedLabel = Server:AddLabel("Amount of kills gained in this server: 0"),
+    }
+
+    -- Assume playerData is already defined in your main script
+    playerData[player.Name] = labels
+
+    -- Capture the initial values when you join the server
+    local initialStrength = leaderstats.Strength and leaderstats.Strength.Value or 0
+    local initialDurability = player.Durability and player.Durability.Value or 0
+    local initialAgility = player.Agility and player.Agility.Value or 0
+    local initialKills = leaderstats.Kills and leaderstats.Kills.Value or 0
+
+    -- Function to update labels based on stat changes
+    local function updateLabels()
+        local strengthGained = leaderstats.Strength and leaderstats.Strength.Value - initialStrength or 0
+        local durabilityGained = player.Durability and player.Durability.Value - initialDurability or 0
+        local agilityGained = player.Agility and player.Agility.Value - initialAgility or 0
+        local killsGained = leaderstats.Kills and leaderstats.Kills.Value - initialKills or 0
+
+        labels.StrengthGainedLabel.Text = "Amount of strength gained in this server: " .. abbreviateNumber(strengthGained)
+        labels.DurabilityGainedLabel.Text = "Amount of durability gained in this server: " .. abbreviateNumber(durabilityGained)
+        labels.AgilityGainedLabel.Text = "Amount of agility gained in this server: " .. abbreviateNumber(agilityGained)
+        labels.KillsGainedLabel.Text = "Amount of kills gained in this server: " .. abbreviateNumber(killsGained)
+    end
+
+    -- Connect change events to update the labels when your stats change
+    if leaderstats.Strength then
         leaderstats.Strength.Changed:Connect(updateLabels)
     end
 
@@ -826,3 +901,12 @@ end
 
 -- Call the function to start tracking your own stats
 createMyLabels()
+
+-- The credit tab
+local Credit = window:AddTab("Credit")
+Credit:AddLabel("Script Made By Encrypted with help of Ahamd and Lucky")
+Credit:AddLabel("Best friends: CwmoKai, Aabis, blackyy, Ahmad, D3ATH, Lucky")
+Credit:AddLabel("Discord Server: https://discord.gg/fzKFQ2vw")
+
+-- Show the window
+window:Show()
