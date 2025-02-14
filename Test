@@ -35,7 +35,7 @@ Killing:AddTextBox("Unwhitelist", function(text)
     end
 end)
 
--- Create the kill aura toggle
+-- Create the "Auto Kill" toggle
 local switch = Killing:AddSwitch("Auto Kill", function(bool)
     if bool then
         -- Start the kill aura when toggle is enabled
@@ -81,11 +81,11 @@ local switch = Killing:AddSwitch("Auto Kill", function(bool)
                         end
                     end
                 end
-                wait(1) -- Adjust the timing to avoid overloading server with too many hits
             else
                 warn("Punch tool not found")
                 _G.autoPunchanim = false -- Stop the loop if tool is not found
             end
+            wait(0.1) -- Adjust the timing to avoid overloading server with too many hits
         end
     else
         -- Stop the kill aura when toggle is disabled
@@ -177,6 +177,7 @@ end)
 local timeLabel = Killing:AddLabel("Amount of time killing target: 00:00")
 
 Killing:AddLabel("Auto Punching/Auto Equip Punch")
+
 -- Create the "Auto Punch [No Animation]" toggle
 local autoPunchNoAnimSwitch = Killing:AddSwitch("Auto Punch [No Animation]", function(state)
     if state then
@@ -207,37 +208,4 @@ local autoPunchNoAnimSwitch = Killing:AddSwitch("Auto Punch [No Animation]", fun
         end
     else
         -- Stop the auto punch when the toggle is turned off
-        _G.autoPunchanim = false
-    end
-end)
-
-
--- Create the "Auto Equip Punch" toggle
-local autoEquipPunchSwitch = Killing:AddSwitch("Auto Equip Punch", function(state)
-    if state then
-        -- When the toggle is enabled, start auto-equipping the punch tool
-        local player = game.Players.LocalPlayer
-        local playerName = player.Name
-        
-        while true do
-            -- Find the "Punch" tool in the player's backpack
-            local punchTool = player.Backpack:FindFirstChild("Punch")
-            
-            if punchTool then
-                -- If the punch tool exists and is not already equipped, equip it
-                if punchTool.Parent ~= game.Workspace:FindFirstChild(playerName) then
-                    punchTool.Parent = game.Workspace:FindFirstChild(playerName)
-                end
-            else
-                -- If the punch tool is not found, print a warning
-                warn("Punch tool not found in backpack.")
-            end
-            
-            wait(0.5) -- Small delay to check for the tool again (can adjust the delay as needed)
-        end
-    else
-        -- If the toggle is turned off, stop the loop
-        -- The script will stop trying to equip the Punch tool
-        -- No action needed here as the loop will naturally stop when the toggle is off
-    end
-end)
+        _G.autoPunchanim =
