@@ -6,7 +6,7 @@ local window = library:AddWindow("Test", {
 	can_resize = false, -- true or false
 })
 
-local Killing = window:AddTab("Killing")
+local Killing = window:AddTab("Killing") 
 
 -- Create Whitelist Dropdown
 local whitelist = {}  -- Store the names of whitelisted players
