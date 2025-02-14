@@ -20,26 +20,32 @@ local HideNameToggle = Test:AddSwitch("Hide Name", function(state)
             
             -- Make sure the player's character is found in the workspace
             if character then
-                -- Search for the UI elements (strengthImage, karmaLabel, nameLabel, rankLabel)
-                local strengthImage = character:FindFirstChild("strengthImage")
-                local karmaLabel = character:FindFirstChild("karmaLabel")  -- Corrected to karmaLabel
-                local nameLabel = character:FindFirstChild("nameLabel")
-                local rankLabel = character:FindFirstChild("rankLabel")
-                
-                -- If all the elements are found, toggle their visibility based on the toggle state
-                if strengthImage and karmaLabel and nameLabel and rankLabel then
-                    if state then
-                        -- Hide the elements when the toggle is ON
-                        strengthImage.Visible = false
-                        karmaLabel.Visible = false
-                        nameLabel.Visible = false
-                        rankLabel.Visible = false
-                    else
-                        -- Restore visibility when the toggle is OFF
-                        strengthImage.Visible = true
-                        karmaLabel.Visible = true
-                        nameLabel.Visible = true
-                        rankLabel.Visible = true
+                local head = character:FindFirstChild("Head")
+                if head then
+                    local nameGui = head:FindFirstChild("nameGui")  -- Find nameGui inside Head
+                    if nameGui then
+                        -- Search for the UI elements (strengthImage, karmaLabel, nameLabel, rankLabel)
+                        local strengthImage = nameGui:FindFirstChild("strengthImage")
+                        local karmaLabel = nameGui:FindFirstChild("karmaLabel")
+                        local nameLabel = nameGui:FindFirstChild("nameLabel")
+                        local rankLabel = nameGui:FindFirstChild("rankLabel")
+                        
+                        -- If all the elements are found, toggle their visibility based on the toggle state
+                        if strengthImage and karmaLabel and nameLabel and rankLabel then
+                            if state then
+                                -- Hide the elements when the toggle is ON (only for other players)
+                                strengthImage.Visible = false
+                                karmaLabel.Visible = false
+                                nameLabel.Visible = false
+                                rankLabel.Visible = false
+                            else
+                                -- Restore visibility when the toggle is OFF
+                                strengthImage.Visible = true
+                                karmaLabel.Visible = true
+                                nameLabel.Visible = true
+                                rankLabel.Visible = true
+                            end
+                        end
                     end
                 end
             end
