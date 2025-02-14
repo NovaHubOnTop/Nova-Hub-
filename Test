@@ -1,1 +1,63 @@
-print("Test")
+local library = loadstring(game:HttpGet("https://raw.githubusercontent.com/memejames/elerium-v2-ui-library//main/Library", true))()
+
+local window = library:AddWindow("Name GUI", {
+	main_color = Color3.fromRGB(41, 74, 122), -- Color
+	min_size = Vector2.new(650, 606), -- Size of the gui
+	can_resize = false, -- true or false
+})
+
+local Killing = window:AddTab("Killing") -- Name of tab
+
+-- Create Dropdown for selecting a player
+local dropdown = Killing:AddDropdown("Select Player", function(text)
+    targetName = text
+    print(text .. " selected!")
+end)
+
+-- Dynamically add player names to the dropdown
+for _, player in ipairs(game.Players:GetPlayers()) do
+    if player.Name ~= game.Players.LocalPlayer.Name then  -- Exclude the local player
+        dropdown:Add(player.Name)  -- Add each player's name to the dropdown
+    end
+end
+
+Killing:AddSwitch("Kill Players", function(state)
+    killPlayersActive = state
+    if killPlayersActive then
+        local startTime = tick() -- Get the current time
+        coroutine.wrap(function()
+            local player = game.Players.LocalPlayer
+            local playerName = player.Name
+            while killPlayersActive do
+                -- Calculate elapsed time
+                local elapsedTime = math.floor(tick() - startTime)
+                local minutes = math.floor(elapsedTime / 60)
+                local seconds = elapsedTime % 60
+                killTimeLabel.Text = string.format("Amount of time killing player: %02d:%02d", minutes, seconds)
+
+                equipPunchTool()
+                punchAction()
+                if targetName ~= "" then
+                    for _, otherPlayer in pairs(game.Players:GetChildren()) do
+                        if otherPlayer.Name == targetName then
+                            local character = game.Workspace:FindFirstChild(otherPlayer.Name)
+                            local localCharacter = game.Workspace:FindFirstChild(playerName)
+                            if character and localCharacter then
+                                local rightHand = localCharacter:FindFirstChild("RightHand")
+                                local humanoidRootPart = character:FindFirstChild("HumanoidRootPart")
+                                if rightHand and humanoidRootPart then
+                                    humanoidRootPart.CFrame = rightHand.CFrame
+                                    makeInvisible(character)
+                                end
+                            end
+                        end
+                    end
+                end
+                wait(1) -- Update every second
+            end
+        end)()
+    else
+        killTimeLabel.Text = "Amount of time killing player: 00:00"
+        restoreVisibility()
+    end
+end)
