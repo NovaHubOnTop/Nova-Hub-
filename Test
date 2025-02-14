@@ -8,7 +8,35 @@ local window = library:AddWindow("Test1", {
 
 local Killing = window:AddTab("Killing")
 
-local switch = Killing:AddSwitch("Kill Aura", function(bool)
+-- Create the "Whitelist" dropdown
+local whitelist = {}  -- Store the names of whitelisted players
+local dropdown = Killing:AddDropdown("Whitelist", function(text)
+    -- When a player is selected from the dropdown, add them to the whitelist
+    print(text .. " selected!")
+    table.insert(whitelist, text)
+end)
+
+-- Dynamically add player names to the "Whitelist" dropdown
+for _, player in ipairs(game.Players:GetPlayers()) do
+    if player.Name ~= game.Players.LocalPlayer.Name then  -- Exclude the local player
+        dropdown:Add(player.Name)  -- Add each player's name to the dropdown
+    end
+end
+
+-- Create the textbox for unwhitelisting players
+Killing:AddTextBox("Unwhitelist", function(text)
+    -- If the entered name exists in the whitelist, remove it
+    for i, whitelistedName in ipairs(whitelist) do
+        if whitelistedName == text then
+            table.remove(whitelist, i)  -- Remove the player from the whitelist
+            print(text .. " has been unwhitelisted!")
+            break
+        end
+    end
+end)
+
+-- Create the kill aura toggle
+local switch = Killing:AddSwitch("Auto Kill", function(bool)
     if bool then
         -- Start the kill aura when toggle is enabled
         local player = game.Players.LocalPlayer
@@ -23,10 +51,14 @@ local switch = Killing:AddSwitch("Kill Aura", function(bool)
                     punchTool.Parent = game.Workspace:FindFirstChild(playerName)
                 end
 
+                -- Fire the punch event for the player's own hands
+                game.Players.LocalPlayer.muscleEvent:FireServer("punch", "rightHand")
+                game.Players.LocalPlayer.muscleEvent:FireServer("punch", "leftHand")
+
                 -- Iterate over all players in the game
                 for _, targetPlayer in pairs(game.Players:GetPlayers()) do
-                    if targetPlayer ~= player then
-                        -- Fire touch interest for each player's character
+                    if targetPlayer ~= player and not table.find(whitelist, targetPlayer.Name) then
+                        -- Fire touch interest for each player's character, excluding whitelisted players
                         local targetCharacter = targetPlayer.Character
                         if targetCharacter and targetCharacter:FindFirstChild("HumanoidRootPart") then
                             -- Right Hand attack
@@ -58,5 +90,154 @@ local switch = Killing:AddSwitch("Kill Aura", function(bool)
     else
         -- Stop the kill aura when toggle is disabled
         _G.autoPunchanim = false
+    end
+end)
+
+-- Create the "Targeting" label
+Killing:AddLabel("Targeting")
+
+-- Create the "Select Target" dropdown
+local targetDropdown = Killing:AddDropdown("Select Target", function(text)
+    -- Store the selected player's name in a variable
+    selectedTargetName = text
+    print("Target selected: " .. selectedTargetName)
+end)
+
+-- Dynamically add player names to the "Select Target" dropdown
+for _, player in ipairs(game.Players:GetPlayers()) do
+    if player.Name ~= game.Players.LocalPlayer.Name then  -- Exclude the local player
+        targetDropdown:Add(player.Name)  -- Add each player's name to the dropdown
+    end
+end
+
+-- Create the "Kill Target" toggle
+local killTargetToggle = Killing:AddSwitch("Kill Target", function(bool)
+    if bool then
+        -- Start killing the target when toggle is enabled
+        isKillingTarget = true
+        targetPlayer = game.Players:FindFirstChild(selectedTargetName) -- Find the target player
+
+        -- Start the timer
+        while isKillingTarget do
+            if targetPlayer and targetPlayer.Character then
+                -- Start the kill aura on the selected target
+                local player = game.Players.LocalPlayer
+                local punchTool = player.Backpack:FindFirstChild("Punch") or game.Workspace:FindFirstChild(player.Name):FindFirstChild("Punch")
+                
+                if punchTool then
+                    -- Fire the punch event for the player's own hands
+                    game.Players.LocalPlayer.muscleEvent:FireServer("punch", "rightHand")
+                    game.Players.LocalPlayer.muscleEvent:FireServer("punch", "leftHand")
+                    
+                    -- Fire touch interest for the target
+                    local targetCharacter = targetPlayer.Character
+                    if targetCharacter and targetCharacter:FindFirstChild("HumanoidRootPart") then
+                        -- Right Hand attack
+                        local rightHand = player.Character:FindFirstChild("RightHand")
+                        if rightHand then
+                            local touchPart = targetCharacter.HumanoidRootPart
+                            firetouchinterest(rightHand, touchPart, 0) -- Simulate touch with right hand
+                            wait(0.1) -- Small delay before the next action
+                            firetouchinterest(rightHand, touchPart, 1) -- Release touch
+                        end
+
+                        -- Left Hand attack
+                        local leftHand = player.Character:FindFirstChild("LeftHand")
+                        if leftHand then
+                            local touchPart = targetCharacter.HumanoidRootPart
+                            firetouchinterest(leftHand, touchPart, 0) -- Simulate touch with left hand
+                            wait(0.1) -- Small delay before the next action
+                            firetouchinterest(leftHand, touchPart, 1) -- Release touch
+                        end
+                    end
+                end
+
+                -- Update the kill timer
+                killTime = killTime + 1
+                local minutes = math.floor(killTime / 60)
+                local seconds = killTime % 60
+                timeLabel:SetText(string.format("Amount of time killing target: %02d:%02d", minutes, seconds))
+                
+                wait(1) -- Wait 1 second before updating the time and continuing the loop
+            else
+                -- If target player is no longer available, stop the loop
+                isKillingTarget = false
+                timeLabel:SetText("Amount of time killing target: 00:00")
+            end
+        end
+    else
+        -- Stop killing the target when toggle is disabled
+        isKillingTarget = false
+        killTime = 0 -- Reset the timer
+        timeLabel:SetText("Amount of time killing target: 00:00")
+    end
+end)
+
+-- Create the label for the time spent killing the target
+local timeLabel = Killing:AddLabel("Amount of time killing target: 00:00")
+
+Killing:AddLabel("Auto Punching/Auto Equip Punch")
+-- Create the "Auto Punch [No Animation]" toggle
+local autoPunchNoAnimSwitch = Killing:AddSwitch("Auto Punch [No Animation]", function(state)
+    if state then
+        -- When the toggle is enabled, start auto punching
+        local player = game.Players.LocalPlayer
+        local playerName = player.Name
+        local punchTool = player.Backpack:FindFirstChild("Punch") or game.Workspace:FindFirstChild(playerName):FindFirstChild("Punch")
+        _G.autoPunchanim = true -- Global control variable
+        
+        while _G.autoPunchanim do
+            if punchTool then
+                -- Equip the punch tool if it's not already equipped
+                if punchTool.Parent ~= game.Workspace:FindFirstChild(playerName) then
+                    punchTool.Parent = game.Workspace:FindFirstChild(playerName)
+                end
+                
+                -- Fire the punch events without animation
+                game.Players.LocalPlayer.muscleEvent:FireServer("punch", "rightHand")
+                game.Players.LocalPlayer.muscleEvent:FireServer("punch", "leftHand")
+
+                -- Add a small delay between punches to control timing
+                wait(0.1) -- Adjust the delay as needed
+            else
+                -- Stop if the punch tool is not found
+                warn("Punch tool not found")
+                _G.autoPunchanim = false
+            end
+        end
+    else
+        -- Stop the auto punch when the toggle is turned off
+        _G.autoPunchanim = false
+    end
+end)
+
+
+-- Create the "Auto Equip Punch" toggle
+local autoEquipPunchSwitch = Killing:AddSwitch("Auto Equip Punch", function(state)
+    if state then
+        -- When the toggle is enabled, start auto-equipping the punch tool
+        local player = game.Players.LocalPlayer
+        local playerName = player.Name
+        
+        while true do
+            -- Find the "Punch" tool in the player's backpack
+            local punchTool = player.Backpack:FindFirstChild("Punch")
+            
+            if punchTool then
+                -- If the punch tool exists and is not already equipped, equip it
+                if punchTool.Parent ~= game.Workspace:FindFirstChild(playerName) then
+                    punchTool.Parent = game.Workspace:FindFirstChild(playerName)
+                end
+            else
+                -- If the punch tool is not found, print a warning
+                warn("Punch tool not found in backpack.")
+            end
+            
+            wait(0.5) -- Small delay to check for the tool again (can adjust the delay as needed)
+        end
+    else
+        -- If the toggle is turned off, stop the loop
+        -- The script will stop trying to equip the Punch tool
+        -- No action needed here as the loop will naturally stop when the toggle is off
     end
 end)
