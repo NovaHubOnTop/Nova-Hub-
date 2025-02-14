@@ -132,6 +132,7 @@ local killTargetToggle = Killing:AddSwitch("Kill Target", function(bool)
     end
 end)
 
+-- Auto Punch [No Animation] Toggle
 local autoPunchToggle = Killing:AddSwitch("Auto Punch [No Animation]", function(state)
     if state then
         local player = game.Players.LocalPlayer
