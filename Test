@@ -86,9 +86,19 @@ end)
 
 -- **Auto Equip Tool Function**
 local function autoEquipTool(toolName, stateVariable)
+    local player = game.Players.LocalPlayer
+    local backpack = player:FindFirstChild("Backpack")
+    
+    -- Unequip the tool if the toggle is off
+    if not stateVariable then
+        local tool = player.Character:FindFirstChild(toolName)
+        if tool then
+            tool.Parent = backpack  -- Move tool back to backpack if equipped
+        end
+    end
+    
+    -- Equip the tool if the toggle is on
     while stateVariable do
-        local player = game.Players.LocalPlayer
-        local backpack = player:FindFirstChild("Backpack")
         if backpack then
             local tool = backpack:FindFirstChild(toolName)
             if tool then
@@ -107,116 +117,4 @@ Tabs.AutoFarm:AddToggle("Auto Equip Weight", { Title = "Auto Equip Weight", Defa
 end)
 
 local autoPushups = false
-Tabs.AutoFarm:AddToggle("Auto Equip Pushups", { Title = "Auto Equip Pushups", Default = false }):OnChanged(function(state)
-    autoPushups = state
-    autoEquipTool("Pushups", autoPushups)
-end)
-
-local autoSitups = false
-Tabs.AutoFarm:AddToggle("Auto Equip Situps", { Title = "Auto Equip Situps", Default = false }):OnChanged(function(state)
-    autoSitups = state
-    autoEquipTool("Sit-ups", autoSitups)
-end)
-
-local autoHandstands = false
-Tabs.AutoFarm:AddToggle("Auto Equip Handstands", { Title = "Auto Equip Handstands", Default = false }):OnChanged(function(state)
-    autoHandstands = state
-    autoEquipTool("Handstand", autoHandstands)
-end)
-
-local autoRebirth = false
-local rebirthUntilTarget = false
-local targetRebirths = 0
-
--- Auto Rebirth Toggle
-Tabs.Rebirth:AddToggle("Auto Rebirth", { Title = "Auto Rebirth", Default = false })
-:OnChanged(function(state)
-    autoRebirth = state
-    while autoRebirth do
-        game:GetService("ReplicatedStorage"):WaitForChild("rEvents"):WaitForChild("rebirthRemote"):InvokeServer("rebirthRequest")
-        task.wait(0.1)
-    end
-end)
-
--- Input Field for Target Rebirth Amount
-local Input = Tabs.Rebirth:AddInput("Select Rebirth Target", {
-    Title = "Select Rebirth Target",
-    Default = "0",
-    Placeholder = "Enter Target Rebirths",
-    Numeric = true, -- Only allows numbers
-    Finished = true, -- Calls callback when you press enter
-    Callback = function(Value)
-        targetRebirths = tonumber(Value) or 0
-        print("Target rebirths set to:", targetRebirths)
-    end
-})
-
--- Rebirth Until Target Toggle
-Tabs.Rebirth:AddToggle("Rebirth Until Target Amount", { Title = "Rebirth Until Target Amount", Default = false })
-:OnChanged(function(state)
-    rebirthUntilTarget = state
-    while rebirthUntilTarget do
-        -- Get the player's leaderstats
-        local player = game.Players.LocalPlayer
-        local leaderstats = player:FindFirstChild("leaderstats")
-        if leaderstats then
-            local currentRebirths = leaderstats:FindFirstChild("Rebirths")
-            if currentRebirths then
-                -- Stop when reaching the target rebirths
-                if currentRebirths.Value >= targetRebirths then
-                    rebirthUntilTarget = false
-                    print("Target rebirth amount reached!")
-                    break
-                end
-
-                -- Perform the rebirth
-                game:GetService("ReplicatedStorage"):WaitForChild("rEvents"):WaitForChild("rebirthRemote"):InvokeServer("rebirthRequest")
-            end
-        end
-        task.wait(0.1)
-    end
-end)
-
-local selectedCrystal = "Blue Crystal"  -- Default selected crystal
-
--- Dropdown for selecting crystal
-local Dropdown = Tabs.Crystal:AddDropdown("Select Crystal", {
-    Title = "Select Crystal",
-    Values = {"Blue Crystal", "Green Crystal", "Frozen Crystal", "Mythical Crystal", 
-              "Inferno Crystal", "Legends Crystal", "Muscle Elite Crystal", 
-              "Galaxy Oracle Crystal", "Sky Eclipse Crystal", "Jungle Crystal"},
-    Multi = false,
-    Default = 1,
-})
-
--- Set default crystal value
-Dropdown:SetValue("Blue Crystal")
-
--- Dropdown change handler
-Dropdown:OnChanged(function(Value)
-    selectedCrystal = Value
-    print("Dropdown changed:", selectedCrystal)
-end)
-
--- Auto Crystal Toggle
-local Toggle = Tabs.Crystal:AddToggle("Auto Crystal", {Title = "Auto Crystal", Default = false})
-
--- Toggle change handler
-Toggle:OnChanged(function(state)
-    if state then
-        -- Execute the crystal opening when Auto Crystal is enabled
-        local args = {
-            [1] = "openCrystal",
-            [2] = selectedCrystal  -- Use the selected crystal from dropdown
-        }
-        game:GetService("ReplicatedStorage"):WaitForChild("rEvents"):WaitForChild("openCrystalRemote"):InvokeServer(unpack(args))
-        print("Opening crystal:", selectedCrystal)
-        
-        while state do
-            -- Repeatedly open the selected crystal every 0.1 seconds
-            game:GetService("ReplicatedStorage"):WaitForChild("rEvents"):WaitForChild("openCrystalRemote"):InvokeServer(unpack(args))
-            task.wait(0.1)
-        end
-    end
-end)
-
+Tabs.AutoFarm:AddToggle("Auto
