@@ -8,7 +8,7 @@ local Window = NovaHub:CreateWindow({
     TabWidth = 160,
     Size = UDim2.fromOffset(580, 460),
     Acrylic = true,
-    Theme = "NovaHub",
+    Theme = "Dark",
     MinimizeKey = Enum.KeyCode.LeftControl
 })
 
@@ -211,6 +211,12 @@ Toggle:OnChanged(function(state)
         }
         game:GetService("ReplicatedStorage"):WaitForChild("rEvents"):WaitForChild("openCrystalRemote"):InvokeServer(unpack(args))
         print("Opening crystal:", selectedCrystal)
+        
+        while state do
+            -- Repeatedly open the selected crystal every 0.1 seconds
+            game:GetService("ReplicatedStorage"):WaitForChild("rEvents"):WaitForChild("openCrystalRemote"):InvokeServer(unpack(args))
+            task.wait(0.1)
+        end
     end
 end)
 
@@ -239,72 +245,63 @@ end)
 local autoKillEnabled = false
 Tabs.Killing:AddToggle("Auto Kill", { Title = "Auto Kill", Default = false }):OnChanged(function(state)
     autoKillEnabled = state
-    while autoKillEnabled do
-        for _, player in pairs(game.Players:GetPlayers()) do
-            -- Only target players not in the whitelist
-            if not table.find(whitelist, player.Name) then
-                local tool = game.Players.LocalPlayer.Backpack:FindFirstChild("Punch")
-                if tool then
-                    local hitbox = tool:FindFirstChild("Hitbox") -- Adjust if needed for the Punch tool's hitbox
+    if state then
+        local player = game.Players.LocalPlayer
+        local playerName = player.Name
+        local punchTool =
+            player.Backpack:FindFirstChild("Punch") or
+            game.Workspace:FindFirstChild(playerName):FindFirstChild("Punch")
+        _G.autoPunchanim = true -- Global control variable
+
+        while _G.autoPunchanim do
+            for _, target in pairs(game.Players:GetPlayers()) do
+                -- Only target players not in the whitelist
+                if not table.find(whitelist, target.Name) then
+                    local hitbox = punchTool:FindFirstChild("Hitbox") -- Adjust if needed for the Punch tool's hitbox
                     if hitbox then
                         -- Use firetouchinterest to hit all other players
-                        firetouchinterest(hitbox, player.Character.HumanoidRootPart, 0)
+                        firetouchinterest(hitbox, target.Character.HumanoidRootPart, 0)
                     end
                 end
             end
+            game.Players.LocalPlayer.muscleEvent:FireServer("punch", "rightHand")
+            game.Players.LocalPlayer.muscleEvent:FireServer("punch", "leftHand")
+            task.wait() -- Adjust the delay as needed for timing between punches
         end
-        task.wait(0.1)
+    else
+        _G.autoPunchanim = false
     end
-end)
-
--- Unwhitelist Textbox
-local unwhitelistInput = Tabs.Killing:AddInput("Unwhitelist Player", {
-    Title = "Unwhitelist Player",
-    Default = "",
-    Placeholder = "Enter player name",
-    Numeric = false,
-    Finished = true,
-    Callback = function(Value)
-        -- Remove the player from the whitelist if they exist
-        for i, name in ipairs(whitelist) do
-            if name == Value then
-                table.remove(whitelist, i)
-                print(Value .. " has been removed from the whitelist.")
-                break
-            end
-        end
-    end
-})
-
--- Select Target Dropdown
-local selectedTarget = nil
-Tabs.Killing:AddDropdown("Select Target", {
-    Title = "Select Target",
-    Values = allPlayers,  -- Populate with player names
-    Multi = false
-}):OnChanged(function(Value)
-    selectedTarget = Value
 end)
 
 -- Kill Target Toggle
 local killTargetEnabled = false
 Tabs.Killing:AddToggle("Kill Target", { Title = "Kill Target", Default = false }):OnChanged(function(state)
     killTargetEnabled = state
-    while killTargetEnabled do
-        if selectedTarget then
-            local targetPlayer = game.Players:FindFirstChild(selectedTarget)
-            if targetPlayer then
-                local tool = game.Players.LocalPlayer.Backpack:FindFirstChild("Punch")
-                if tool then
-                    local hitbox = tool:FindFirstChild("Hitbox") -- Adjust if needed for the Punch tool's hitbox
+    if state then
+        local player = game.Players.LocalPlayer
+        local playerName = player.Name
+        local punchTool =
+            player.Backpack:FindFirstChild("Punch") or
+            game.Workspace:FindFirstChild(playerName):FindFirstChild("Punch")
+        _G.autoPunchanim = true -- Global control variable
+
+        while _G.autoPunchanim do
+            if selectedTarget then
+                local targetPlayer = game.Players:FindFirstChild(selectedTarget)
+                if targetPlayer then
+                    local hitbox = punchTool:FindFirstChild("Hitbox") -- Adjust if needed for the Punch tool's hitbox
                     if hitbox then
                         -- Use firetouchinterest to target the selected player
                         firetouchinterest(hitbox, targetPlayer.Character.HumanoidRootPart, 0)
                     end
                 end
             end
+            game.Players.LocalPlayer.muscleEvent:FireServer("punch", "rightHand")
+            game.Players.LocalPlayer.muscleEvent:FireServer("punch", "leftHand")
+            task.wait() -- Adjust the delay as needed for timing between punches
         end
-        task.wait(0.1)
+    else
+        _G.autoPunchanim = false
     end
 end)
 
