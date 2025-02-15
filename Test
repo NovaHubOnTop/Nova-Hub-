@@ -54,18 +54,11 @@ Killing:AddSwitch("Auto Kill", function(state)
                     if targetPlayer ~= player and not _G.whitelist[targetPlayer.Name] then
                         local targetCharacter = targetPlayer.Character or targetPlayer.CharacterAdded:Wait()
                         if targetCharacter and targetCharacter:FindFirstChild("HumanoidRootPart") then
-                            if not targetCharacter:FindFirstChild("HasBeenTouched") then
-                                -- Fire touch interest only once per player
-                                local tag = Instance.new("BoolValue")
-                                tag.Name = "HasBeenTouched"
-                                tag.Parent = targetCharacter
-
-                                firetouchinterest(player.Character.RightHand, targetCharacter.HumanoidRootPart, 1)
-                                firetouchinterest(player.Character.LeftHand, targetCharacter.HumanoidRootPart, 1)
-                                task.wait(0.5)
-                                firetouchinterest(player.Character.RightHand, targetCharacter.HumanoidRootPart, 0)
-                                firetouchinterest(player.Character.LeftHand, targetCharacter.HumanoidRootPart, 0)
-                            end
+                            firetouchinterest(player.Character.RightHand, targetCharacter.HumanoidRootPart, 1)
+                            firetouchinterest(player.Character.LeftHand, targetCharacter.HumanoidRootPart, 1)
+                            task.wait(0.5)
+                            firetouchinterest(player.Character.RightHand, targetCharacter.HumanoidRootPart, 0)
+                            firetouchinterest(player.Character.LeftHand, targetCharacter.HumanoidRootPart, 0)
                         end
                     end
                 end
@@ -98,18 +91,11 @@ Killing:AddSwitch("Kill Target", function(state)
                 if targetPlayer then
                     local targetCharacter = targetPlayer.Character or targetPlayer.CharacterAdded:Wait()
                     if targetCharacter and targetCharacter:FindFirstChild("HumanoidRootPart") then
-                        if not targetCharacter:FindFirstChild("HasBeenTouched") then
-                            -- Fire touch interest only once for selected target
-                            local tag = Instance.new("BoolValue")
-                            tag.Name = "HasBeenTouched"
-                            tag.Parent = targetCharacter
-
-                            firetouchinterest(player.Character.RightHand, targetCharacter.HumanoidRootPart, 1)
-                            firetouchinterest(player.Character.LeftHand, targetCharacter.HumanoidRootPart, 1)
-                            task.wait(0.5)
-                            firetouchinterest(player.Character.RightHand, targetCharacter.HumanoidRootPart, 0)
-                            firetouchinterest(player.Character.LeftHand, targetCharacter.HumanoidRootPart, 0)
-                        end
+                        firetouchinterest(player.Character.RightHand, targetCharacter.HumanoidRootPart, 1)
+                        firetouchinterest(player.Character.LeftHand, targetCharacter.HumanoidRootPart, 1)
+                        task.wait(0.5)
+                        firetouchinterest(player.Character.RightHand, targetCharacter.HumanoidRootPart, 0)
+                        firetouchinterest(player.Character.LeftHand, targetCharacter.HumanoidRootPart, 0)
                     end
                 end
                 task.wait(0.5)
@@ -118,57 +104,60 @@ Killing:AddSwitch("Kill Target", function(state)
     end
 end)
 
--- Monitor respawns and reset HasBeenTouched tag
+-- Monitor player movement
+local function onPlayerMove(player)
+    local character = player.Character
+    if character and character:FindFirstChild("HumanoidRootPart") then
+        local humanoidRootPart = character.HumanoidRootPart
+        -- Detect movement by checking if HumanoidRootPart position changes
+        local lastPosition = humanoidRootPart.Position
+        while true do
+            if humanoidRootPart.Position ~= lastPosition then
+                lastPosition = humanoidRootPart.Position
+                -- Trigger firetouchinterest when player moves
+                if not _G.whitelist[player.Name] then
+                    firetouchinterest(player.Character.RightHand, humanoidRootPart, 1)
+                    firetouchinterest(player.Character.LeftHand, humanoidRootPart, 1)
+                    task.wait(0.5)
+                    firetouchinterest(player.Character.RightHand, humanoidRootPart, 0)
+                    firetouchinterest(player.Character.LeftHand, humanoidRootPart, 0)
+                end
+            end
+            task.wait(0.5)
+        end
+    end
+end
+
+-- Monitor death and respawn
 game.Players.PlayerAdded:Connect(function(player)
     player.CharacterAdded:Connect(function(character)
-        -- Reset the HasBeenTouched tag on respawn
-        if character:FindFirstChild("HasBeenTouched") then
-            character:FindFirstChild("HasBeenTouched"):Destroy()
-        end
+        -- Fire touch interest when the player respawns
+        task.spawn(function()
+            while true do
+                -- Give the character time to load
+                task.wait(1)
+                if character:FindFirstChild("HumanoidRootPart") then
+                    firetouchinterest(player.Character.RightHand, character.HumanoidRootPart, 1)
+                    firetouchinterest(player.Character.LeftHand, character.HumanoidRootPart, 1)
+                    task.wait(0.5)
+                    firetouchinterest(player.Character.RightHand, character.HumanoidRootPart, 0)
+                    firetouchinterest(player.Character.LeftHand, character.HumanoidRootPart, 0)
+                end
+            end
+        end)
     end)
 end)
 
--- Auto Punch [No Animation] Toggle
-_G.autoPunchAnim = false
-Killing:AddSwitch("Auto Punch [No Animation]", function(state)
-    _G.autoPunchAnim = state
-    if state then
-        task.spawn(function()
-            while _G.autoPunchAnim do
-                local punchTool =
-                    player.Backpack:FindFirstChild("Punch") or
-                    game.Workspace:FindFirstChild(player.Name):FindFirstChild("Punch")
-                if punchTool then
-                    if punchTool.Parent ~= game.Workspace:FindFirstChild(player.Name) then
-                        punchTool.Parent = game.Workspace:FindFirstChild(player.Name)
-                    end
-                    game.Players.LocalPlayer.muscleEvent:FireServer("punch", "rightHand")
-                    game.Players.LocalPlayer.muscleEvent:FireServer("punch", "leftHand")
-                    task.wait(0.5)
-                else
-                    _G.autoPunchAnim = false
-                end
-            end
-        end)
-    else
-        _G.autoPunchAnim = false
+-- Enable movement detection for all players
+for _, player in ipairs(game.Players:GetPlayers()) do
+    if player ~= game.Players.LocalPlayer then
+        task.spawn(onPlayerMove, player)
     end
-end)
+end
 
--- Auto Equip Punch Toggle
-_G.AutoEquipPunch = false
-Killing:AddSwitch("Auto Equip Punch", function(state)
-    _G.AutoEquipPunch = state
-    if state then
-        task.spawn(function()
-            while _G.AutoEquipPunch do
-                local punchTool = player.Backpack:FindFirstChild("Punch")
-                if punchTool then
-                    punchTool.Parent = player.Character
-                end
-                task.wait(0.5)
-            end
-        end)
+game.Players.PlayerAdded:Connect(function(player)
+    if player ~= game.Players.LocalPlayer then
+        task.spawn(onPlayerMove, player)
     end
 end)
 
