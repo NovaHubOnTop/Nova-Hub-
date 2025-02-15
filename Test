@@ -19,7 +19,7 @@ if not isWhitelisted(player.Name) then
 end
 
 local library = loadstring(game:HttpGet("https://raw.githubusercontent.com/Marwanleprodu91670/muscle-legend-lite-hub-elerium-library-/refs/heads/main/library", true))()
-local window = library:AddWindow("Nova Hub V1 Paid Version | Encrypted Script", {
+local window = library:AddWindow("Nova Hub V2 Paid Version | Encrypted Script", {
     main_color = Color3.fromRGB(75, 0, 130),
     min_size = Vector2.new(700, 640),
     can_resize = false
