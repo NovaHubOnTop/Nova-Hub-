@@ -1,4 +1,32 @@
+-- Whitelist for specific usernames 
+local whitelistedUsers = {
+   "",
+   "Mrbignewcoming3",
+   "Hi_dorihi",  --whitelisted
+    "",
+    "",
+    "",
+}
 
+-- Function to check if player is whitelisted
+local function isWhitelisted(username)
+   for _, whitelisted in ipairs(whitelistedUsers) do
+       if username == whitelisted then
+           return true
+       end
+   end
+   return false
+end
+
+-- Get the local player's username
+local player = game.Players.LocalPlayer
+local username = player.Name
+
+-- Kick the player if they are not whitelisted
+if not isWhitelisted(username) then
+   game.Players.LocalPlayer:Kick("Not WhiteListed L")
+   return
+else
 
 
 
