@@ -54,7 +54,7 @@ Killing:AddSwitch("Auto Kill", function(state)
                     if targetPlayer ~= player and not _G.whitelist[targetPlayer.Name] then
                         local targetCharacter = targetPlayer.Character or targetPlayer.CharacterAdded:Wait() -- Handle respawn
                         if targetCharacter and targetCharacter:FindFirstChild("HumanoidRootPart") then
-                            -- Continuously fire touch interest for the target, even after killing
+                            -- Continuously fire touch interest for all players, even after dying
                             firetouchinterest(player.Character.RightHand, targetCharacter.HumanoidRootPart, 1)
                             firetouchinterest(player.Character.LeftHand, targetCharacter.HumanoidRootPart, 1)
                             task.wait(0.1)
