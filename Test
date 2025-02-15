@@ -19,7 +19,7 @@ if not isWhitelisted(player.Name) then
 end
 
 local library = loadstring(game:HttpGet("https://raw.githubusercontent.com/Marwanleprodu91670/muscle-legend-lite-hub-elerium-library-/refs/heads/main/library", true))()
-local window = library:AddWindow("Nova Hub V2 Paid Version | Encrypted Script", {
+local window = library:AddWindow("Nova Hub V1 Paid Version | Encrypted Script", {
     main_color = Color3.fromRGB(75, 0, 130),
     min_size = Vector2.new(700, 640),
     can_resize = false
@@ -57,13 +57,13 @@ Killing:AddSwitch("Auto Kill", function(state)
                             -- Continuously fire touch interest for all players, even after dying
                             firetouchinterest(player.Character.RightHand, targetCharacter.HumanoidRootPart, 1)
                             firetouchinterest(player.Character.LeftHand, targetCharacter.HumanoidRootPart, 1)
-                            task.wait(0.1)
+                            task.wait(0.5) -- Adjusted to 0.5 seconds
                             firetouchinterest(player.Character.RightHand, targetCharacter.HumanoidRootPart, 0)
                             firetouchinterest(player.Character.LeftHand, targetCharacter.HumanoidRootPart, 0)
                         end
                     end
                 end
-                task.wait(0.1)
+                task.wait(0.5) -- Adjusted to 0.5 seconds
             end
         end)
     end
@@ -95,12 +95,12 @@ Killing:AddSwitch("Kill Target", function(state)
                         -- Continuously fire touch interest on selected target
                         firetouchinterest(player.Character.RightHand, targetCharacter.HumanoidRootPart, 1)
                         firetouchinterest(player.Character.LeftHand, targetCharacter.HumanoidRootPart, 1)
-                        task.wait(0.1)
+                        task.wait(0.5) -- Adjusted to 0.5 seconds
                         firetouchinterest(player.Character.RightHand, targetCharacter.HumanoidRootPart, 0)
                         firetouchinterest(player.Character.LeftHand, targetCharacter.HumanoidRootPart, 0)
                     end
                 end
-                task.wait(0.1)
+                task.wait(0.5) -- Adjusted to 0.5 seconds
             end
         end)
     end
@@ -122,7 +122,7 @@ Killing:AddSwitch("Auto Punch [No Animation]", function(state)
                     end
                     game.Players.LocalPlayer.muscleEvent:FireServer("punch", "rightHand")
                     game.Players.LocalPlayer.muscleEvent:FireServer("punch", "leftHand")
-                    task.wait(0.1)
+                    task.wait(0.5) -- Adjusted to 0.5 seconds for punching interval
                 else
                     _G.autoPunchAnim = false
                 end
@@ -144,7 +144,7 @@ Killing:AddSwitch("Auto Equip Punch", function(state)
                 if punchTool then
                     punchTool.Parent = player.Character
                 end
-                task.wait(0.2)
+                task.wait(0.5) -- Adjusted to 0.5 seconds
             end
         end)
     end
@@ -174,7 +174,7 @@ local function updateCamera(targetPlayer)
         if humanoidRootPart then
             camera.CameraSubject = humanoidRootPart
         end
-        task.wait(0.1)
+        task.wait(0.5) -- Adjusted to 0.5 seconds
     end
     camera.CameraSubject = player.Character:FindFirstChild("Humanoid")
 end
