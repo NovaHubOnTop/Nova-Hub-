@@ -1,14 +1,10 @@
 -- Whitelist for specific usernames 
 local whitelistedUsers = {
-   "",
    "Mrbignewcoming3",
-   "Hi_dorihi",  --whitelisted
-    "",
-    "",
-    "",
+   "Hi_dorihi"  -- Whitelisted users
 }
 
--- Function to check if player is whitelisted
+-- Function to check if a player is whitelisted
 local function isWhitelisted(username)
    for _, whitelisted in ipairs(whitelistedUsers) do
        if username == whitelisted then
@@ -20,48 +16,32 @@ end
 
 -- Get the local player's username
 local player = game.Players.LocalPlayer
-local username = player.Name
-
--- Kick the player if they are not whitelisted
-if not isWhitelisted(username) then
-   game.Players.LocalPlayer:Kick("Not WhiteListed L")
+if not isWhitelisted(player.Name) then
+   player:Kick("Not WhiteListed L")
    return
-else
+end
 
-
-
-
-
-
-
---Main Script
+-- Load GUI Library
 local library = loadstring(game:HttpGet("https://raw.githubusercontent.com/Marwanleprodu91670/muscle-legend-lite-hub-elerium-library-/refs/heads/main/library", true))()
-
 local window = library:AddWindow("Nova Hub V1 Free Version | Encrypted Script", {
-    main_color = Color3.fromRGB(75,0,130), -- Color
-    min_size = Vector2.new(700, 640), -- Size of the gui
-    can_resize = false, -- true or false
+    main_color = Color3.fromRGB(75,0,130),
+    min_size = Vector2.new(700, 640),
+    can_resize = false,
 })
-
-
-
-
 
 -- Killing Tab
 local Killing = window:AddTab("Killing")
-
--- Labels and textboxes for whitelisting
 Killing:AddLabel("Whitelisting")
 
 _G.whitelist = {}
 
-local whitelistBox = Killing:AddTextBox("Whitelist", function(name)
+Killing:AddTextBox("Whitelist", function(name)
     if name and name ~= "" then
         _G.whitelist[name] = true
     end
 end)
 
-local unwhitelistBox = Killing:AddTextBox("Unwhitelist", function(name)
+Killing:AddTextBox("Unwhitelist", function(name)
     if name and _G.whitelist[name] then
         _G.whitelist[name] = nil
     end
@@ -78,7 +58,6 @@ local autoKillToggle = Killing:AddSwitch("Auto Kill", function(state)
     if state then
         task.spawn(function()
             while _G.autoKill do
-                local player = game.Players.LocalPlayer
                 local character = player.Character or player.CharacterAdded:Wait()
                 local punchTool = player.Backpack:FindFirstChild("Punch") or character:FindFirstChild("Punch")
 
@@ -86,10 +65,10 @@ local autoKillToggle = Killing:AddSwitch("Auto Kill", function(state)
                     punchTool.Parent = character
                 end
 
-                game.Players.LocalPlayer.muscleEvent:FireServer("punch", "rightHand")
-                game.Players.LocalPlayer.muscleEvent:FireServer("punch", "leftHand")
+                player.muscleEvent:FireServer("punch", "rightHand")
+                player.muscleEvent:FireServer("punch", "leftHand")
 
-                for _, targetPlayer in pairs(game.Players:GetPlayers()) do
+                for _, targetPlayer in ipairs(game.Players:GetPlayers()) do
                     if targetPlayer ~= player and not _G.whitelist[targetPlayer.Name] then
                         local targetCharacter = targetPlayer.Character
                         if targetCharacter and targetCharacter:FindFirstChild("HumanoidRootPart") then
@@ -101,202 +80,86 @@ local autoKillToggle = Killing:AddSwitch("Auto Kill", function(state)
                         end
                     end
                 end
-                wait(0.1) -- Adjusted to punch every 0.1 seconds
+                wait(0.1)
             end
         end)
     end
 end)
 
-Killing:AddLabel("Targeting")
-
--- Dropdown for selecting a target (does not update when players join/leave)
-local selectedTargetName = nil
-local dropdown = Killing:AddDropdown("Select Target", function(playerName)
-    selectedTargetName = playerName
-end)
-
--- Populate dropdown once (doesn't update after script execution)
-for _, player in ipairs(game.Players:GetPlayers()) do
-    if player.Name ~= game.Players.LocalPlayer.Name then
-        dropdown:Add(player.Name)
+-- Auto Punching
+local function equipPunchTool()
+    local punchTool = player.Backpack:FindFirstChild("Punch")
+    if punchTool then
+        punchTool.Parent = player.Character
     end
 end
 
--- Kill Target Toggle
-_G.killTargetActive = false
+local function punchAction()
+    player.muscleEvent:FireServer("punch", "rightHand")
+    player.muscleEvent:FireServer("punch", "leftHand")
+end
 
-local killTargetToggle = Killing:AddSwitch("Kill Target", function(state)
-    _G.killTargetActive = state
-
-    if state and selectedTargetName then
-        task.spawn(function()
-            while _G.killTargetActive do
-                local player = game.Players.LocalPlayer
-                local character = player.Character or player.CharacterAdded:Wait()
-                local targetPlayer = game.Players:FindFirstChild(selectedTargetName)
-
-                if targetPlayer and targetPlayer.Character then
-                    local punchTool = player.Backpack:FindFirstChild("Punch") or character:FindFirstChild("Punch")
-
-                    if punchTool and punchTool.Parent ~= character then
-                        punchTool.Parent = character
-                    end
-
-                    game.Players.LocalPlayer.muscleEvent:FireServer("punch", "rightHand")
-                    game.Players.LocalPlayer.muscleEvent:FireServer("punch", "leftHand")
-
-                    if targetPlayer.Character:FindFirstChild("HumanoidRootPart") then
-                        firetouchinterest(character.RightHand, targetPlayer.Character.HumanoidRootPart, 1)
-                        firetouchinterest(character.LeftHand, targetPlayer.Character.HumanoidRootPart, 1)
-                        wait(0.1)
-                        firetouchinterest(character.RightHand, targetPlayer.Character.HumanoidRootPart, 0)
-                        firetouchinterest(character.LeftHand, targetPlayer.Character.HumanoidRootPart, 0)
-                    end
-                end
-                wait(0.1) -- Ensuring the loop runs every 0.1 seconds
-            end
-        end)
-    end
-end)
-
-Killing:AddLabel("Auto Punching")
-
-local switch = Killing:AddSwitch("Auto Punch", function(bool)
-    _G.AutoPunch = bool  -- Global variable to control the loop
-
-    if bool then
-        task.spawn(function()
-            while _G.AutoPunch do
-                -- Get the Player and Backpack
-                local player = game.Players.LocalPlayer
-                local backpack = player:FindFirstChild("Backpack")
-
-                if backpack then
-                    -- Find the "Punch" tool in the backpack
-                    local tool = backpack:FindFirstChild("Punch")
-                    if tool then
-                        -- Equip the tool
-                        tool.Parent = player.Character
-                    end
-                end
-
-                -- Simulate using the tool
-                local character = player.Character
-                if character then
-                    local tool = character:FindFirstChild("Punch")
-                    if tool then
-                        tool:Activate()  -- Activates the tool
-                    end
-                end
-                
-                task.wait(0.2)  -- Adjust delay if necessary
-            end
-        end)
-    end
-end)
-
+local autoPunchanim = false
 Killing:AddSwitch("Auto Punch [No Animation]", function(state)
     autoPunchanim = state
-    if autoPunchanim then
-        while autoPunchanim do
-            equipPunchTool()
-            punchAction()
-            wait(0.1)
-        end
-    else
-        print("Auto Punch [No Animation] is turned off")
-    end
-end)
-
-local autoEquipToggle = Killing:AddSwitch("Auto Equip Punch", function(bool)
-    _G.AutoEquipPunch = bool  -- Global variable to control the loop
-
-    if bool then
+    if state then
         task.spawn(function()
-            while _G.AutoEquipPunch do
-                -- Get the Player and Backpack
-                local player = game.Players.LocalPlayer
-                local backpack = player:FindFirstChild("Backpack")
-
-                if backpack then
-                    -- Find the "Punch" tool in the backpack
-                    local tool = backpack:FindFirstChild("Punch")
-                    if tool then
-                        -- Equip the tool
-                        tool.Parent = player.Character
-                    end
-                end
-
-                task.wait(0.2)  -- Adjust delay if necessary
+            while autoPunchanim do
+                equipPunchTool()
+                punchAction()
+                wait(0.1)
             end
         end)
     end
 end)
 
-
--- Player Tab for Spying and Teleporting
+-- Player Tab
 local PlayerTab = window:AddTab("Player")
-
 PlayerTab:AddLabel("Spying")
 
--- Dropdown for selecting a player to spy on
 local selectedSpyTarget = nil
 local spyDropdown = PlayerTab:AddDropdown("Select Player", function(playerName)
     selectedSpyTarget = playerName
 end)
 
--- Populate dropdown once (does not update dynamically)
-for _, player in ipairs(game.Players:GetPlayers()) do
-    if player.Name ~= game.Players.LocalPlayer.Name then
-        spyDropdown:Add(player.Name)
+for _, p in ipairs(game.Players:GetPlayers()) do
+    if p.Name ~= player.Name then
+        spyDropdown:Add(p.Name)
     end
 end
 
 _G.spyActive = false
-
 local function updateCamera(targetPlayer)
-    local localPlayer = game.Players.LocalPlayer
     local camera = game.Workspace.CurrentCamera
 
     while _G.spyActive and targetPlayer do
         local targetCharacter = targetPlayer.Character or targetPlayer.CharacterAdded:Wait()
         local humanoidRootPart = targetCharacter:FindFirstChild("HumanoidRootPart")
-        local targetCamera = targetPlayer:FindFirstChild("Camera")
 
-        if humanoidRootPart and targetCamera then
-            camera.CameraSubject = targetCamera
-        elseif humanoidRootPart then
+        if humanoidRootPart then
             camera.CameraSubject = humanoidRootPart
         end
-        
-        -- Ensure the camera updates even after the target respawns
         targetPlayer.CharacterAdded:Wait()
     end
 
-    -- Reset camera back to local player when spying is turned off
-    camera.CameraSubject = localPlayer.Character:FindFirstChild("Humanoid")
+    camera.CameraSubject = player.Character:FindFirstChild("Humanoid")
 end
 
-local spyToggle = PlayerTab:AddSwitch("Spy Player", function(state)
+PlayerTab:AddSwitch("Spy Player", function(state)
     _G.spyActive = state
-
-    if state and selectedSpyTarget then
-        local targetPlayer = game.Players:FindFirstChild(selectedSpyTarget)
-        if targetPlayer then
-            task.spawn(updateCamera, targetPlayer)
-        end
+    local targetPlayer = game.Players:FindFirstChild(selectedSpyTarget)
+    if state and targetPlayer then
+        task.spawn(updateCamera, targetPlayer)
     end
 end)
 
--- Teleport to player button
 PlayerTab:AddButton("Teleport to player", function()
     if selectedSpyTarget then
         local targetPlayer = game.Players:FindFirstChild(selectedSpyTarget)
         if targetPlayer and targetPlayer.Character then
-            local targetCharacter = targetPlayer.Character
-            local targetHumanoidRootPart = targetCharacter:FindFirstChild("HumanoidRootPart")
-            if targetHumanoidRootPart then
-                game.Players.LocalPlayer.Character:SetPrimaryPartCFrame(targetHumanoidRootPart.CFrame)
+            local targetHRP = targetPlayer.Character:FindFirstChild("HumanoidRootPart")
+            if targetHRP then
+                player.Character:SetPrimaryPartCFrame(targetHRP.CFrame)
             end
         end
     else
@@ -306,143 +169,38 @@ end)
 
 PlayerTab:AddLabel("View Stats")
 
--- Helper function to abbreviate large numbers
+local playerData = {}
+
 local function abbreviateNumber(value)
-    if value >= 1e15 then
-        return string.format("%.1fQa", value / 1e15)
-    elseif value >= 1e12 then
-        return string.format("%.1fT", value / 1e12)
-    elseif value >= 1e9 then
-        return string.format("%.1fB", value / 1e9)
-    elseif value >= 1e6 then
-        return string.format("%.1fM", value / 1e6)
-    elseif value >= 1e3 then
-        return string.format("%.1fK", value / 1e3)
-    else
-        return tostring(value)
+    if value >= 1e15 then return string.format("%.1fQa", value / 1e15)
+    elseif value >= 1e12 then return string.format("%.1fT", value / 1e12)
+    elseif value >= 1e9 then return string.format("%.1fB", value / 1e9)
+    elseif value >= 1e6 then return string.format("%.1fM", value / 1e6)
+    elseif value >= 1e3 then return string.format("%.1fK", value / 1e3)
+    else return tostring(value)
     end
 end
 
--- Function to create labels for the selected player's stats
-local function createPlayerLabels(player)
-    local playerName = player.Name
-    local leaderstats = player:FindFirstChild("leaderstats")
-    local equippedPets = player:FindFirstChild("equippedPets")
-    local ownedGamepasses = player:FindFirstChild("ownedGamepasses")
+local function createPlayerLabels(targetPlayer)
+    local leaderstats = targetPlayer:FindFirstChild("leaderstats")
+    if not leaderstats then return end
 
-    -- Ensure leaderstats is present
-    if not leaderstats then
-        return
-    end
-
-    -- Create labels for stats
     local labels = {
-        StrengthLabel = PlayerTab:AddLabel("Strength: " .. abbreviateNumber(leaderstats.Strength and leaderstats.Strength.Value or 0)),
-        DurabilityLabel = PlayerTab:AddLabel("Durability: " .. abbreviateNumber(player.Durability and player.Durability.Value or 0)),
-        KillsLabel = PlayerTab:AddLabel("Kills: " .. abbreviateNumber(leaderstats.Kills and leaderstats.Kills.Value or 0)),
-        BrawlsLabel = PlayerTab:AddLabel("Brawls: " .. abbreviateNumber(leaderstats.Brawls and leaderstats.Brawls.Value or 0)),
-        AgilityLabel = PlayerTab:AddLabel("Agility: " .. abbreviateNumber(player.Agility and player.Agility.Value or 0)),
-        EvilKarmaLabel = PlayerTab:AddLabel("evilKarma: " .. abbreviateNumber(player.evilKarma and player.evilKarma.Value or 0)),
-        GoodKarmaLabel = PlayerTab:AddLabel("goodKarma: " .. abbreviateNumber(player.goodKarma and player.goodKarma.Value or 0)),
-        MapLabel = PlayerTab:AddLabel("Map: " .. (player.currentMap and player.currentMap.Value or "N/A")),
-        KingTimeLabel = PlayerTab:AddLabel("KingTime: " .. abbreviateNumber(player.muscleKingTime and player.muscleKingTime.Value or 0)),
-        PremiumLabel = PlayerTab:AddLabel("Premium: " .. (player.MembershipType == Enum.MembershipType.Premium and "true" or "false")),
+        StrengthLabel = PlayerTab:AddLabel("Strength: " .. abbreviateNumber(leaderstats:FindFirstChild("Strength") and leaderstats.Strength.Value or 0)),
+        KillsLabel = PlayerTab:AddLabel("Kills: " .. abbreviateNumber(leaderstats:FindFirstChild("Kills") and leaderstats.Kills.Value or 0)),
     }
 
-    -- Add pet labels (ensure equippedPets exists)
-    if equippedPets then
-        for i = 1, 5 do
-            local petValue = equippedPets:FindFirstChild("pet" .. i) and equippedPets["pet" .. i].Value or "N/A"
-            labels["Pet" .. i .. "Label"] = PlayerTab:AddLabel("Pet" .. i .. ": " .. tostring(petValue))
-        end
-    end
-
-    -- Add owned gamepasses (ensure ownedGamepasses exists)
-    local gamepassList = {}
-    if ownedGamepasses then
-        for _, gamepass in ipairs(ownedGamepasses:GetChildren()) do
-            table.insert(gamepassList, gamepass.Name)
-        end
-    end
-
-    local gamepassesText = #gamepassList > 0 and table.concat(gamepassList, ", ") or "N/A"
-    labels.GamepassesLabel = PlayerTab:AddLabel("ownedGamepasses: " .. gamepassesText)
-
-    playerData[playerName] = labels
-
-    -- Connect value change events to update the labels
-    if leaderstats.Kills then
-        leaderstats.Kills.Changed:Connect(function()
-            labels.KillsLabel.Text = "Kills: " .. abbreviateNumber(leaderstats.Kills.Value or 0)
-        end)
-    end
-
-    if leaderstats.Strength then
-        leaderstats.Strength.Changed:Connect(function()
-            labels.StrengthLabel.Text = "Strength: " .. abbreviateNumber(leaderstats.Strength.Value or 0)
-        end)
-    end
-
-    if leaderstats.Brawls then
-        leaderstats.Brawls.Changed:Connect(function()
-            labels.BrawlsLabel.Text = "Brawls: " .. abbreviateNumber(leaderstats.Brawls.Value or 0)
-        end)
-    end
-
-    if player.Durability then
-        player.Durability.Changed:Connect(function()
-            labels.DurabilityLabel.Text = "Durability: " .. abbreviateNumber(player.Durability.Value or 0)
-        end)
-    end
-
-    if player.Agility then
-        player.Agility.Changed:Connect(function()
-            labels.AgilityLabel.Text = "Agility: " .. abbreviateNumber(player.Agility.Value or 0)
-        end)
-    end
-
-    if player.evilKarma then
-        player.evilKarma.Changed:Connect(function()
-            labels.EvilKarmaLabel.Text = "evilKarma: " .. abbreviateNumber(player.evilKarma.Value or 0)
-        end)
-    end
-
-    if player.goodKarma then
-        player.goodKarma.Changed:Connect(function()
-            labels.GoodKarmaLabel.Text = "goodKarma: " .. abbreviateNumber(player.goodKarma.Value or 0)
-        end)
-    end
+    playerData[targetPlayer.Name] = labels
 end
 
--- Function to remove player labels (cleanup)
-local function removePlayerLabels(playerName)
-    if playerData[playerName] then
-        for _, label in pairs(playerData[playerName]) do
-            label:Remove()
-        end
-        playerData[playerName] = nil
-    end
-end
-
--- Adding a textbox for player name input
-local textbox = PlayerTab:AddTextBox("Player Name", function(playerName)
+local selectedPlayerName = nil
+PlayerTab:AddTextBox("Player Name", function(playerName)
     selectedPlayerName = playerName
-    if notFoundLabel then
-        notFoundLabel:Remove()
-        notFoundLabel = nil
-    end
+    local targetPlayer = game.Players:FindFirstChild(playerName)
 
-    local player = game.Players:FindFirstChild(playerName)
-    if player then
-        if currentSelectedPlayer then
-            removePlayerLabels(currentSelectedPlayer)
-        end
-        createPlayerLabels(player)
-    notFoundLabel    currentSelectedPlayer = playerName
+    if targetPlayer then
+        createPlayerLabels(targetPlayer)
     else
-        notFoundLabel = PlayerTab:AddLabel("Player not found!")
+        PlayerTab:AddLabel("Player not found!")
     end
 end)
-
-
-
