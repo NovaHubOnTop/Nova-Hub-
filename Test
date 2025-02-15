@@ -1,10 +1,8 @@
--- Whitelist for specific usernames
 local whitelistedUsers = {
     "Mrbignewcoming3",
     "Hi_dorihi"
 }
 
--- Function to check if player is whitelisted
 local function isWhitelisted(username)
     for _, whitelisted in ipairs(whitelistedUsers) do
         if username == whitelisted then
@@ -14,14 +12,12 @@ local function isWhitelisted(username)
     return false
 end
 
--- Get the local player's username
 local player = game.Players.LocalPlayer
 if not isWhitelisted(player.Name) then
     player:Kick("Not WhiteListed L")
     return
 end
 
--- Load GUI library
 local library = loadstring(game:HttpGet("https://raw.githubusercontent.com/Marwanleprodu91670/muscle-legend-lite-hub-elerium-library-/refs/heads/main/library", true))()
 local window = library:AddWindow("Nova Hub V1 Paid Version | Encrypted Script", {
     main_color = Color3.fromRGB(75, 0, 130),
@@ -29,7 +25,6 @@ local window = library:AddWindow("Nova Hub V1 Paid Version | Encrypted Script", 
     can_resize = false
 })
 
--- Killing Tab
 local Killing = window:AddTab("Killing")
 Killing:AddLabel("Whitelisting")
 
@@ -48,12 +43,10 @@ end)
 
 Killing:AddLabel("Killing Features")
 
--- Auto Kill Toggle
 _G.autoKill = false
 Killing:AddSwitch("Auto Kill", function(state)
     _G.autoKill = state
     if state then
-        -- Start AutoKill loop when enabled
         task.spawn(function()
             while _G.autoKill do
                 for _, targetPlayer in pairs(game.Players:GetPlayers()) do
@@ -74,7 +67,6 @@ Killing:AddSwitch("Auto Kill", function(state)
     end
 end)
 
--- Targeting
 Killing:AddLabel("Targeting")
 local selectedTargetName = nil
 local dropdown = Killing:AddDropdown("Select Target", function(playerName)
@@ -87,7 +79,6 @@ for _, p in ipairs(game.Players:GetPlayers()) do
     end
 end
 
--- Kill Target Toggle
 _G.killTargetActive = false
 Killing:AddSwitch("Kill Target", function(state)
     _G.killTargetActive = state
@@ -108,9 +99,7 @@ Killing:AddSwitch("Kill Target", function(state)
     end
 end)
 
--- Player Respawn Handling to Restart Auto Kill
 game.Players.LocalPlayer.CharacterAdded:Connect(function(character)
-    -- Ensure AutoKill continues after respawn
     if _G.autoKill then
         task.spawn(function()
             while _G.autoKill do
@@ -132,7 +121,6 @@ game.Players.LocalPlayer.CharacterAdded:Connect(function(character)
     end
 end)
 
--- Auto Punch [No Animation] Toggle
 _G.autoPunchAnim = false
 Killing:AddSwitch("Auto Punch [No Animation]", function(state)
     _G.autoPunchAnim = state
@@ -144,14 +132,13 @@ Killing:AddSwitch("Auto Punch [No Animation]", function(state)
                     game.Workspace:FindFirstChild(player.Name):FindFirstChild("Punch")
                 if punchTool then
                     if punchTool.Parent ~= game.Workspace:FindFirstChild(player.Name) then
-                        punchTool.Parent = game.Workspace:FindFirstChild(player.Name) -- Equip the tool
+                        punchTool.Parent = game.Workspace:FindFirstChild(player.Name)
                     end
                     game.Players.LocalPlayer.muscleEvent:FireServer("punch", "rightHand")
                     game.Players.LocalPlayer.muscleEvent:FireServer("punch", "leftHand")
-                    task.wait(0.1) -- Adjust the delay as needed for timing between punches
+                    task.wait(0.1)
                 else
-                    warn("Punch tool not found")
-                    _G.autoPunchAnim = false -- Stop the loop if tool is not found
+                    _G.autoPunchAnim = false
                 end
             end
         end)
@@ -160,7 +147,22 @@ Killing:AddSwitch("Auto Punch [No Animation]", function(state)
     end
 end)
 
--- Player Tab for Spying and Teleporting
+_G.AutoEquipPunch = false
+Killing:AddSwitch("Auto Equip Punch", function(state)
+    _G.AutoEquipPunch = state
+    if state then
+        task.spawn(function()
+            while _G.AutoEquipPunch do
+                local punchTool = player.Backpack:FindFirstChild("Punch")
+                if punchTool then
+                    punchTool.Parent = player.Character
+                end
+                task.wait(0.2)
+            end
+        end)
+    end
+end)
+
 local PlayerTab = window:AddTab("Player")
 PlayerTab:AddLabel("Spying")
 
@@ -186,7 +188,7 @@ local function updateCamera(targetPlayer)
         end
         task.wait(0.1)
     end
-    camera.CameraSubject = player.Character:FindFirstChild("Humanoid") -- Reset camera when spying stops
+    camera.CameraSubject = player.Character:FindFirstChild("Humanoid")
 end
 
 PlayerTab:AddSwitch("Spy Player", function(state)
@@ -201,7 +203,6 @@ PlayerTab:AddSwitch("Spy Player", function(state)
     end
 end)
 
--- Teleport to player button
 PlayerTab:AddButton("Teleport to player", function()
     if selectedSpyTarget then
         local targetPlayer = game.Players:FindFirstChild(selectedSpyTarget)
@@ -211,7 +212,5 @@ PlayerTab:AddButton("Teleport to player", function()
                 player.Character:SetPrimaryPartCFrame(targetHumanoidRootPart.CFrame)
             end
         end
-    else
-        warn("No player selected!")
     end
 end)
