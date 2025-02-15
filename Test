@@ -104,6 +104,46 @@ Killing:AddSwitch("Kill Target", function(state)
     end
 end)
 
+-- Auto Punch [No Animation] Toggle
+_G.autoPunchNoAnimation = false
+Killing:AddSwitch("Auto Punch [No Animation]", function(state)
+    _G.autoPunchNoAnimation = state
+    if state then
+        task.spawn(function()
+            while _G.autoPunchNoAnimation do
+                if player.Character and player.Character:FindFirstChild("RightHand") and player.Character:FindFirstChild("LeftHand") then
+                    local rightHand = player.Character.RightHand
+                    local leftHand = player.Character.LeftHand
+                    -- Fire touch interest without animation
+                    firetouchinterest(rightHand, rightHand.Position, 1)
+                    firetouchinterest(leftHand, leftHand.Position, 1)
+                    task.wait(0.5)
+                    firetouchinterest(rightHand, rightHand.Position, 0)
+                    firetouchinterest(leftHand, leftHand.Position, 0)
+                end
+                task.wait(0.5)
+            end
+        end)
+    end
+end)
+
+-- Auto Equip Punch Toggle
+_G.autoEquipPunch = false
+Killing:AddSwitch("Auto Equip Punch", function(state)
+    _G.autoEquipPunch = state
+    if state then
+        task.spawn(function()
+            while _G.autoEquipPunch do
+                -- Check if the player has a Punch tool and equip it if not already equipped
+                if player.Backpack:FindFirstChild("Punch") then
+                    player.Backpack.Punch.Parent = player.Character
+                end
+                task.wait(0.5)
+            end
+        end)
+    end
+end)
+
 -- Monitor player movement
 local function onPlayerMove(player)
     local character = player.Character
