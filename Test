@@ -26,7 +26,6 @@ local Tabs = {
 
 -- **Main Tab**
 Tabs.Main:AddParagraph({ Title = "Server Invite", Content = "" })
-
 Tabs.Main:AddButton({
     Title = "Discord Server",
     Description = "Copy discord server link",
@@ -89,7 +88,7 @@ end)
 local function autoEquipTool(toolName, stateVariable)
     local player = game.Players.LocalPlayer
     local backpack = player:FindFirstChild("Backpack")
-    
+
     -- Unequip the tool if the toggle is off
     if not stateVariable then
         local tool = player.Character:FindFirstChild(toolName)
@@ -140,8 +139,7 @@ local rebirthUntilTarget = false
 local targetRebirths = 0
 
 -- Auto Rebirth Toggle
-Tabs.Rebirth:AddToggle("Auto Rebirth", { Title = "Auto Rebirth", Default = false })
-:OnChanged(function(state)
+Tabs.Rebirth:AddToggle("Auto Rebirth", { Title = "Auto Rebirth", Default = false }):OnChanged(function(state)
     autoRebirth = state
     while autoRebirth do
         game:GetService("ReplicatedStorage"):WaitForChild("rEvents"):WaitForChild("rebirthRemote"):InvokeServer("rebirthRequest")
@@ -163,8 +161,7 @@ local Input = Tabs.Rebirth:AddInput("Select Rebirth Target", {
 })
 
 -- Rebirth Until Target Toggle
-Tabs.Rebirth:AddToggle("Rebirth Until Target Amount", { Title = "Rebirth Until Target Amount", Default = false })
-:OnChanged(function(state)
+Tabs.Rebirth:AddToggle("Rebirth Until Target Amount", { Title = "Rebirth Until Target Amount", Default = false }):OnChanged(function(state)
     rebirthUntilTarget = state
     while rebirthUntilTarget do
         -- Get the player's leaderstats
@@ -188,6 +185,7 @@ Tabs.Rebirth:AddToggle("Rebirth Until Target Amount", { Title = "Rebirth Until T
     end
 end)
 
+-- Timer for Stats
 local timeElapsed = 0  -- Start from 0 seconds
 
 local label = Tabs.Stats:AddParagraph({
@@ -211,45 +209,11 @@ while true do
     task.wait(1)  -- Wait for 1 second before updating
 end
 
-local timerRunning = false
-
--- Add the "Custom Timer" paragraph
-local timerLabel = Tabs.Stats:AddParagraph({
-    Title = "Custom Timer",
-    Content = "0d 0h 0m 0s"
+-- Player Stats Logic
+local trackStatsLabel = Tabs.Stats:AddParagraph({
+    Title = "Track Player Stats",
+    Content = "Amount Of Strength: 0\nAmount Of Durability: 0\nAmount Of Agility: 0\nAmount Of Kill: 0\nGood Karma: 0\nBad Karma: 0"
 })
-
--- Start Timer Button
-Tabs.Stats:AddButton({
-    Title = "Start Timer",
-    Description = "Start the custom timer",
-    Callback = function()
-        if not timerRunning then
-            timerRunning = true
-            while timerRunning do
-                timerLabel:SetContent(formatTime(timeElapsed))
-                timeElapsed = timeElapsed + 1
-                task.wait(1)  -- Wait for 1 second before updating
-            end
-        end
-    end
-})
-
--- Stop Timer Button
-Tabs.Stats:AddButton({
-    Title = "Stop Timer",
-    Description = "Stop the custom timer",
-    Callback = function()
-        timerRunning = false
-        timeElapsed = 0  -- Reset time
-        timerLabel:SetContent("0d 0h 0m 0s")  -- Reset the label content
-    end
-})
-
--- Track Player Stats Logic
-local playerData = {}
-local currentSelectedPlayer = nil
-local trackStatsLabel = nil
 
 -- Add the dropdown for selecting players
 local Dropdown = Tabs.Stats:AddDropdown("Select Player", {
@@ -445,50 +409,3 @@ while true do
     updateTotalStats()
     task.wait(1)
 end
-
-local selectedCrystal = "Blue Crystal"  -- Default selected crystal
-
--- Dropdown for selecting crystal
-local Dropdown = Tabs.Crystal:AddDropdown("Select Crystal", {
-Title = "Select Crystal",
-Values = {"Blue Crystal", "Green Crystal", "Frozen Crystal", "Mythical Crystal",
-"Inferno Crystal", "Legends Crystal", "Muscle Elite Crystal",
-"Galaxy Oracle Crystal", "Sky Eclipse Crystal", "Jungle Crystal"},
-Multi = false,
-Default = 1,
-})
-
--- Set default crystal value
-Dropdown:SetValue("Blue Crystal")
-
--- Dropdown change handler
-Dropdown:OnChanged(function(Value)
-selectedCrystal = Value
-print("Dropdown changed:", selectedCrystal)
-end)
-
--- Auto Crystal Toggle
-local Toggle = Tabs.Crystal:AddToggle("Auto Crystal", {Title = "Auto Crystal", Default = false})
-
--- Toggle change handler
-Toggle:OnChanged(function(state)
-if state then
--- Execute the crystal opening when Auto Crystal is enabled
-local args = {
-[1] = "openCrystal",
-[2] = selectedCrystal  -- Use the selected crystal from dropdown
-}
-game:GetService("ReplicatedStorage"):WaitForChild("rEvents"):WaitForChild("openCrystalRemote"):InvokeServer(unpack(args))
-print("Opening crystal:", selectedCrystal)
-
-while state do  
-        -- Repeatedly open the selected crystal every 0.1 seconds  
-        game:GetService("ReplicatedStorage"):WaitForChild("rEvents"):WaitForChild("openCrystalRemote"):InvokeServer(unpack(args))  
-        task.wait(0.1)  
-    end  
-end
-
-end)
-
-
-
