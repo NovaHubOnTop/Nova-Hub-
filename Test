@@ -1,7 +1,7 @@
 -- Whitelist for specific usernames
 local whitelistedUsers = {
     "Mrbignewcoming3",
-    "Hi_dorihi",
+    "Hi_dorihi"
 }
 
 -- Function to check if player is whitelisted
@@ -24,11 +24,11 @@ if not isWhitelisted(username) then
     return
 end
 
--- Load UI Library
+-- Load UI library
 local library = loadstring(game:HttpGet("https://raw.githubusercontent.com/Marwanleprodu91670/muscle-legend-lite-hub-elerium-library-/refs/heads/main/library", true))()
 
 local window = library:AddWindow("Nova Hub V1 Free Version | Encrypted Script", {
-    main_color = Color3.fromRGB(75, 0, 130),
+    main_color = Color3.fromRGB(75,0,130),
     min_size = Vector2.new(700, 640),
     can_resize = false,
 })
@@ -36,9 +36,7 @@ local window = library:AddWindow("Nova Hub V1 Free Version | Encrypted Script", 
 -- Killing Tab
 local Killing = window:AddTab("Killing")
 
--- Whitelist System
 Killing:AddLabel("Whitelisting")
-
 _G.whitelist = {}
 
 Killing:AddTextBox("Whitelist", function(name)
@@ -54,56 +52,46 @@ Killing:AddTextBox("Unwhitelist", function(name)
 end)
 
 Killing:AddLabel("Killing Features")
+_G.autoKill = false
 
--- Function to equip Punch tool
-local function equipPunchTool()
+local function punch(target)
+    local player = game.Players.LocalPlayer
     local character = player.Character or player.CharacterAdded:Wait()
     local punchTool = player.Backpack:FindFirstChild("Punch") or character:FindFirstChild("Punch")
 
     if punchTool and punchTool.Parent ~= character then
         punchTool.Parent = character
     end
-end
 
--- Function to execute punch actions
-local function punchAction()
     game.Players.LocalPlayer.muscleEvent:FireServer("punch", "rightHand")
     game.Players.LocalPlayer.muscleEvent:FireServer("punch", "leftHand")
-end
 
--- Auto Kill Toggle
-_G.autoKill = false
+    if target and target.Character and target.Character:FindFirstChild("HumanoidRootPart") then
+        firetouchinterest(character.RightHand, target.Character.HumanoidRootPart, 1)
+        firetouchinterest(character.LeftHand, target.Character.HumanoidRootPart, 1)
+        wait(0.1)
+        firetouchinterest(character.RightHand, target.Character.HumanoidRootPart, 0)
+        firetouchinterest(character.LeftHand, target.Character.HumanoidRootPart, 0)
+    end
+end
 
 Killing:AddSwitch("Auto Kill", function(state)
     _G.autoKill = state
-
     if state then
         task.spawn(function()
             while _G.autoKill do
-                equipPunchTool()
-                punchAction()
-
-                for _, targetPlayer in pairs(game.Players:GetPlayers()) do
-                    if targetPlayer ~= player and not _G.whitelist[targetPlayer.Name] then
-                        local targetCharacter = targetPlayer.Character
-                        if targetCharacter and targetCharacter:FindFirstChild("HumanoidRootPart") then
-                            firetouchinterest(player.Character.RightHand, targetCharacter.HumanoidRootPart, 1)
-                            firetouchinterest(player.Character.LeftHand, targetCharacter.HumanoidRootPart, 1)
-                            task.wait(0.1)
-                            firetouchinterest(player.Character.RightHand, targetCharacter.HumanoidRootPart, 0)
-                            firetouchinterest(player.Character.LeftHand, targetCharacter.HumanoidRootPart, 0)
-                        end
+                for _, target in pairs(game.Players:GetPlayers()) do
+                    if target ~= player and not _G.whitelist[target.Name] then
+                        punch(target)
                     end
                 end
-                task.wait(0.1)
+                wait(0.1)
             end
         end)
     end
 end)
 
 Killing:AddLabel("Targeting")
-
--- Select Target Dropdown (does not update dynamically)
 local selectedTargetName = nil
 local dropdown = Killing:AddDropdown("Select Target", function(playerName)
     selectedTargetName = playerName
@@ -115,71 +103,56 @@ for _, p in ipairs(game.Players:GetPlayers()) do
     end
 end
 
--- Kill Target Toggle
 _G.killTargetActive = false
-
 Killing:AddSwitch("Kill Target", function(state)
     _G.killTargetActive = state
-
     if state and selectedTargetName then
         task.spawn(function()
             while _G.killTargetActive do
-                equipPunchTool()
-                punchAction()
-
-                local targetPlayer = game.Players:FindFirstChild(selectedTargetName)
-                if targetPlayer and targetPlayer.Character and targetPlayer.Character:FindFirstChild("HumanoidRootPart") then
-                    firetouchinterest(player.Character.RightHand, targetPlayer.Character.HumanoidRootPart, 1)
-                    firetouchinterest(player.Character.LeftHand, targetPlayer.Character.HumanoidRootPart, 1)
-                    task.wait(0.1)
-                    firetouchinterest(player.Character.RightHand, targetPlayer.Character.HumanoidRootPart, 0)
-                    firetouchinterest(player.Character.LeftHand, targetPlayer.Character.HumanoidRootPart, 0)
+                local target = game.Players:FindFirstChild(selectedTargetName)
+                if target then
+                    punch(target)
                 end
-                task.wait(0.1)
+                wait(0.1)
             end
         end)
     end
 end)
 
--- Auto Punch Toggle
+Killing:AddLabel("Auto Punching")
 _G.AutoPunch = false
-
-Killing:AddSwitch("Auto Punch", function(state)
-    _G.AutoPunch = state
-
-    if state then
+Killing:AddSwitch("Auto Punch", function(bool)
+    _G.AutoPunch = bool
+    if bool then
         task.spawn(function()
             while _G.AutoPunch do
-                equipPunchTool()
-                punchAction()
-                task.wait(0.1)
+                punch()
+                wait(0.1)
             end
         end)
     end
 end)
 
--- Auto Equip Punch
 _G.AutoEquipPunch = false
-
-Killing:AddSwitch("Auto Equip Punch", function(state)
-    _G.AutoEquipPunch = state
-
-    if state then
+Killing:AddSwitch("Auto Equip Punch", function(bool)
+    _G.AutoEquipPunch = bool
+    if bool then
         task.spawn(function()
             while _G.AutoEquipPunch do
-                equipPunchTool()
-                task.wait(0.1)
+                local punchTool = player.Backpack:FindFirstChild("Punch")
+                if punchTool then
+                    punchTool.Parent = player.Character
+                end
+                wait(0.2)
             end
         end)
     end
 end)
 
--- Player Tab for Spying
+-- Player Tab
 local PlayerTab = window:AddTab("Player")
 
 PlayerTab:AddLabel("Spying")
-
--- Select Player Dropdown (does not update dynamically)
 local selectedSpyTarget = nil
 local spyDropdown = PlayerTab:AddDropdown("Select Player", function(playerName)
     selectedSpyTarget = playerName
@@ -192,10 +165,8 @@ for _, p in ipairs(game.Players:GetPlayers()) do
 end
 
 _G.spyActive = false
-
 local function updateCamera(targetPlayer)
     local camera = game.Workspace.CurrentCamera
-
     while _G.spyActive and targetPlayer do
         local targetCharacter = targetPlayer.Character or targetPlayer.CharacterAdded:Wait()
         local humanoidRootPart = targetCharacter:FindFirstChild("HumanoidRootPart")
@@ -203,32 +174,30 @@ local function updateCamera(targetPlayer)
         if humanoidRootPart then
             camera.CameraSubject = humanoidRootPart
         end
-
         targetPlayer.CharacterAdded:Wait()
     end
-
     camera.CameraSubject = player.Character:FindFirstChild("Humanoid")
 end
 
 PlayerTab:AddSwitch("Spy Player", function(state)
     _G.spyActive = state
-
     if state and selectedSpyTarget then
         local targetPlayer = game.Players:FindFirstChild(selectedSpyTarget)
         if targetPlayer then
             task.spawn(updateCamera, targetPlayer)
         end
+    else
+        game.Workspace.CurrentCamera.CameraSubject = player.Character:FindFirstChild("Humanoid")
     end
 end)
 
--- Teleport to Selected Player
-PlayerTab:AddButton("Teleport to Player", function()
+PlayerTab:AddButton("Teleport to player", function()
     if selectedSpyTarget then
         local targetPlayer = game.Players:FindFirstChild(selectedSpyTarget)
         if targetPlayer and targetPlayer.Character then
-            local targetRootPart = targetPlayer.Character:FindFirstChild("HumanoidRootPart")
-            if targetRootPart then
-                player.Character:SetPrimaryPartCFrame(targetRootPart.CFrame)
+            local targetHumanoidRootPart = targetPlayer.Character:FindFirstChild("HumanoidRootPart")
+            if targetHumanoidRootPart then
+                player.Character:SetPrimaryPartCFrame(targetHumanoidRootPart.CFrame)
             end
         end
     else
