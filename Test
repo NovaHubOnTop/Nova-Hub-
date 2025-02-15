@@ -74,6 +74,19 @@ Killing:AddSwitch("Auto Kill", function(state)
     end
 end)
 
+-- Targeting
+Killing:AddLabel("Targeting")
+local selectedTargetName = nil
+local dropdown = Killing:AddDropdown("Select Target", function(playerName)
+    selectedTargetName = playerName
+end)
+
+for _, p in ipairs(game.Players:GetPlayers()) do
+    if p.Name ~= player.Name then
+        dropdown:Add(p.Name)
+    end
+end
+
 -- Kill Target Toggle
 _G.killTargetActive = false
 Killing:AddSwitch("Kill Target", function(state)
