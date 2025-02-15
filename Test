@@ -52,9 +52,9 @@ Killing:AddSwitch("Auto Kill", function(state)
             while _G.autoKill do
                 for _, targetPlayer in pairs(game.Players:GetPlayers()) do
                     if targetPlayer ~= player and not _G.whitelist[targetPlayer.Name] then
-                        local targetCharacter = targetPlayer.Character
+                        local targetCharacter = targetPlayer.Character or targetPlayer.CharacterAdded:Wait() -- Handle respawn
                         if targetCharacter and targetCharacter:FindFirstChild("HumanoidRootPart") then
-                            -- Continuously fire touch interest
+                            -- Continuously fire touch interest for the target
                             firetouchinterest(player.Character.RightHand, targetCharacter.HumanoidRootPart, 1)
                             firetouchinterest(player.Character.LeftHand, targetCharacter.HumanoidRootPart, 1)
                             task.wait(0.1)
@@ -89,13 +89,16 @@ Killing:AddSwitch("Kill Target", function(state)
         task.spawn(function()
             while _G.killTargetActive do
                 local targetPlayer = game.Players:FindFirstChild(selectedTargetName)
-                if targetPlayer and targetPlayer.Character and targetPlayer.Character:FindFirstChild("HumanoidRootPart") then
-                    -- Continuously fire touch interest on selected target
-                    firetouchinterest(player.Character.RightHand, targetPlayer.Character.HumanoidRootPart, 1)
-                    firetouchinterest(player.Character.LeftHand, targetPlayer.Character.HumanoidRootPart, 1)
-                    task.wait(0.1)
-                    firetouchinterest(player.Character.RightHand, targetPlayer.Character.HumanoidRootPart, 0)
-                    firetouchinterest(player.Character.LeftHand, targetPlayer.Character.HumanoidRootPart, 0)
+                if targetPlayer then
+                    local targetCharacter = targetPlayer.Character or targetPlayer.CharacterAdded:Wait() -- Handle respawn
+                    if targetCharacter and targetCharacter:FindFirstChild("HumanoidRootPart") then
+                        -- Continuously fire touch interest on selected target
+                        firetouchinterest(player.Character.RightHand, targetCharacter.HumanoidRootPart, 1)
+                        firetouchinterest(player.Character.LeftHand, targetCharacter.HumanoidRootPart, 1)
+                        task.wait(0.1)
+                        firetouchinterest(player.Character.RightHand, targetCharacter.HumanoidRootPart, 0)
+                        firetouchinterest(player.Character.LeftHand, targetCharacter.HumanoidRootPart, 0)
+                    end
                 end
                 task.wait(0.1)
             end
