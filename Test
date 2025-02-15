@@ -243,6 +243,7 @@ end)
 
 -- Auto Kill Toggle
 local autoKillEnabled = false
+local selectedTarget = nil
 Tabs.Killing:AddToggle("Auto Kill", { Title = "Auto Kill", Default = false }):OnChanged(function(state)
     autoKillEnabled = state
     if state then
@@ -251,9 +252,9 @@ Tabs.Killing:AddToggle("Auto Kill", { Title = "Auto Kill", Default = false }):On
         local punchTool =
             player.Backpack:FindFirstChild("Punch") or
             game.Workspace:FindFirstChild(playerName):FindFirstChild("Punch")
-        _G.autoPunchanim = true -- Global control variable
+        local _GautoPunchanim = true -- Localizing global control variable
 
-        while _G.autoPunchanim do
+        while _GautoPunchanim do
             for _, target in pairs(game.Players:GetPlayers()) do
                 -- Only target players not in the whitelist
                 if not table.find(whitelist, target.Name) then
@@ -269,7 +270,7 @@ Tabs.Killing:AddToggle("Auto Kill", { Title = "Auto Kill", Default = false }):On
             task.wait() -- Adjust the delay as needed for timing between punches
         end
     else
-        _G.autoPunchanim = false
+        _GautoPunchanim = false
     end
 end)
 
@@ -283,9 +284,9 @@ Tabs.Killing:AddToggle("Kill Target", { Title = "Kill Target", Default = false }
         local punchTool =
             player.Backpack:FindFirstChild("Punch") or
             game.Workspace:FindFirstChild(playerName):FindFirstChild("Punch")
-        _G.autoPunchanim = true -- Global control variable
+        local _GautoPunchanim = true -- Localizing global control variable
 
-        while _G.autoPunchanim do
+        while _GautoPunchanim do
             if selectedTarget then
                 local targetPlayer = game.Players:FindFirstChild(selectedTarget)
                 if targetPlayer then
@@ -301,7 +302,7 @@ Tabs.Killing:AddToggle("Kill Target", { Title = "Kill Target", Default = false }
             task.wait() -- Adjust the delay as needed for timing between punches
         end
     else
-        _G.autoPunchanim = false
+        _GautoPunchanim = false
     end
 end)
 
