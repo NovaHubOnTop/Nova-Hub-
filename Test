@@ -212,22 +212,12 @@ while true do
 end
 
 local timerRunning = false
-local timeElapsed = 0  -- Start from 0 seconds
 
 -- Add the "Custom Timer" paragraph
 local timerLabel = Tabs.Stats:AddParagraph({
     Title = "Custom Timer",
     Content = "0d 0h 0m 0s"
 })
-
--- Function to format time
-local function formatTime(seconds)
-    local days = math.floor(seconds / (24 * 3600))
-    local hours = math.floor((seconds % (24 * 3600)) / 3600)
-    local minutes = math.floor((seconds % 3600) / 60)
-    local remainingSeconds = seconds % 60
-    return string.format("%dd %dh %dm %ds", days, hours, minutes, remainingSeconds)
-end
 
 -- Start Timer Button
 Tabs.Stats:AddButton({
@@ -243,332 +233,17 @@ Tabs.Stats:AddButton({
             end
         end
     end
-})
-
--- Stop Timer Button
-Tabs.Stats:AddButton({
-    Title = "Stop Timer",
-    Description = "Stop the custom timer",
-    Callback = function()
-        timerRunning = false
-        timeElapsed = 0  -- Reset time
-        timerLabel:SetContent("0d 0h 0m 0s")  -- Reset the label content
-    end
-})
-
-local playerData = {}
-local currentSelectedPlayer = nil
-local trackStatsLabel = nil
-
--- Add the dropdown for selecting players
-local Dropdown = Tabs.Stats:AddDropdown("Select Player", {
-    Title = "Select Player",
-    Values = {},
-    Multi = false,
-    Default = 1,
-})
-
--- Function to format the stats
-local function abbreviateNumber(value)
-    if value >= 1e15 then
-        return string.format("%.1fQa", value / 1e15)
-    elseif value >= 1e12 then
-        return string.format("%.1fT", value / 1e12)
-    elseif value >= 1e9 then
-        return string.format("%.1fB", value / 1e9)
-    elseif value >= 1e6 then
-        return string.format("%.1fM", value / 1e6)
-    elseif value >= 1e3 then
-        return string.format("%.1fK", value / 1e3)
-    else
-        return tostring(value)
-    end
-end
-
--- Create the "Track Player Stats" paragraph
-trackStatsLabel = Tabs.Stats:AddParagraph({
-    Title = "Track Player Stats",
-    Content = "Amount Of Strength: 0\nAmount Of Durability: 0\nAmount Of Agility: 0\nAmount Of Kill: 0\nGood Karma: 0\nBad Karma: 0"
-})
-
--- Function to update the "Track Player Stats" content when a player is selected
-local function updatePlayerStats(player)
-    local leaderstats = player:FindFirstChild("leaderstats")
-    local statsText = "Amount Of Strength: 0\nAmount Of Durability: 0\nAmount Of Agility: 0\nAmount Of Kill: 0\nGood Karma: 0\nBad Karma: 0"
-
-    -- If the player has leaderstats, update the stats
-    if leaderstats then
-        local strength = leaderstats:FindFirstChild("Strength")
-        local durability = player:FindFirstChild("Durability")
-        local agility = player:FindFirstChild("Agility")
-        local kills = leaderstats:FindFirstChild("Kills")
-        local goodKarma = player:FindFirstChild("goodKarma")
-        local evilKarma = player:FindFirstChild("evilKarma")
-
-        statsText = string.format(
-            "Amount Of Strength: %s\nAmount Of Durability: %s\nAmount Of Agility: %s\nAmount Of Kill: %s\nGood Karma: %s\nBad Karma: %s",
-            abbreviateNumber(strength and strength.Value or 0),
-            abbreviateNumber(durability and durability.Value or 0),
-            abbreviateNumber(agility and agility.Value or 0),
-            abbreviateNumber(kills and kills.Value or 0),
-            abbreviateNumber(goodKarma and goodKarma.Value or 0),
-            abbreviateNumber(evilKarma and evilKarma.Value or 0)
-        )
-    end
-
-    -- Update the paragraph with the new stats text
-    trackStatsLabel:SetContent(statsText)
-end
-
--- Add players to the dropdown when they are added to the game
-game.Players.PlayerAdded:Connect(function(player)
-    table.insert(Dropdown.Values, player.Name)
-    Dropdown:SetValues(Dropdown.Values)
-end)
-
--- When the dropdown value changes (player selection), update the stats
-Dropdown:OnChanged(function(selectedPlayerName)
-    local player = game.Players:FindFirstChild(selectedPlayerName)
-    if player then
-        updatePlayerStats(player)
-    end
-end)
-
--- Optionally, you could track player stats in real-time with event listeners for changes
-local function trackRealTimeStats(player)
-    local leaderstats = player:FindFirstChild("leaderstats")
-    if leaderstats then
-        local strength = leaderstats:FindFirstChild("Strength")
-        local durability = player:FindFirstChild("Durability")
-        local agility = player:FindFirstChild("Agility")
-        local kills = leaderstats:FindFirstChild("Kills")
-        local goodKarma = player:FindFirstChild("goodKarma")
-        local evilKarma = player:FindFirstChild("evilKarma")
-
-        -- Connect value changes to update stats in real-time
-        if strength then
-            strength.Changed:Connect(function()
-                updatePlayerStats(player)
-            end)
-        end
-        if durability then
-            durability.Changed:Connect(function()
-                updatePlayerStats(player)
-            end)
-        end
-        if agility then
-            agility.Changed:Connect(function()
-                updatePlayerStats(player)
-            end)
-        end
-        if kills then
-            kills.Changed:Connect(function()
-                updatePlayerStats(player)
-            end)
-        end
-        if goodKarma then
-            goodKarma.Changed:Connect(function()
-                updatePlayerStats(player)
-            end)
-        end
-        if evilKarma then
-            evilKarma.Changed:Connect(function()
-                updatePlayerStats(player)
-            end)
-        end
-    end
-end
-
--- Start tracking stats when the player is selected from the dropdown
-Dropdown:OnChanged(function(selectedPlayerName)
-    local player = game.Players:FindFirstChild(selectedPlayerName)
-    if player then
-        trackRealTimeStats(player)
-    end
-end)
-
-local totalStatsLabel = nil
-
--- Function to format numbers
-local function abbreviateNumber(value)
-    if value >= 1e15 then
-        return string.format("%.1fQa", value / 1e15)
-    elseif value >= 1e12 then
-        return string.format("%.1fT", value / 1e12)
-    elseif value >= 1e9 then
-        return string.format("%.1fB", value / 1e9)
-    elseif value >= 1e6 then
-        return string.format("%.1fM", value / 1e6)
-    elseif value >= 1e3 then
-        return string.format("%.1fK", value / 1e3)
-    else
-        return tostring(value)
-    end
-end
-
--- Add the paragraph to track the total stats gained in the server
-totalStatsLabel = Tabs.Stats:AddParagraph({
-    Title = "Amount Of Stats Gained In Server",
-    Content = "Amount Of Strength: 0\nAmount Of Durability: 0\nAmount Of Agility: 0\nAmount Of Kill: 0\nAmount Of Bad Karma: 0\nAmount Of Good Karma: 0"
-})
-
--- Function to calculate and update the total stats in the server
-local function updateTotalStats()
-    local totalStrength = 0
-    local totalDurability = 0
-    local totalAgility = 0
-    local totalKills = 0
-    local totalGoodKarma = 0
-    local totalBadKarma = 0
-
-    -- Iterate over all players in the game and sum their stats
-    for _, player in ipairs(game.Players:GetPlayers()) do
-        local leaderstats = player:FindFirstChild("leaderstats")
-        if leaderstats then
-            local strength = leaderstats:FindFirstChild("Strength")
-            local durability = player:FindFirstChild("Durability")
-            local agility = player:FindFirstChild("Agility")
-            local kills = leaderstats:FindFirstChild("Kills")
-            local goodKarma = player:FindFirstChild("goodKarma")
-            local badKarma = player:FindFirstChild("evilKarma")
-
-            -- Add up each player's stats
-            if strength then
-                totalStrength = totalStrength + strength.Value
-            end
-            if durability then
-                totalDurability = totalDurability + durability.Value
-            end
-            if agility then
-                totalAgility = totalAgility + agility.Value
-            end
-            if kills then
-                totalKills = totalKills + kills.Value
-            end
-            if goodKarma then
-                totalGoodKarma = totalGoodKarma + goodKarma.Value
-            end
-            if badKarma then
-                totalBadKarma = totalBadKarma + badKarma.Value
-            end
-        end
-    end
-
-    -- Update the "Amount Of Stats Gained In Server" paragraph with the new totals
-    totalStatsLabel:SetContent(string.format(
-        "Amount Of Strength: %s\nAmount Of Durability: %s\nAmount Of Agility: %s\nAmount Of Kill: %s\nAmount Of Bad Karma: %s\nAmount Of Good Karma: %s",
-        abbreviateNumber(totalStrength),
-        abbreviateNumber(totalDurability),
-        abbreviateNumber(totalAgility),
-        abbreviateNumber(totalKills),
-        abbreviateNumber(totalBadKarma),
-        abbreviateNumber(totalGoodKarma)
-    ))
-end
-
--- Update the total stats initially when the script starts
-updateTotalStats()
-
--- Listen for stat changes in all players to keep the total stats updated
-game.Players.PlayerAdded:Connect(function(player)
-    -- Listen for stat changes when a new player joins the game
-    local leaderstats = player:FindFirstChild("leaderstats")
-    if leaderstats then
-        local strength = leaderstats:FindFirstChild("Strength")
-        local durability = player:FindFirstChild("Durability")
-        local agility = player:FindFirstChild("Agility")
-        local kills = leaderstats:FindFirstChild("Kills")
-        local goodKarma = player:FindFirstChild("goodKarma")
-        local badKarma = player:FindFirstChild("evilKarma")
-
-        -- Connect stat changes to update the total stats
-        if strength then
-            strength.Changed:Connect(function()
-                updateTotalStats()
-            end)
-        end
-        if durability then
-            durability.Changed:Connect(function()
-                updateTotalStats()
-            end)
-        end
-        if agility then
-            agility.Changed:Connect(function()
-                updateTotalStats()
-            end)
-        end
-        if kills then
-            kills.Changed:Connect(function()
-                updateTotalStats()
-            end)
-        end
-        if goodKarma then
-            goodKarma.Changed:Connect(function()
-                updateTotalStats()
-            end)
-        end
-        if badKarma then
-            badKarma.Changed:Connect(function()
-                updateTotalStats()
-            end)
-        end
-    end
-end)
-
--- Listen for stat changes from existing players
-for _, player in ipairs(game.Players:GetPlayers()) do
-    local leaderstats = player:FindFirstChild("leaderstats")
-    if leaderstats then
-        local strength = leaderstats:FindFirstChild("Strength")
-        local durability = player:FindFirstChild("Durability")
-        local agility = player:FindFirstChild("Agility")
-        local kills = leaderstats:FindFirstChild("Kills")
-        local goodKarma = player:FindFirstChild("goodKarma")
-        local badKarma = player:FindFirstChild("evilKarma")
-
-        if strength then
-            strength.Changed:Connect(function()
-                updateTotalStats()
-            end)
-        end
-        if durability then
-            durability.Changed:Connect(function()
-                updateTotalStats()
-            end)
-        end
-        if agility then
-            agility.Changed:Connect(function()
-                updateTotalStats()
-            end)
-        end
-        if kills then
-            kills.Changed:Connect(function()
-                updateTotalStats()
-            end)
-        end
-        if goodKarma then
-            goodKarma.Changed:Connect(function()
-                updateTotalStats()
-            end)
-        end
-        if badKarma then
-            badKarma.Changed:Connect(function()
-                updateTotalStats()
-            end)
-        end
-    end
-end
 
 local selectedCrystal = "Blue Crystal"  -- Default selected crystal
 
 -- Dropdown for selecting crystal
 local Dropdown = Tabs.Crystal:AddDropdown("Select Crystal", {
-    Title = "Select Crystal",
-    Values = {"Blue Crystal", "Green Crystal", "Frozen Crystal", "Mythical Crystal", 
-              "Inferno Crystal", "Legends Crystal", "Muscle Elite Crystal", 
-              "Galaxy Oracle Crystal", "Sky Eclipse Crystal", "Jungle Crystal"},
-    Multi = false,
-    Default = 1,
+Title = "Select Crystal",
+Values = {"Blue Crystal", "Green Crystal", "Frozen Crystal", "Mythical Crystal",
+"Inferno Crystal", "Legends Crystal", "Muscle Elite Crystal",
+"Galaxy Oracle Crystal", "Sky Eclipse Crystal", "Jungle Crystal"},
+Multi = false,
+Default = 1,
 })
 
 -- Set default crystal value
@@ -576,8 +251,8 @@ Dropdown:SetValue("Blue Crystal")
 
 -- Dropdown change handler
 Dropdown:OnChanged(function(Value)
-    selectedCrystal = Value
-    print("Dropdown changed:", selectedCrystal)
+selectedCrystal = Value
+print("Dropdown changed:", selectedCrystal)
 end)
 
 -- Auto Crystal Toggle
@@ -585,19 +260,21 @@ local Toggle = Tabs.Crystal:AddToggle("Auto Crystal", {Title = "Auto Crystal", D
 
 -- Toggle change handler
 Toggle:OnChanged(function(state)
-    if state then
-        -- Execute the crystal opening when Auto Crystal is enabled
-        local args = {
-            [1] = "openCrystal",
-            [2] = selectedCrystal  -- Use the selected crystal from dropdown
-        }
-        game:GetService("ReplicatedStorage"):WaitForChild("rEvents"):WaitForChild("openCrystalRemote"):InvokeServer(unpack(args))
-        print("Opening crystal:", selectedCrystal)
-        
-        while state do
-            -- Repeatedly open the selected crystal every 0.1 seconds
-            game:GetService("ReplicatedStorage"):WaitForChild("rEvents"):WaitForChild("openCrystalRemote"):InvokeServer(unpack(args))
-            task.wait(0.1)
-        end
-    end
+if state then
+-- Execute the crystal opening when Auto Crystal is enabled
+local args = {
+[1] = "openCrystal",
+[2] = selectedCrystal  -- Use the selected crystal from dropdown
+}
+game:GetService("ReplicatedStorage"):WaitForChild("rEvents"):WaitForChild("openCrystalRemote"):InvokeServer(unpack(args))
+print("Opening crystal:", selectedCrystal)
+
+while state do  
+        -- Repeatedly open the selected crystal every 0.1 seconds  
+        game:GetService("ReplicatedStorage"):WaitForChild("rEvents"):WaitForChild("openCrystalRemote"):InvokeServer(unpack(args))  
+        task.wait(0.1)  
+    end  
+end
+
 end)
+
