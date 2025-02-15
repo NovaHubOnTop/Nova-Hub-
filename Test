@@ -53,6 +53,7 @@ _G.autoKill = false
 Killing:AddSwitch("Auto Kill", function(state)
     _G.autoKill = state
     if state then
+        -- Start AutoKill loop when enabled
         task.spawn(function()
             while _G.autoKill do
                 for _, targetPlayer in pairs(game.Players:GetPlayers()) do
@@ -72,20 +73,6 @@ Killing:AddSwitch("Auto Kill", function(state)
         end)
     end
 end)
-
-Killing:AddLabel("Targeting")
-
--- Dropdown for selecting a target (static list)
-local selectedTargetName = nil
-local dropdown = Killing:AddDropdown("Select Target", function(playerName)
-    selectedTargetName = playerName
-end)
-
-for _, p in ipairs(game.Players:GetPlayers()) do
-    if p.Name ~= player.Name then
-        dropdown:Add(p.Name)
-    end
-end
 
 -- Kill Target Toggle
 _G.killTargetActive = false
@@ -108,18 +95,23 @@ Killing:AddSwitch("Kill Target", function(state)
     end
 end)
 
-Killing:AddLabel("Auto Punching")
-
--- Auto Punch Toggle
-_G.AutoPunch = false
-Killing:AddSwitch("Auto Punch", function(state)
-    _G.AutoPunch = state
-    if state then
+-- Player Respawn Handling to Restart Auto Kill
+game.Players.LocalPlayer.CharacterAdded:Connect(function(character)
+    -- Ensure AutoKill continues after respawn
+    if _G.autoKill then
         task.spawn(function()
-            while _G.AutoPunch do
-                local punchTool = player.Character and player.Character:FindFirstChild("Punch")
-                if punchTool then
-                    punchTool:Activate()
+            while _G.autoKill do
+                for _, targetPlayer in pairs(game.Players:GetPlayers()) do
+                    if targetPlayer ~= player and not _G.whitelist[targetPlayer.Name] then
+                        local targetCharacter = targetPlayer.Character
+                        if targetCharacter and targetCharacter:FindFirstChild("HumanoidRootPart") then
+                            firetouchinterest(player.Character.RightHand, targetCharacter.HumanoidRootPart, 1)
+                            firetouchinterest(player.Character.LeftHand, targetCharacter.HumanoidRootPart, 1)
+                            task.wait(0.1)
+                            firetouchinterest(player.Character.RightHand, targetCharacter.HumanoidRootPart, 0)
+                            firetouchinterest(player.Character.LeftHand, targetCharacter.HumanoidRootPart, 0)
+                        end
+                    end
                 end
                 task.wait(0.1)
             end
@@ -127,7 +119,7 @@ Killing:AddSwitch("Auto Punch", function(state)
     end
 end)
 
--- Auto Punch [No Animation]
+-- Auto Punch [No Animation] Toggle
 _G.autoPunchAnim = false
 Killing:AddSwitch("Auto Punch [No Animation]", function(state)
     _G.autoPunchAnim = state
@@ -152,23 +144,6 @@ Killing:AddSwitch("Auto Punch [No Animation]", function(state)
         end)
     else
         _G.autoPunchAnim = false
-    end
-end)
-
--- Auto Equip Punch Toggle
-_G.AutoEquipPunch = false
-Killing:AddSwitch("Auto Equip Punch", function(state)
-    _G.AutoEquipPunch = state
-    if state then
-        task.spawn(function()
-            while _G.AutoEquipPunch do
-                local punchTool = player.Backpack:FindFirstChild("Punch")
-                if punchTool then
-                    punchTool.Parent = player.Character
-                end
-                task.wait(0.2)
-            end
-        end)
     end
 end)
 
@@ -225,44 +200,5 @@ PlayerTab:AddButton("Teleport to player", function()
         end
     else
         warn("No player selected!")
-    end
-end)
-
--- Handling Player Respawn and keeping FireTouchInterest for AutoKill and KillTarget
-game.Players.LocalPlayer.CharacterAdded:Connect(function(character)
-    if _G.autoKill then
-        task.spawn(function()
-            while _G.autoKill do
-                for _, targetPlayer in pairs(game.Players:GetPlayers()) do
-                    if targetPlayer ~= player and not _G.whitelist[targetPlayer.Name] then
-                        local targetCharacter = targetPlayer.Character
-                        if targetCharacter and targetCharacter:FindFirstChild("HumanoidRootPart") then
-                            firetouchinterest(player.Character.RightHand, targetCharacter.HumanoidRootPart, 1)
-                            firetouchinterest(player.Character.LeftHand, targetCharacter.HumanoidRootPart, 1)
-                            task.wait(0.1)
-                            firetouchinterest(player.Character.RightHand, targetCharacter.HumanoidRootPart, 0)
-                            firetouchinterest(player.Character.LeftHand, targetCharacter.HumanoidRootPart, 0)
-                        end
-                    end
-                end
-                task.wait(0.1)
-            end
-        end)
-    end
-
-    if _G.killTargetActive then
-        task.spawn(function()
-            while _G.killTargetActive do
-                local targetPlayer = game.Players:FindFirstChild(selectedTargetName)
-                if targetPlayer and targetPlayer.Character and targetPlayer.Character:FindFirstChild("HumanoidRootPart") then
-                    firetouchinterest(player.Character.RightHand, targetPlayer.Character.HumanoidRootPart, 1)
-                    firetouchinterest(player.Character.LeftHand, targetPlayer.Character.HumanoidRootPart, 1)
-                    task.wait(0.1)
-                    firetouchinterest(player.Character.RightHand, targetPlayer.Character.HumanoidRootPart, 0)
-                    firetouchinterest(player.Character.LeftHand, targetPlayer.Character.HumanoidRootPart, 0)
-                end
-                task.wait(0.1)
-            end
-        end)
     end
 end)
