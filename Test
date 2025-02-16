@@ -16,8 +16,8 @@ local Window = NovaHub:CreateWindow({
 local Tabs = {
     Main = Window:AddTab({ Title = "Main", Icon = "scan-face" }),
     AutoFarm = Window:AddTab({ Title = "Auto Farm", Icon = "biceps-flexed" }),
-    Rebirth = Window:AddTab({ Title = "Rebirth", Icon = "Refresg" }),
-    Stats = Window:AddTab({ Title = "Stats", Icon = "Star" }),
+    Rebirth = Window:AddTab({ Title = "Rebirth", Icon = "refresh" }),
+    Stats = Window:AddTab({ Title = "Stats", Icon = "particle" }),
     Crystal = Window:AddTab({ Title = "Crystal", Icon = "gem" }),
     Killing = Window:AddTab({ Title = "Killing", Icon = "sword" }),
     Teleport = Window:AddTab({ Title = "Teleport", Icon = "asterisk" }),
@@ -244,26 +244,27 @@ Tabs.Rebirth:AddToggle("Eat Every Protein Eggs", { Title = "Eat Every Protein Eg
     end
 end)
 
-local Toggle = Tabs.Rebirth:AddToggle("Hide Frame", {Title = "Hide Frame", Default = false })
+local hideFrame = false
 
-Toggle:OnChanged(function()
-    local isVisible = Toggle.Value
+Tabs.Main:AddToggle("Hide Frame", { Title = "Hide Frame", Default = false }):OnChanged(function(state)
+    hideFrame = state
+    local player = game.Players.LocalPlayer
+    local playerGui = player:FindFirstChild("PlayerGui")
 
-    -- Find the statsList object (adjust this path if necessary)
-    local statsList = game.Players.LocalPlayer.PlayerGui:FindFirstChild("statsList")
-
-    if statsList then
-        -- Loop through all children of statsList and set their visibility
-        for _, child in pairs(statsList:GetChildren()) do
-            if child:IsA("GuiObject") then
-                child.Visible = isVisible
+    if playerGui then
+        local gameGui = playerGui:FindFirstChild("gameGui")
+        if gameGui then
+            local statsMenu = gameGui:FindFirstChild("statsMenu")
+            if statsMenu then
+                for _, child in ipairs(statsMenu:GetChildren()) do
+                    if child:IsA("GuiObject") then
+                        child.Visible = not hideFrame -- Hide when toggle is ON, Show when OFF
+                    end
+                end
             end
         end
     end
-
-    print("Toggle changed:", Toggle.Value)
 end)
-
 
 -- Time Since Script Executed Paragraph
 local TimeSinceExecutedParagraph = Tabs.Stats:AddParagraph({
