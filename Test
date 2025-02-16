@@ -89,25 +89,29 @@ local function autoEquipTool(toolName, stateVariable)
     local player = game.Players.LocalPlayer
     local backpack = player:FindFirstChild("Backpack")
 
-    -- Unequip the tool if the toggle is off
     if not stateVariable then
         local tool = player.Character:FindFirstChild(toolName)
         if tool then
             tool.Parent = backpack  -- Move tool back to backpack if equipped
         end
+        return  -- Stop function execution when toggle is off
     end
-    
-    -- Equip the tool if the toggle is on
-    while stateVariable do
-        if backpack then
-            local tool = backpack:FindFirstChild(toolName)
-            if tool then
-                player.Character.Humanoid:EquipTool(tool)
+
+    -- Create a new task for auto-equipping
+    task.spawn(function()
+        while stateVariable do
+            if backpack then
+                local tool = backpack:FindFirstChild(toolName)
+                if tool then
+                    player.Character.Humanoid:EquipTool(tool)
+                end
             end
+            task.wait(0.1)
         end
-        task.wait(0.1)
-    end
+    end)
 end
+
+Tabs.AutoFarm:AddParagraph({ Title = "Tools", Content = "" })
 
 -- **Auto Equip Toggles**
 local autoWeight = false
@@ -133,6 +137,7 @@ Tabs.AutoFarm:AddToggle("Auto Equip Handstands", { Title = "Auto Equip Handstand
     autoHandstands = state
     autoEquipTool("Handstand", autoHandstands)
 end)
+
 
 local autoRebirth = false
 local rebirthUntilTarget = false
