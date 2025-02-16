@@ -237,7 +237,7 @@ Tabs.Rebirth:AddToggle("Hide Frame", { Title = "Hide Frame", Default = false }):
         end
     end
 
-    toggleFrames(not state) -- Toggle frames based on state
+    toggleFrames(state)
 end)
 
 
@@ -388,57 +388,56 @@ local function updateTimeSinceExecuted()
     end
 end
 
--- Continuously update the time since script execution every second
-while true do
-    updateTimeSinceExecuted()
-    wait(1)  -- Update every second
-end
+task.spawn(function()
+    while true do
+        updateTimeSinceExecuted()
+        task.wait(1)
+    end
+end)
 
-local Toggle = Tabs.Killing:AddToggle("Auto Kill", {Title = "Auto Kill", Default = false })
+local AutoKillToggle = Tabs.Killing:AddToggle("Auto Kill", {Title = "Auto Kill", Default = false})
 
-Toggle:OnChanged(function(state)
-    _G.autoPunchanim = state -- Update control variable
+AutoKillToggle:OnChanged(function(state)
+    _G.autoKill = state -- Store toggle state
 
     if state then
-        local player = game.Players.LocalPlayer
-        local playerName = player.Name
-        local function punchLoop()
-            while _G.autoPunchanim do
-                local punchTool =
-                    player.Backpack:FindFirstChild("Punch") or
-                    game.Workspace:FindFirstChild(playerName) and game.Workspace:FindFirstChild(playerName):FindFirstChild("Punch")
-
-                if punchTool then
-                    if punchTool.Parent ~= game.Workspace:FindFirstChild(playerName) then
-                        punchTool.Parent = game.Workspace:FindFirstChild(playerName) -- Equip the tool
-                    end
-                    game.Players.LocalPlayer.muscleEvent:FireServer("punch", "rightHand")
-                    game.Players.LocalPlayer.muscleEvent:FireServer("punch", "leftHand")
-                else
-                    warn("Punch tool not found")
-                end
-                wait() -- Adjust delay as needed
-            end
-        end
-
-        local function touchLoop()
-            while _G.autoPunchanim do
-                for _, target in pairs(game.Players:GetPlayers()) do
+        task.spawn(function()
+            local player = game.Players.LocalPlayer
+            local function getValidTargets()
+                local targets = {}
+                for _, target in ipairs(game.Players:GetPlayers()) do
                     if target ~= player and target.Character and target.Character:FindFirstChild("HumanoidRootPart") then
-                        -- Fire touch interest with both hands
-                        firetouchinterest(player.Character.RightHand, target.Character.HumanoidRootPart, 1)
-                        firetouchinterest(player.Character.LeftHand, target.Character.HumanoidRootPart, 1)
-                        wait()
-                        firetouchinterest(player.Character.RightHand, target.Character.HumanoidRootPart, 0)
-                        firetouchinterest(player.Character.LeftHand, target.Character.HumanoidRootPart, 0)
+                        table.insert(targets, target)
                     end
                 end
-                wait()
+                return targets
             end
-        end
 
-        -- Run both loops
-        spawn(punchLoop)
-        spawn(touchLoop)
+            while _G.autoKill do
+                local targets = getValidTargets()
+
+                if #targets >= 2 then
+                    local hand1Target = targets[math.random(1, #targets)]
+                    local hand2Target = targets[math.random(1, #targets)]
+
+                    -- Ensure both hands don't target the same player
+                    while hand2Target == hand1Target and #targets > 1 do
+                        hand2Target = targets[math.random(1, #targets)]
+                    end
+
+                    -- Fire touch interest for each hand
+                    local humanoidRootPart = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
+                    if humanoidRootPart then
+                        firetouchinterest(humanoidRootPart, hand1Target.Character.HumanoidRootPart, 1)
+                        firetouchinterest(humanoidRootPart, hand1Target.Character.HumanoidRootPart, 0)
+                        
+                        firetouchinterest(humanoidRootPart, hand2Target.Character.HumanoidRootPart, 1)
+                        firetouchinterest(humanoidRootPart, hand2Target.Character.HumanoidRootPart, 0)
+                    end
+                end
+
+                task.wait(0.1) -- Run every 0.1 seconds
+            end
+        end)
     end
 end)
