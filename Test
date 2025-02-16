@@ -17,11 +17,11 @@ local Tabs = {
     Main = Window:AddTab({ Title = "Main", Icon = "scan-face" }),
     AutoFarm = Window:AddTab({ Title = "Auto Farm", Icon = "biceps-flexed" }),
     Rebirth = Window:AddTab({ Title = "Rebirth", Icon = "rotate-ccw" }),
-    Stats = Window:AddTab({ Title = "Stats", Icon = "sparkles" }),
+    Stats = Window:AddTab({ Title = "Stats", Icon = "sparkle" }),
     Crystal = Window:AddTab({ Title = "Crystal", Icon = "gem" }),
     Killing = Window:AddTab({ Title = "Killing", Icon = "sword" }),
     Teleport = Window:AddTab({ Title = "Teleport", Icon = "map-pin-x" }),
-    Misc = Window:AddTab({ Title = "Misc", Icon = "" })
+    Misc = Window:AddTab({ Title = "Misc", Icon = "settings" })
 }
 
 -- **Main Tab**
@@ -84,22 +84,23 @@ Tabs.AutoFarm:AddToggle("Auto Reps", { Title = "Auto Reps", Default = false }):O
     end
 end)
 
+-- Store running equip tasks
+local runningEquipTasks = {}
+
 -- **Auto Equip Tool Function**
-local function autoEquipTool(toolName, stateVariable)
+local function autoEquipTool(toolName, toggleName)
     local player = game.Players.LocalPlayer
     local backpack = player:FindFirstChild("Backpack")
 
-    if not stateVariable then
-        local tool = player.Character:FindFirstChild(toolName)
-        if tool then
-            tool.Parent = backpack  -- Move tool back to backpack if equipped
-        end
-        return  -- Stop function execution when toggle is off
+    -- If a task is already running for this tool, stop it
+    if runningEquipTasks[toggleName] then
+        runningEquipTasks[toggleName] = nil
+        return
     end
 
     -- Create a new task for auto-equipping
-    task.spawn(function()
-        while stateVariable do
+    runningEquipTasks[toggleName] = task.spawn(function()
+        while Tabs.AutoFarm:GetToggle(toggleName).State do
             if backpack then
                 local tool = backpack:FindFirstChild(toolName)
                 if tool then
@@ -108,34 +109,27 @@ local function autoEquipTool(toolName, stateVariable)
             end
             task.wait(0.1)
         end
+        runningEquipTasks[toggleName] = nil -- Remove task reference when stopped
     end)
 end
 
 Tabs.AutoFarm:AddParagraph({ Title = "Tools", Content = "" })
 
 -- **Auto Equip Toggles**
-local autoWeight = false
-Tabs.AutoFarm:AddToggle("Auto Equip Weight", { Title = "Auto Equip Weight", Default = false }):OnChanged(function(state)
-    autoWeight = state
-    autoEquipTool("Weight", autoWeight)
+Tabs.AutoFarm:AddToggle("Auto Equip Weight", { Title = "Auto Equip Weight", Default = false }):OnChanged(function()
+    autoEquipTool("Weight", "Auto Equip Weight")
 end)
 
-local autoPushups = false
-Tabs.AutoFarm:AddToggle("Auto Equip Pushups", { Title = "Auto Equip Pushups", Default = false }):OnChanged(function(state)
-    autoPushups = state
-    autoEquipTool("Pushups", autoPushups)
+Tabs.AutoFarm:AddToggle("Auto Equip Pushups", { Title = "Auto Equip Pushups", Default = false }):OnChanged(function()
+    autoEquipTool("Pushups", "Auto Equip Pushups")
 end)
 
-local autoSitups = false
-Tabs.AutoFarm:AddToggle("Auto Equip Situps", { Title = "Auto Equip Situps", Default = false }):OnChanged(function(state)
-    autoSitups = state
-    autoEquipTool("Sit-ups", autoSitups)
+Tabs.AutoFarm:AddToggle("Auto Equip Situps", { Title = "Auto Equip Situps", Default = false }):OnChanged(function()
+    autoEquipTool("Sit-ups", "Auto Equip Situps")
 end)
 
-local autoHandstands = false
-Tabs.AutoFarm:AddToggle("Auto Equip Handstands", { Title = "Auto Equip Handstands", Default = false }):OnChanged(function(state)
-    autoHandstands = state
-    autoEquipTool("Handstand", autoHandstands)
+Tabs.AutoFarm:AddToggle("Auto Equip Handstands", { Title = "Auto Equip Handstands", Default = false }):OnChanged(function()
+    autoEquipTool("Handstand", "Auto Equip Handstands")
 end)
 
 
