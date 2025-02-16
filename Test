@@ -466,7 +466,10 @@ end)
 local function updateDropdown()
     local playerNames = {}
     for _, player in ipairs(game.Players:GetPlayers()) do
-        table.insert(playerNames, player.Name)
+        -- Skip the local player if it is in the list
+        if player ~= game.Players.LocalPlayer then
+            table.insert(playerNames, player.Name)
+        end
     end
 
     -- Safely set values if the dropdown allows it
@@ -485,6 +488,9 @@ end)
 game.Players.PlayerRemoving:Connect(function()
     updateDropdown()
 end)
+
+-- Initialize the dropdown when the script starts
+updateDropdown()
 
 
 local locations = {
