@@ -219,6 +219,22 @@ Tabs.Rebirth:AddToggle("Auto Rebirth Until Reach Target Amount", { Title = "Auto
     end
 end)
 
+local Toggle = Tabs.Rebirth:AddToggle("Auto Set Size 2", {Title = "Auto Set Size 2", Default = false })
+
+local autoSetSize2Running = false
+
+Toggle:OnChanged(function(value)
+    autoSetSize2Running = value
+    while autoSetSize2Running do
+        local args = {
+            [1] = "changeSize",
+            [2] = "2"
+        }
+        game:GetService("ReplicatedStorage"):WaitForChild("rEvents"):WaitForChild("changeSpeedSizeRemote"):InvokeServer(unpack(args))
+        task.wait(0.1)
+    end
+end)
+
 -- **Auto Eat Protein Egg Every 30 Minutes**
 Tabs.Rebirth:AddToggle("Auto Eat Protein Egg", { Title = "Auto Eat Protein Egg Every 30 Minutes", Default = false }):OnChanged(function(state)
     if state then
