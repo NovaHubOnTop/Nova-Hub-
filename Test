@@ -185,16 +185,30 @@ Tabs.Rebirth:AddToggle("Rebirth Until Target Amount", { Title = "Rebirth Until T
     end
 end)
 
--- **Initialize Time Variables**
-local timeSinceExecuted = 0
+-- **Time Since Script Executed**
+local timeSpent = 0
 
--- **Create the Label for Execution Time**
-local executionTimeLabel = Tabs.Stats:AddParagraph({
-    Title = "Time Since Script Executed",
-    Content = "0 weeks, 0 days, 0 hours, 0 minutes, 0 seconds"
-})
+-- Helper function to abbreviate large numbers
+local function abbreviateNumber(value)
+    if value >= 1e15 then
+        return string.format("%.1fQa", value / 1e15)
+    elseif value >= 1e12 then
+        return string.format("%.1fT", value / 1e12)
+    elseif value >= 1e9 then
+        return string.format("%.1fB", value / 1e9)
+    elseif value >= 1e6 then
+        return string.format("%.1fM", value / 1e6)
+    elseif value >= 1e3 then
+        return string.format("%.1fK", value / 1e3)
+    else
+        return tostring(value)
+    end
+end
 
--- **Function to Convert Time**
+-- **Create Time Since Script Executed Label**
+local timeLabel = Tabs.Stats:AddLabel("Time Since Script Executed: 0 weeks, 0 days, 0 hours, 0 minutes, 0 seconds")
+
+-- Function to convert total seconds into weeks, days, hours, minutes, and seconds
 local function convertTime(seconds)
     local weeks = math.floor(seconds / (7 * 24 * 3600))
     seconds = seconds - weeks * 7 * 24 * 3600
@@ -207,36 +221,41 @@ local function convertTime(seconds)
     return weeks, days, hours, minutes, seconds
 end
 
--- **Function to Update Execution Time Label**
-local function updateExecutionTimeLabel()
-    local weeks, days, hours, minutes, seconds = convertTime(timeSinceExecuted)
-    local timeString = string.format("%d weeks, %d days, %d hours, %d minutes, %d seconds", weeks, days, hours, minutes, seconds)
-    executionTimeLabel:Set({ Content = timeString })
+-- **Function to Update Time Label**
+local function updateTimeLabel()
+    local weeks, days, hours, minutes, seconds = convertTime(timeSpent)
+    timeLabel.Text = string.format("Time Since Script Executed: %d weeks, %d days, %d hours, %d minutes, %d seconds", weeks, days, hours, minutes, seconds)
 end
 
--- **Loop to Update the Label Every Second**
-task.spawn(function()
+-- **Start a Loop to Update Time Every Second**
+spawn(function()
     while true do
-        timeSinceExecuted = timeSinceExecuted + 1
-        updateExecutionTimeLabel()
-        task.wait(1)
+        wait(1)  -- Wait for 1 second before updating again
+        timeSpent = timeSpent + 1  -- Increment the time spent by 1 second
+        updateTimeLabel()  -- Update the label with the new time
     end
 end)
 
--- **Select Target Dropdown**
-local selectedTarget = nil  
+
+-- **Selected Target Stats**
+local playerData = {}
+local selectedTarget = nil
+
+-- **Dropdown for Selecting Target**
 local targetDropdown = Tabs.Stats:AddDropdown("Select Target", {
     Title = "Select Target",
-    Values = {},  
+    Values = {},
     Multi = false,
     Default = nil,
     Callback = function(selected)
         selectedTarget = game.Players:FindFirstChild(selected)
-        updateTargetStats(selectedTarget) 
+        if selectedTarget then
+            createPlayerLabels(selectedTarget)
+        end
     end
 })
 
--- **Function to Update Dropdown List (Runs Once)**
+-- **Function to Populate the Dropdown (Runs Once)**
 local function populateTargetDropdown()
     local playerList = {}
     for _, player in ipairs(game.Players:GetPlayers()) do
@@ -245,48 +264,74 @@ local function populateTargetDropdown()
     targetDropdown:SetValues(playerList)
 end
 
-populateTargetDropdown()  
+populateTargetDropdown()
 
--- **Track Selected Target's Stats Paragraph**
-local targetStatsLabel = Tabs.Stats:AddParagraph({
-    Title = "Selected Target Stats",
-    Content = "Amount Of Strength: 0\nAmount Of Durability: 0\nAmount Of Agility: 0\nAmount Of Kill: 0\nGood Karma: 0\nBad Karma: 0"
-})
-
-local function updateTargetStats(player)
-    local statsText = "Amount Of Strength: 0\nAmount Of Durability: 0\nAmount Of Agility: 0\nAmount Of Kill: 0\nGood Karma: 0\nBad Karma: 0"
-
-    if player then
-        local leaderstats = player:FindFirstChild("leaderstats")
-        if leaderstats then
-            local strength = leaderstats:FindFirstChild("Strength")
-            local durability = player:FindFirstChild("Durability")
-            local agility = player:FindFirstChild("Agility")
-            local kills = leaderstats:FindFirstChild("Kills")
-            local goodKarma = player:FindFirstChild("goodKarma")
-            local evilKarma = player:FindFirstChild("evilKarma")
-
-            statsText = string.format(
-                "Amount Of Strength: %s\nAmount Of Durability: %s\nAmount Of Agility: %s\nAmount Of Kill: %s\nGood Karma: %s\nBad Karma: %s",
-                abbreviateNumber(strength and strength.Value or 0),
-                abbreviateNumber(durability and durability.Value or 0),
-                abbreviateNumber(agility and agility.Value or 0),
-                abbreviateNumber(kills and kills.Value or 0),
-                abbreviateNumber(goodKarma and goodKarma.Value or 0),
-                abbreviateNumber(evilKarma and evilKarma.Value or 0)
-            )
+-- **Function to Create Labels for Selected Player**
+local function createPlayerLabels(player)
+    -- **Clear Old Labels if Switching Players**
+    if playerData[player.Name] then
+        for _, label in pairs(playerData[player.Name]) do
+            label:Remove()
         end
     end
 
-    targetStatsLabel:Set({ Content = statsText })
+    local leaderstats = player:FindFirstChild("leaderstats")
+    if not leaderstats then return end  -- Prevent errors if stats don't exist
+
+    -- **Create Labels**
+    playerData[player.Name] = {
+        StrengthLabel = Tabs.Stats:AddLabel("Strength: " .. abbreviateNumber(leaderstats:FindFirstChild("Strength") and leaderstats.Strength.Value or 0)),
+        DurabilityLabel = Tabs.Stats:AddLabel("Durability: " .. abbreviateNumber(player:FindFirstChild("Durability") and player.Durability.Value or 0)),
+        KillsLabel = Tabs.Stats:AddLabel("Kills: " .. abbreviateNumber(leaderstats:FindFirstChild("Kills") and leaderstats.Kills.Value or 0)),
+        BrawlsLabel = Tabs.Stats:AddLabel("Brawls: " .. abbreviateNumber(leaderstats:FindFirstChild("Brawls") and leaderstats.Brawls.Value or 0)),
+        AgilityLabel = Tabs.Stats:AddLabel("Agility: " .. abbreviateNumber(player:FindFirstChild("Agility") and player.Agility.Value or 0)),
+        EvilKarmaLabel = Tabs.Stats:AddLabel("Evil Karma: " .. abbreviateNumber(player:FindFirstChild("evilKarma") and player.evilKarma.Value or 0)),
+        GoodKarmaLabel = Tabs.Stats:AddLabel("Good Karma: " .. abbreviateNumber(player:FindFirstChild("goodKarma") and player.goodKarma.Value or 0)),
+        MapLabel = Tabs.Stats:AddLabel("Map: " .. (player:FindFirstChild("currentMap") and player.currentMap.Value or "N/A")),
+        KingTimeLabel = Tabs.Stats:AddLabel("King Time: " .. abbreviateNumber(player:FindFirstChild("muscleKingTime") and player.muscleKingTime.Value or 0)),
+        PremiumLabel = Tabs.Stats:AddLabel("Premium: " .. (player.MembershipType == Enum.MembershipType.Premium and "true" or "false"))
+    }
+
+    -- **Auto-Update Labels When Stats Change**
+    if leaderstats:FindFirstChild("Strength") then
+        leaderstats.Strength.Changed:Connect(function()
+            playerData[player.Name].StrengthLabel.Text = "Strength: " .. abbreviateNumber(leaderstats.Strength.Value)
+        end)
+    end
+
+    if leaderstats:FindFirstChild("Kills") then
+        leaderstats.Kills.Changed:Connect(function()
+            playerData[player.Name].KillsLabel.Text = "Kills: " .. abbreviateNumber(leaderstats.Kills.Value)
+        end)
+    end
+
+    if leaderstats:FindFirstChild("Brawls") then
+        leaderstats.Brawls.Changed:Connect(function()
+            playerData[player.Name].BrawlsLabel.Text = "Brawls: " .. abbreviateNumber(leaderstats.Brawls.Value)
+        end)
+    end
+
+    if player:FindFirstChild("Durability") then
+        player.Durability.Changed:Connect(function()
+            playerData[player.Name].DurabilityLabel.Text = "Durability: " .. abbreviateNumber(player.Durability.Value)
+        end)
+    end
+
+    if player:FindFirstChild("Agility") then
+        player.Agility.Changed:Connect(function()
+            playerData[player.Name].AgilityLabel.Text = "Agility: " .. abbreviateNumber(player.Agility.Value)
+        end)
+    end
+
+    if player:FindFirstChild("evilKarma") then
+        player.evilKarma.Changed:Connect(function()
+            playerData[player.Name].EvilKarmaLabel.Text = "Evil Karma: " .. abbreviateNumber(player.evilKarma.Value)
+        end)
+    end
+
+    if player:FindFirstChild("goodKarma") then
+        player.goodKarma.Changed:Connect(function()
+            playerData[player.Name].GoodKarmaLabel.Text = "Good Karma: " .. abbreviateNumber(player.goodKarma.Value)
+        end)
+    end
 end
-
--- **Auto-Update Selected Target's Stats**
-task.spawn(function()
-    while true do
-        if selectedTarget then
-            updateTargetStats(selectedTarget)
-        end
-        task.wait(1)
-    end
-end)
