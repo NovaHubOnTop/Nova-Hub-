@@ -1,6 +1,4 @@
 local NovaHub = loadstring(game:HttpGet("https://pastebin.com/raw/Rne8BmfA"))()
-local SaveManager = loadstring(game:HttpGet("https://raw.githubusercontent.com/dawid-scripts/Fluent/master/Addons/SaveManager.lua"))()
-local InterfaceManager = loadstring(game:HttpGet("https://raw.githubusercontent.com/dawid-scripts/Fluent/master/Addons/InterfaceManager.lua"))()
 
 local Window = NovaHub:CreateWindow({
     Title = "Muscle Legend Private Script" .. Fluent.Version,
@@ -83,21 +81,15 @@ Tabs.AutoFarm:AddToggle("Auto Reps", { Title = "Auto Reps", Default = false }):O
     end
 end)
 
--- Store toggle states
-local toggleStates = {}
-
 -- **Auto Equip Tool Function**
 local function autoEquipTool(toolName, toggleName)
     local player = game.Players.LocalPlayer
     local backpack = player:FindFirstChild("Backpack")
-
-    -- Update toggle state
     if not toggleStates[toggleName] then
         toggleStates[toggleName] = false
         return
     end
 
-    -- Create a new task for auto-equipping
     task.spawn(function()
         while toggleStates[toggleName] do
             if backpack then
@@ -133,9 +125,6 @@ Tabs.AutoFarm:AddToggle("Auto Equip Handstands", { Title = "Auto Equip Handstand
     toggleStates["Auto Equip Handstands"] = state
     autoEquipTool("Handstand", "Auto Equip Handstands")
 end)
-
-local player = game.Players.LocalPlayer
-local leaderstats = player:FindFirstChild("leaderstats")
 
 -- **Rebirth Stats Paragraph**
 local rebirthStats = Tabs.Rebirth:AddParagraph({
@@ -186,11 +175,9 @@ local rebirthTargetTextbox = Tabs.Rebirth:AddInput("Rebirth Target", {
     Title = "Rebirth Target",
     Default = "0",
     Placeholder = "Enter Target Rebirth Amount",
-    Numeric = true,  -- Only allows numbers
-    Finished = true, -- Calls callback when you press enter
-    Callback = function(Value)
-        -- No print, just use Value as needed
-    end
+    Numeric = true,
+    Finished = true,
+    Callback = function(Value) end
 })
 
 -- **Auto Rebirth Until Reach Target Amount Toggle**
@@ -403,84 +390,13 @@ local function updateDropdown()
     if Dropdown and Dropdown.SetValues then
         Dropdown:SetValues(playerNames)
     else
-        warn("Dropdown:SetValues method not available")
-    end
-
-    -- Set the default to the first player in the list (if any)
-    if #playerNames > 0 then
-        Dropdown:SetValue(playerNames[1])  -- Update the value
-    else
-        Dropdown:SetValue("")  -- No players in game
+        warn("Dropdown:SetValues method not available...")
     end
 end
 
--- Call updateDropdown whenever players join/leave
-game.Players.PlayerAdded:Connect(updateDropdown)
-game.Players.PlayerRemoving:Connect(updateDropdown)
-
--- Handle dropdown changes
-Dropdown:OnChanged(function(selectedPlayerName)
-    -- Find the selected player
-    local selectedPlayer = game.Players:FindFirstChild(selectedPlayerName)
-    if selectedPlayer then
-        -- Retrieve the player's leaderstats
-        local leaderstats = selectedPlayer:FindFirstChild("leaderstats")
-        local strength = leaderstats and leaderstats.Strength and leaderstats.Strength.Value or 0
-        local durability = selectedPlayer:FindFirstChild("Durability") and selectedPlayer.Durability.Value or 0
-        local agility = selectedPlayer:FindFirstChild("Agility") and selectedPlayer.Agility.Value or 0
-        local kills = leaderstats and leaderstats.Kills and leaderstats.Kills.Value or 0
-
-        -- Safely update the paragraph with the player's stats using SetDesc
-        if TargetStatsParagraph then
-            TargetStatsParagraph:SetDesc(string.format([[
-                Amount Of Strength: %s
-                Amount Of Durability: %s
-                Amount Of Agility: %s
-                Amount Of Kills: %s
-            ]], abbreviateNumber(strength), abbreviateNumber(durability), abbreviateNumber(agility), abbreviateNumber(kills)))
-        end
-    else
-        -- If player doesn't exist, set stats to 0
-        if TargetStatsParagraph then
-            TargetStatsParagraph:SetDesc("Amount Of Strength: 0\nAmount Of Durability: 0\nAmount Of Agility: 0\nAmount Of Kills: 0")
-        end
-    end
-end)
-
--- Initial population of the dropdown when the script runs
-updateDropdown()
-
--- Timer for Stats Tab
-local startTime = tick() -- Store the time when the script starts executing
-
--- Function to convert total seconds into hours, minutes, and seconds
-local function convertTime(seconds)
-    local hours = math.floor(seconds / 3600)
-    seconds = seconds - hours * 3600
-    local minutes = math.floor(seconds / 60)
-    seconds = seconds - minutes * 60
-    return hours, minutes, seconds
-end
-
--- Function to update the time since script execution
-local function updateTimeSinceExecuted()
-    local elapsedTime = tick() - startTime
-    local hours, minutes, seconds = convertTime(elapsedTime)
-
-    -- Update the Time Since Script Executed paragraph content
-    if TimeSinceExecutedParagraph then
-        TimeSinceExecutedParagraph:SetDesc(string.format(
-            "Hours: %d Minutes: %d Seconds: %d",
-            hours, minutes, seconds
-        ))
-    end
-end
-
-task.spawn(function()
-    while true do
-        updateTimeSinceExecuted()
-        task.wait(1)
-    end
+-- Update the dropdown every 1 second to keep player list current
+game:GetService("RunService").Heartbeat:Connect(function()
+    updateDropdown()
 end)
 
 local locations = {
@@ -501,29 +417,14 @@ for _, location in ipairs(locations) do
         Title = name,
         Description = "Teleport to " .. name,
         Callback = function()
-            Window:Dialog({
-                Title = "Teleport Confirmation",
-                Content = "Do you want to teleport to " .. name .. "?",
-                Buttons = {
-                    {
-                        Title = "Confirm",
-                        Callback = function()
-                            local player = game:GetService("Players").LocalPlayer
-                            if player and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
-                                if typeof(position) == "CFrame" then
-                                    player.Character.HumanoidRootPart.CFrame = position
-                                else
-                                    player.Character.HumanoidRootPart.CFrame = CFrame.new(position)
-                                end
-                            end
-                        end
-                    },
-                    {
-                        Title = "Cancel",
-                        Callback = function() end
-                    }
-                }
-            })
+            local player = game:GetService("Players").LocalPlayer
+            if player and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+                if typeof(position) == "CFrame" then
+                    player.Character.HumanoidRootPart.CFrame = position
+                else
+                    player.Character.HumanoidRootPart.CFrame = CFrame.new(position)
+                end
+            end
         end
     })
 end
@@ -635,7 +536,6 @@ Tabs.Misc:AddToggle("Anti Ping", {
             game:GetService("RunService").Stepped:Connect(checkPerformance)
         else
             -- Stop checking when Anti Ping is turned off
-            -- You can disconnect any previous connections if necessary
         end
     end
 })
@@ -818,27 +718,3 @@ Tabs.Misc:AddToggle("Zoom Bypasser", {
 })
 
 local AutoSpinWheelToggle = false
-
--- Add Auto Spin Wheel toggle
-Tabs.Misc:AddToggle("Auto Spin Wheel", {
-    Title = "Auto Spin Wheel",
-    Description = "Automatically spins the fortune wheel",
-    Default = false,
-    Callback = function(state)
-        AutoSpinWheelToggle = state
-        while AutoSpinWheelToggle do
-            -- Arguments for spinning the fortune wheel
-            local args = {
-                [1] = "openFortuneWheel",
-                [2] = game:GetService("ReplicatedStorage"):WaitForChild("fortuneWheelChances"):WaitForChild("Fortune Wheel")
-            }
-            
-            -- Invoke the server to spin the fortune wheel
-            game:GetService("ReplicatedStorage"):WaitForChild("rEvents"):WaitForChild("openFortuneWheelRemote"):InvokeServer(unpack(args))
-            
-            -- Wait before spinning again to avoid spamming
-            wait(0.25)  -- Adjust the time between spins if needed
-        end
-    end
-})
-
