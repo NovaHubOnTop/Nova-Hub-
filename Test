@@ -1,6 +1,6 @@
 -- Whitelist for specific usernames
 local whitelistedUsers = {
-   "",
+   "XxHaHaGetBetterXx",
    "Mrbignewcoming3",
    "",
    "",
@@ -77,7 +77,6 @@ local Window = NovaHub:CreateWindow({
 local Tabs = {
     Main = Window:AddTab({ Title = "Main", Icon = "scan-face" }),
     AutoFarm = Window:AddTab({ Title = "Auto Farm", Icon = "" }),
-    Killing = Window:AddTab({ Title = "Killing", Icon = "sword" }),
     Rebirth = Window:AddTab({ Title = "Rebirth", Icon = "refresh-ccw" }),
     Stats = Window:AddTab({ Title = "Stats", Icon = "plus-circle" }),
     Crystal = Window:AddTab({ Title = "Crystal", Icon = "gem" }),
@@ -815,7 +814,7 @@ end
 -- Add Anti Lag toggle
 Tabs.Misc:AddToggle("Anti Lag", {
     Title = "Anti Lag",
-    Description = "",
+    Description = "Reduces lag by disabling effects",
     Default = false,
     Callback = function(state)
         AntiLagToggle = state
@@ -835,7 +834,7 @@ local lockedPosition = game.Players.LocalPlayer.Character.HumanoidRootPart.Posit
 -- Add Lock Position toggle
 Tabs.Misc:AddToggle("Lock Position", {
     Title = "Lock Position",
-    Description = "",
+    Description = "Locks your position in place",
     Default = false,
     Callback = function(state)
         LockPositionToggle = state
@@ -862,7 +861,7 @@ local ZoomBypassToggle = false
 -- Add Zoom Bypasser toggle
 Tabs.Misc:AddToggle("Zoom Bypasser", {
     Title = "Zoom Bypasser",
-    Description = "",
+    Description = "Bypasses the zoom limit",
     Default = false,
     Callback = function(state)
         ZoomBypassToggle = state
@@ -884,7 +883,7 @@ local AutoSpinWheelToggle = false
 -- Add Auto Spin Wheel toggle
 Tabs.Misc:AddToggle("Auto Spin Wheel", {
     Title = "Auto Spin Wheel",
-    Description = "",
+    Description = "Automatically spins the fortune wheel",
     Default = false,
     Callback = function(state)
         AutoSpinWheelToggle = state
@@ -904,196 +903,3 @@ Tabs.Misc:AddToggle("Auto Spin Wheel", {
     end
 })
 
-local Whitelist = {} -- Stores whitelisted players
-local currentRadius = 10 -- Set default kill radius
-
--- Whitelist Input
-local WhitelistInput = Tabs.Killing:AddInput("Whitelist", {
-    Title = "Whitelist",
-    Default = "",
-    Placeholder = "Enter player name to whitelist",
-    Numeric = false,
-    Finished = false,
-    Callback = function(Value)
-        if Value ~= "" and not table.find(Whitelist, Value) then
-            table.insert(Whitelist, Value)
-            print(Value .. " added to whitelist")
-        end
-    end
-})
-
--- Unwhitelist Input
-local UnwhitelistInput = Tabs.Killing:AddInput("Unwhitelist", {
-    Title = "Unwhitelist",
-    Default = "",
-    Placeholder = "Enter player name to unwhitelist",
-    Numeric = false,
-    Finished = false,
-    Callback = function(Value)
-        if Value ~= "" then
-            for i, playerName in ipairs(Whitelist) do
-                if playerName == Value then
-                    table.remove(Whitelist, i)
-                    print(Value .. " removed from whitelist")
-                    break
-                end
-            end
-        end
-    end
-})
-
--- Create a function for Kill Effect & Radius
-local function killPlayers(targetName)
-    getgenv().killNearby = true
-    local radiusVisual = Instance.new("Part")
-    radiusVisual.Anchored = true
-    radiusVisual.CanCollide = false
-    radiusVisual.Transparency = 0.8
-    radiusVisual.Material = Enum.Material.ForceField
-    radiusVisual.Color = Color3.fromRGB(0, 255, 0)
-    radiusVisual.Size = Vector3.new(1, 0.1, 1)
-
-    task.spawn(function()
-        while getgenv().killNearby do
-            pcall(function()
-                local myCharacter = game.Players.LocalPlayer.Character
-                local myRoot = myCharacter and myCharacter:FindFirstChild("HumanoidRootPart")
-                if myRoot then
-                    radiusVisual.Parent = workspace
-                    radiusVisual.Size = Vector3.new(currentRadius * 2, 0.1, currentRadius * 2)
-                    radiusVisual.CFrame = myRoot.CFrame * CFrame.new(0, -2, 0)
-
-                    for _, player in pairs(game:GetService("Players"):GetPlayers()) do
-                        if player ~= game.Players.LocalPlayer and not table.find(Whitelist, player.Name) then
-                            if not targetName or (targetName and player.Name == targetName) then
-                                local char = player.Character
-                                local root = char and char:FindFirstChild("HumanoidRootPart")
-                                if root and myRoot then
-                                    local distance = (root.Position - myRoot.Position).Magnitude
-                                    if distance <= currentRadius then
-                                        local killEffect = Instance.new("Part")
-                                        killEffect.Anchored = true
-                                        killEffect.CanCollide = false
-                                        killEffect.Transparency = 0.5
-                                        killEffect.Material = Enum.Material.Neon
-                                        killEffect.Color = Color3.fromRGB(0, 255, 0)
-                                        killEffect.CFrame = root.CFrame
-                                        killEffect.Size = Vector3.new(5, 5, 5)
-                                        killEffect.Parent = workspace
-
-                                        game:GetService("TweenService"):Create(killEffect, TweenInfo.new(0.5), {
-                                            Size = Vector3.new(0, 0, 0),
-                                            Transparency = 1
-                                        }):Play()
-
-                                        game:GetService("Debris"):AddItem(killEffect, 0.5)
-                                        firetouchinterest(root, myCharacter.LeftHand, 0)
-                                        task.wait()
-                                        firetouchinterest(root, myCharacter.LeftHand, 1)
-                                    end
-                                end
-                            end
-                        end
-                    end
-                    task.wait(0.1)
-                end
-            end)
-            task.wait(0.1)
-        end
-        radiusVisual:Destroy()
-    end)
-end
-
--- Auto Kill Toggle
-local AutoKillToggle = Tabs.Killing:AddToggle("Auto Kill", {Title = "Auto Kill", Default = false})
-
-AutoKillToggle:OnChanged(function(enabled)
-    if enabled then
-        killPlayers(nil) -- Nil means it targets all players
-    else
-        getgenv().killNearby = false
-    end
-end)
-
--- Targeting Paragraph
-Tabs.Killing:AddParagraph({
-    Title = "Targeting",
-    Content = ""
-})
-
--- Select Target Dropdown
-local SelectTargetDropdown = Tabs.Killing:AddDropdown("Select Target", {
-    Title = "Select Target",
-    Values = {}, -- Initially empty
-    Multi = false,
-    Default = nil,
-})
-
--- Function to update dropdown with player names
-local function updateTargetDropdown()
-    local playerNames = {}
-    for _, player in pairs(game.Players:GetPlayers()) do
-        table.insert(playerNames, player.Name)
-    end
-    SelectTargetDropdown:SetValues(playerNames)
-end
-
-updateTargetDropdown()
-
--- Kill Target Toggle
-local KillTargetToggle = Tabs.Killing:AddToggle("Kill Target", {Title = "Kill Target", Default = false})
-
-KillTargetToggle:OnChanged(function(enabled)
-    if enabled then
-        local targetName = SelectTargetDropdown:GetValue()
-        if targetName then
-            killPlayers(targetName) -- Targets selected player only
-        end
-    else
-        getgenv().killNearby = false
-    end
-end)
-
--- Update dropdown when players join/leave
-game.Players.PlayerAdded:Connect(updateTargetDropdown)
-game.Players.PlayerRemoving:Connect(updateTargetDropdown)
-
-Tabs.Killing:AddParagraph({
-    Title = "Auto Punch",
-    Content = "Activate The Auto Punch when you
-use a toggle that kills a player"
-})
-
-local AutoPunchNoAnimToggle = false
-
--- Add Auto Punch [No Animation] toggle
-Tabs.Killing:AddToggle("Auto Punch [No Animation]", {
-    Title = "Auto Punch [No Animation]",
-    Description = "Automatically punches every 0.1 seconds without animation.",
-    Default = false,
-    Callback = function(state)
-        AutoPunchNoAnimToggle = state
-        local player = game.Players.LocalPlayer
-        local playerName = player.Name
-        local punchTool =
-            player.Backpack:FindFirstChild("Punch") or
-            game.Workspace:FindFirstChild(playerName):FindFirstChild("Punch")
-        _G.autoPunchanim = true -- Global control variable
-
-        while AutoPunchNoAnimToggle do
-            if punchTool then
-                if punchTool.Parent ~= game.Workspace:FindFirstChild(playerName) then
-                    punchTool.Parent = game.Workspace:FindFirstChild(playerName) -- Equip the tool
-                end
-                -- Perform the punching action
-                game.Players.LocalPlayer.muscleEvent:FireServer("punch", "rightHand")
-                game.Players.LocalPlayer.muscleEvent:FireServer("punch", "leftHand")
-                wait(0.1) -- Punch every 0.1 seconds
-            else
-                warn("Punch tool not found")
-                _G.autoPunchanim = false -- Stop the loop if tool is not found
-                break
-            end
-        end
-    end
-})
