@@ -440,7 +440,58 @@ task.spawn(function()
     end
 end)
 
+local Toggle = Tabs.Killing:AddToggle("Auto Kill", {Title = "Auto Kill", Default = false})
 
+Toggle:OnChanged(function(enabled)
+    if enabled then
+        _G.autoPunchanim = true
+        local player = game.Players.LocalPlayer
+        local character = player.Character or player.CharacterAdded:Wait()
+        local punchTool = player.Backpack:FindFirstChild("Punch") or character:FindFirstChild("Punch")
+
+        if punchTool and punchTool.Parent ~= character then
+            punchTool.Parent = character
+        end
+
+        task.spawn(function()
+            while _G.autoPunchanim do
+                character = player.Character
+                if character then
+                    local rightHand = character:FindFirstChild("RightHand")
+                    local leftHand = character:FindFirstChild("LeftHand")
+
+                    if rightHand and leftHand then
+                        local players = game.Players:GetPlayers()
+                        local i = 1
+
+                        for _, targetPlayer in pairs(players) do
+                            if targetPlayer ~= player then
+                                local targetCharacter = targetPlayer.Character
+                                if targetCharacter and targetCharacter:FindFirstChild("HumanoidRootPart") then
+                                    local touchPart = targetCharacter.HumanoidRootPart
+
+                                    if i % 2 == 0 then
+                                        firetouchinterest(rightHand, touchPart, 0)
+                                        task.wait(0.05)
+                                        firetouchinterest(rightHand, touchPart, 1)
+                                    else
+                                        firetouchinterest(leftHand, touchPart, 0)
+                                        task.wait(0.05)
+                                        firetouchinterest(leftHand, touchPart, 1)
+                                    end
+                                    i = i + 1
+                                end
+                            end
+                        end
+                    end
+                end
+                task.wait(0.5) -- Increased to 0.5s
+            end
+        end)
+    else
+        _G.autoPunchanim = false
+    end
+end)
 
 local Toggle = Tabs.Killing:AddToggle("Auto Punch [No Animation]", {Title = "Auto Punch [No Animation]", Default = false })
 
