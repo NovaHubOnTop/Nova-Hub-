@@ -200,6 +200,8 @@ local rebirthStats = Tabs.Rebirth:AddParagraph({
 -- **Update Rebirth Stats Every 0.1 Seconds**
 task.spawn(function()
     local initialRebirths = 0
+    local player = game.Players.LocalPlayer  -- Make sure the player variable is defined
+    local leaderstats = player:WaitForChild("leaderstats")  -- Ensure leaderstats is available
     if leaderstats then
         local rebirths = leaderstats:FindFirstChild("Rebirths")
         if rebirths then
@@ -270,6 +272,7 @@ Tabs.Rebirth:AddToggle("Auto Rebirth Until Reach Target Amount", { Title = "Auto
     end
 end)
 
+-- **Auto Set Size 2 Toggle**
 local Toggle = Tabs.Rebirth:AddToggle("Auto Set Size 2", {Title = "Auto Set Size 2", Default = false })
 
 local autoSetSize2Running = false
@@ -286,9 +289,9 @@ Toggle:OnChanged(function(value)
     end
 end)
 
+-- **Auto Hide Pets Toggle**
 local AutoHidePetsToggle = false
 
--- Add Auto Hide Pets toggle
 Tabs.Rebirth:AddToggle("Auto Hide Pets", {
     Title = "Auto Hide Pets",
     Description = "Toggles hiding or showing pets automatically.",
@@ -302,7 +305,7 @@ Tabs.Rebirth:AddToggle("Auto Hide Pets", {
                     [1] = "hidePets"
                 }
                 game:GetService("ReplicatedStorage"):WaitForChild("rEvents"):WaitForChild("showPetsEvent"):FireServer(unpack(args))
-                wait(0.1) -- Repeat every 0.1 seconds
+                task.wait(0.1) -- Repeat every 0.1 seconds
             end
         else
             -- Show pets when toggled off
@@ -380,12 +383,24 @@ Tabs.Rebirth:AddToggle("Hide Frame", { Title = "Hide Frame", Default = false }):
     end
 end)
 
-
--- Time Since Script Executed Paragraph
-local TimeSinceExecutedParagraph = Tabs.Stats:AddParagraph({
-    Title = "Time Since Script Executed",
-    Content = "Hours: 0 Minutes: 0 Seconds: 0"
+-- Session Time Paragraph
+local SessionTimeParagraph = Tabs.Stats:AddParagraph({
+    Title = "Session Time",
+    Content = "Days: 0 Hours: 0 Minutes: 0 Seconds: 0"
 })
+
+local startTime = tick()
+
+-- Function to update session time
+local function updateSessionTime()
+    local elapsedTime = tick() - startTime
+    local days = math.floor(elapsedTime / 86400)  -- 86400 seconds in a day
+    local hours = math.floor((elapsedTime % 86400) / 3600)
+    local minutes = math.floor((elapsedTime % 3600) / 60)
+    local seconds = math.floor(elapsedTime % 60)
+
+    SessionTimeParagraph:SetDesc(string.format("Days: %d Hours: %d Minutes: %d Seconds: %d", days, hours, minutes, seconds))
+end
 
 -- Select Target Dropdown
 local Dropdown = Tabs.Stats:AddDropdown("Select Target", {
@@ -442,6 +457,9 @@ game:GetService("RunService").Heartbeat:Connect(function()
             Amount Of Kills: %s
         ]], abbreviateNumber(strength), abbreviateNumber(durability), abbreviateNumber(agility), abbreviateNumber(kills)))
     end
+
+    -- Update session time every second
+    updateSessionTime()
 end)
 
 -- Function to update the dropdown with player names
@@ -459,10 +477,15 @@ local function updateDropdown()
     end
 end
 
--- Update the dropdown every 1 second to keep player list current
-game:GetService("RunService").Heartbeat:Connect(function()
+-- Update the dropdown when a player joins or leaves
+game.Players.PlayerAdded:Connect(function()
     updateDropdown()
 end)
+
+game.Players.PlayerRemoving:Connect(function()
+    updateDropdown()
+end)
+
 
 local locations = {
     {"Tiny Island", Vector3.new(-38, 5, 1884)},
