@@ -444,7 +444,6 @@ local Toggle = Tabs.Killing:AddToggle("Auto Kill", {Title = "Auto Kill", Default
 
 Toggle:OnChanged(function(bool)
     if bool then
-        -- Start Auto Kill
         _G.autoPunchanim = true
         local player = game.Players.LocalPlayer
 
@@ -476,14 +475,14 @@ Toggle:OnChanged(function(bool)
                                     -- Right Hand attack
                                     if rightHand then
                                         firetouchinterest(rightHand, touchPart, 0)
-                                        task.wait(0.05)
+                                        task.wait(0.5)
                                         firetouchinterest(rightHand, touchPart, 1)
                                     end
 
                                     -- Left Hand attack
                                     if leftHand then
                                         firetouchinterest(leftHand, touchPart, 0)
-                                        task.wait(0.05)
+                                        task.wait(0.5)
                                         firetouchinterest(leftHand, touchPart, 1)
                                     end
                                 end
@@ -493,11 +492,10 @@ Toggle:OnChanged(function(bool)
                         _G.autoPunchanim = false -- Stop if tool not found
                     end
                 end
-                task.wait(0.1) -- Loop delay
+                task.wait(0.5) -- Increased wait time to avoid overlap issues
             end
         end)
     else
-        -- Stop Auto Kill
         _G.autoPunchanim = false
     end
 end)
