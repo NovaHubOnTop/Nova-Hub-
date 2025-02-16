@@ -16,8 +16,8 @@ local Window = NovaHub:CreateWindow({
 local Tabs = {
     Main = Window:AddTab({ Title = "Main", Icon = "scan-face" }),
     AutoFarm = Window:AddTab({ Title = "Auto Farm", Icon = "biceps-flexed" }),
-    Rebirth = Window:AddTab({ Title = "Rebirth", Icon = "refresh" }),
-    Stats = Window:AddTab({ Title = "Stats", Icon = "particle" }),
+    Rebirth = Window:AddTab({ Title = "Rebirth", Icon = "Refresh" }),
+    Stats = Window:AddTab({ Title = "Stats", Icon = "particles" }),
     Crystal = Window:AddTab({ Title = "Crystal", Icon = "gem" }),
     Killing = Window:AddTab({ Title = "Killing", Icon = "sword" }),
     Teleport = Window:AddTab({ Title = "Teleport", Icon = "asterisk" }),
@@ -246,7 +246,7 @@ end)
 
 local hideFrame = false
 
-Tabs.Main:AddToggle("Hide Frame", { Title = "Hide Frame", Default = false }):OnChanged(function(state)
+Tabs.Rebirth:AddToggle("Hide Frame", { Title = "Hide Frame", Default = false }):OnChanged(function(state)
     hideFrame = state
     local player = game.Players.LocalPlayer
     local playerGui = player:FindFirstChild("PlayerGui")
