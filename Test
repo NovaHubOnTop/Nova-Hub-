@@ -182,6 +182,43 @@ Tabs.Rebirth:AddToggle("Auto Rebirth (Infinitely)", { Title = "Auto Rebirth (Inf
     end
 end)
 
+-- **Rebirth Target Textbox**
+local rebirthTargetTextbox = Tabs.Rebirth:AddInput("Rebirth Target", {
+    Title = "Rebirth Target",
+    Default = "0",
+    Placeholder = "Enter Target Rebirth Amount",
+    Numeric = true,  -- Only allows numbers
+    Finished = true, -- Calls callback when you press enter
+    Callback = function(Value)
+        -- No print, just use Value as needed
+    end
+})
+
+-- **Auto Rebirth Until Reach Target Amount Toggle**
+Tabs.Rebirth:AddToggle("Auto Rebirth Until Reach Target Amount", { Title = "Auto Rebirth Until Reach Target Amount", Default = false }):OnChanged(function(state)
+    if state then
+        local targetRebirths = tonumber(rebirthTargetTextbox.Value) or 0
+        task.spawn(function()
+            while state do
+                local currentRebirths = 0
+                if leaderstats then
+                    local rebirths = leaderstats:FindFirstChild("Rebirths")
+                    if rebirths then
+                        currentRebirths = rebirths.Value
+                    end
+                end
+                
+                if currentRebirths >= targetRebirths then
+                    break
+                end
+
+                game:GetService("ReplicatedStorage"):WaitForChild("rEvents"):WaitForChild("rebirthRemote"):InvokeServer("rebirthRequest")
+                task.wait(0.1)
+            end
+        end)
+    end
+end)
+
 -- **Auto Eat Protein Egg Every 30 Minutes**
 Tabs.Rebirth:AddToggle("Auto Eat Protein Egg", { Title = "Auto Eat Protein Egg Every 30 Minutes", Default = false }):OnChanged(function(state)
     if state then
@@ -227,6 +264,7 @@ Tabs.Rebirth:AddToggle("Eat Every Protein Eggs", { Title = "Eat Every Protein Eg
     end
 end)
 
+-- **Hide Frame Toggle**
 Tabs.Rebirth:AddToggle("Hide Frame", { Title = "Hide Frame", Default = false }):OnChanged(function(state)
     local replicatedStorage = game:GetService("ReplicatedStorage")
     
@@ -446,9 +484,11 @@ AutoKillToggle:OnChanged(function(state)
                 task.wait(0.1) -- Run every 0.1 seconds
             end
         end)
+    else
+        -- Reset after Auto Kill is turned off
+        _G.autoKill = false
     end
 end)
-
 
 local Toggle = Tabs.Killing:AddToggle("Auto Punch", {Title = "Auto Punch", Default = false })
 
@@ -456,12 +496,12 @@ Toggle:OnChanged(function()
     if Toggle.Value then
         task.spawn(function()
             while Toggle.Value do
-                -- Equip the Punch tool
+                -- Equip the Punch tool if not already equipped
                 local player = game:GetService("Players").LocalPlayer
                 local backpack = player:FindFirstChild("Backpack")
                 if backpack then
                     local tool = backpack:FindFirstChild("Punch")
-                    if tool then
+                    if tool and not tool.Parent then
                         tool.Parent = player.Character
                     end
                 end
@@ -472,5 +512,12 @@ Toggle:OnChanged(function()
                 task.wait(0.1) -- Adjust delay as needed
             end
         end)
+    else
+        -- Stop auto punching and un-equip the Punch tool if Auto Kill is off
+        local player = game:GetService("Players").LocalPlayer
+        local tool = player.Character:FindFirstChild("Punch")
+        if tool then
+            tool.Parent = player.Backpack
+        end
     end
 end)
