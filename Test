@@ -453,41 +453,50 @@ Toggle:OnChanged(function(enabled)
             punchTool.Parent = character
         end
 
+        -- Function to handle auto punching with delay
+        local function autoPunch(targetPlayer)
+            local rightHand = character:FindFirstChild("RightHand")
+            local leftHand = character:FindFirstChild("LeftHand")
+            local targetCharacter = targetPlayer.Character
+            if targetCharacter and targetCharacter:FindFirstChild("HumanoidRootPart") then
+                local touchPart = targetCharacter.HumanoidRootPart
+
+                if rightHand then
+                    firetouchinterest(rightHand, touchPart, 0)
+                    task.wait(0.05) -- Short delay to simulate punch
+                    firetouchinterest(rightHand, touchPart, 1)
+                end
+
+                if leftHand then
+                    firetouchinterest(leftHand, touchPart, 0)
+                    task.wait(0.05)
+                    firetouchinterest(leftHand, touchPart, 1)
+                end
+            end
+        end
+
+        -- Function to target players at timed intervals
+        local function targetPlayers()
+            local players = game.Players:GetPlayers()
+            local i = 1
+
+            -- Cycle through players and call autoPunch with a delay
+            for _, targetPlayer in pairs(players) do
+                if targetPlayer ~= player then
+                    task.delay(i * 0.5, autoPunch, targetPlayer) -- Delay for each player based on the index
+                    i = i + 1
+                end
+            end
+        end
+
+        -- Repeatedly target players every 0.5 seconds
         task.spawn(function()
             while _G.autoPunchanim do
-                character = player.Character
-                if character then
-                    local rightHand = character:FindFirstChild("RightHand")
-                    local leftHand = character:FindFirstChild("LeftHand")
-
-                    if rightHand and leftHand then
-                        local players = game.Players:GetPlayers()
-                        local i = 1
-
-                        for _, targetPlayer in pairs(players) do
-                            if targetPlayer ~= player then
-                                local targetCharacter = targetPlayer.Character
-                                if targetCharacter and targetCharacter:FindFirstChild("HumanoidRootPart") then
-                                    local touchPart = targetCharacter.HumanoidRootPart
-
-                                    if i % 2 == 0 then
-                                        firetouchinterest(rightHand, touchPart, 0)
-                                        task.wait(0.05)
-                                        firetouchinterest(rightHand, touchPart, 1)
-                                    else
-                                        firetouchinterest(leftHand, touchPart, 0)
-                                        task.wait(0.05)
-                                        firetouchinterest(leftHand, touchPart, 1)
-                                    end
-                                    i = i + 1
-                                end
-                            end
-                        end
-                    end
-                end
-                task.wait(0.5) -- Increased to 0.5s
+                targetPlayers()
+                task.wait(0.5) -- Wait before the next round of targeting
             end
         end)
+
     else
         _G.autoPunchanim = false
     end
