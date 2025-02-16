@@ -135,24 +135,8 @@ Tabs.AutoFarm:AddToggle("Auto Equip Handstands", { Title = "Auto Equip Handstand
     autoEquipTool("Handstand", "Auto Equip Handstands")
 end)
 
-local autoRebirth = false
-local rebirthUntilTarget = false
-local targetRebirths = 0
-local autoEatProteinEgg = false
-local eatEveryProteinEggs = false
-local hideFrame = false
-local initialRebirths = 0
-local rebirthsGained = 0
-
 local player = game.Players.LocalPlayer
 local leaderstats = player:FindFirstChild("leaderstats")
-
-if leaderstats then
-    local rebirths = leaderstats:FindFirstChild("Rebirths")
-    if rebirths then
-        initialRebirths = rebirths.Value
-    end
-end
 
 -- **Rebirth Stats Paragraph**
 local rebirthStats = Tabs.Rebirth:AddParagraph({
@@ -162,6 +146,14 @@ local rebirthStats = Tabs.Rebirth:AddParagraph({
 
 -- **Update Rebirth Stats Every 0.1 Seconds**
 task.spawn(function()
+    local initialRebirths = 0
+    if leaderstats then
+        local rebirths = leaderstats:FindFirstChild("Rebirths")
+        if rebirths then
+            initialRebirths = rebirths.Value
+        end
+    end
+
     while true do
         local currentRebirths = 0
         if leaderstats then
@@ -171,7 +163,7 @@ task.spawn(function()
             end
         end
 
-        rebirthsGained = currentRebirths - initialRebirths
+        local rebirthsGained = currentRebirths - initialRebirths
         rebirthStats:SetDesc("Amount Of Rebirth: " .. currentRebirths .. "\nAmount Of Rebirth Gained In Server: " .. rebirthsGained)
 
         task.wait(0.1)
@@ -180,43 +172,10 @@ end)
 
 -- **Auto Rebirth Toggle**
 Tabs.Rebirth:AddToggle("Auto Rebirth (Infinitely)", { Title = "Auto Rebirth (Infinitely)", Default = false }):OnChanged(function(state)
-    autoRebirth = state
     if state then
         task.spawn(function()
-            while autoRebirth do
+            while state do
                 game:GetService("ReplicatedStorage"):WaitForChild("rEvents"):WaitForChild("rebirthRemote"):InvokeServer("rebirthRequest")
-                task.wait(0.1)
-            end
-        end)
-    end
-end)
-
--- **Input Field for Target Rebirth Amount**
-Tabs.Rebirth:AddInput("Select Rebirth Target", {
-    Title = "Select Rebirth Target",
-    Default = "0",
-    Placeholder = "Enter Target Rebirths",
-    Numeric = true,
-    Finished = true,
-    Callback = function(Value)
-        targetRebirths = tonumber(Value) or 0
-    end
-})
-
--- **Rebirth Until Target Toggle**
-Tabs.Rebirth:AddToggle("Rebirth Until Target Amount", { Title = "Rebirth Until Target Amount", Default = false }):OnChanged(function(state)
-    rebirthUntilTarget = state
-    if state then
-        task.spawn(function()
-            while rebirthUntilTarget do
-                if leaderstats then
-                    local rebirths = leaderstats:FindFirstChild("Rebirths")
-                    if rebirths and rebirths.Value >= targetRebirths then
-                        rebirthUntilTarget = false
-                        break
-                    end
-                    game:GetService("ReplicatedStorage"):WaitForChild("rEvents"):WaitForChild("rebirthRemote"):InvokeServer("rebirthRequest")
-                end
                 task.wait(0.1)
             end
         end)
@@ -225,10 +184,9 @@ end)
 
 -- **Auto Eat Protein Egg Every 30 Minutes**
 Tabs.Rebirth:AddToggle("Auto Eat Protein Egg", { Title = "Auto Eat Protein Egg Every 30 Minutes", Default = false }):OnChanged(function(state)
-    autoEatProteinEgg = state
     if state then
         task.spawn(function()
-            while autoEatProteinEgg do
+            while state do
                 local backpack = player:FindFirstChild("Backpack")
                 if backpack then
                     local tool = backpack:FindFirstChild("Protein Egg")
@@ -240,7 +198,7 @@ Tabs.Rebirth:AddToggle("Auto Eat Protein Egg", { Title = "Auto Eat Protein Egg E
                 end
 
                 for i = 1, 1800 do
-                    if not autoEatProteinEgg then break end
+                    if not state then break end
                     task.wait(1)
                 end
             end
@@ -250,10 +208,9 @@ end)
 
 -- **Eat Every Protein Egg In Inventory**
 Tabs.Rebirth:AddToggle("Eat Every Protein Eggs", { Title = "Eat Every Protein Eggs In Inventory", Default = false }):OnChanged(function(state)
-    eatEveryProteinEggs = state
     if state then
         task.spawn(function()
-            while eatEveryProteinEggs do
+            while state do
                 local backpack = player:FindFirstChild("Backpack")
                 if backpack then
                     for _, tool in ipairs(backpack:GetChildren()) do
@@ -272,7 +229,6 @@ end)
 
 -- **Hide All Frames in the Game**
 Tabs.Rebirth:AddToggle("Hide Frame", { Title = "Hide Frame", Default = false }):OnChanged(function(state)
-    hideFrame = state
     local function toggleFrames(visibility)
         for _, descendant in ipairs(game:GetDescendants()) do
             if descendant:IsA("Frame") then
@@ -281,11 +237,7 @@ Tabs.Rebirth:AddToggle("Hide Frame", { Title = "Hide Frame", Default = false }):
         end
     end
 
-    if hideFrame then
-        toggleFrames(false) -- Hide all frames
-    else
-        toggleFrames(true) -- Show all frames
-    end
+    toggleFrames(not state) -- Toggle frames based on state
 end)
 
 
