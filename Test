@@ -17,7 +17,7 @@ local Tabs = {
     Main = Window:AddTab({ Title = "Main", Icon = "scan-face" }),
     AutoFarm = Window:AddTab({ Title = "Auto Farm", Icon = "biceps-flexed" }),
     Rebirth = Window:AddTab({ Title = "Rebirth", Icon = "refresh-ccw" }),
-    Stats = Window:AddTab({ Title = "Stats", Icon = "rbxassetid://15623956340"}" }),
+    Stats = Window:AddTab({ Title = "Stats", Icon = "rbxassetid://15623956340" }),
     Crystal = Window:AddTab({ Title = "Crystal", Icon = "gem" }),
     Killing = Window:AddTab({ Title = "Killing", Icon = "sword" }),
     Teleport = Window:AddTab({ Title = "Teleport", Icon = "asterisk" }),
