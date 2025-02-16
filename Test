@@ -193,6 +193,23 @@ local Dropdown = Tabs.Stats:AddDropdown("Select Target", {
     Default = 1,
 })
 
+-- Create the paragraph for target stats
+local TargetStatsParagraph = Tabs.Stats:AddParagraph({
+    Title = "Target Stats",
+    Content = "Amount Of Strength: 0\nAmount Of Durability: 0\nAmount Of Agility: 0\nAmount Of Kills: 0",
+})
+
+-- Function to abbreviate numbers for readability (e.g., 1000 becomes 1K)
+local function abbreviateNumber(number)
+    if number >= 1e6 then
+        return string.format("%.1fM", number / 1e6)
+    elseif number >= 1e3 then
+        return string.format("%.1fK", number / 1e3)
+    else
+        return tostring(number)
+    end
+end
+
 -- Populate the dropdown with player names
 local function updateDropdown()
     local playerNames = {}
@@ -221,30 +238,34 @@ game.Players.PlayerRemoving:Connect(updateDropdown)
 
 -- Handle dropdown changes
 Dropdown:OnChanged(function(selectedPlayerName)
-    -- Update the target stats paragraph with selected player's data
+    -- Find the selected player
     local selectedPlayer = game.Players:FindFirstChild(selectedPlayerName)
     if selectedPlayer then
+        -- Retrieve the player's leaderstats
         local leaderstats = selectedPlayer:FindFirstChild("leaderstats")
         local strength = leaderstats and leaderstats.Strength and leaderstats.Strength.Value or 0
         local durability = selectedPlayer:FindFirstChild("Durability") and selectedPlayer.Durability.Value or 0
         local agility = selectedPlayer:FindFirstChild("Agility") and selectedPlayer.Agility.Value or 0
         local kills = leaderstats and leaderstats.Kills and leaderstats.Kills.Value or 0
 
-        -- Update the paragraph content
-        TargetStatsParagraph:SetContent(string.format([[
-            Amount Of Strength: %s
-            Amount Of Durability: %s
-            Amount Of Agility: %s
-            Amount Of Kills: %s
-        ]], abbreviateNumber(strength), abbreviateNumber(durability), abbreviateNumber(agility), abbreviateNumber(kills)))
+        -- Safely update the paragraph with the player's stats
+        if TargetStatsParagraph then
+            TargetStatsParagraph:SetContent(string.format([[
+                Amount Of Strength: %s
+                Amount Of Durability: %s
+                Amount Of Agility: %s
+                Amount Of Kills: %s
+            ]], abbreviateNumber(strength), abbreviateNumber(durability), abbreviateNumber(agility), abbreviateNumber(kills)))
+        else
+            warn("TargetStatsParagraph is not defined!")
+        end
+    else
+        -- If player doesn't exist, set stats to 0
+        if TargetStatsParagraph then
+            TargetStatsParagraph:SetContent("Amount Of Strength: 0\nAmount Of Durability: 0\nAmount Of Agility: 0\nAmount Of Kills: 0")
+        end
     end
 end)
-
--- Create the paragraph for target stats
-local TargetStatsParagraph = Tabs.Stats:AddParagraph({
-    Title = "Target Stats",
-    Content = "Amount Of Strength: 0\nAmount Of Durability: 0\nAmount Of Agility: 0\nAmount Of Kills: 0",
-})
 
 -- Initial population of the dropdown when the script runs
 updateDropdown()
