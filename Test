@@ -81,20 +81,77 @@ Tabs.AutoFarm:AddToggle("Auto Reps", { Title = "Auto Reps", Default = false }):O
     end
 end)
 
--- **Auto Equip Tool Function**
-local function autoEquipTool(toolName, toggleName)
+-- **Auto Equip Tool Functions**
+local toggleStates = {}  -- Define toggleStates to track toggle states
+
+-- Function to infinitely equip the "Weight" tool
+local function autoEquipWeight()
     local player = game.Players.LocalPlayer
     local backpack = player:FindFirstChild("Backpack")
-    if not toggleStates[toggleName] then
-        toggleStates[toggleName] = false
-        return
-    end
 
+    -- Loop to equip the "Weight" tool while toggle is on
     task.spawn(function()
-        while toggleStates[toggleName] do
+        while toggleStates["Auto Equip Weight"] do
             if backpack then
-                local tool = backpack:FindFirstChild(toolName)
-                if tool then
+                local tool = backpack:FindFirstChild("Weight")
+                if tool and player.Character and player.Character:FindFirstChild("Humanoid") then
+                    player.Character.Humanoid:EquipTool(tool)
+                end
+            end
+            task.wait(0.1)
+        end
+    end)
+end
+
+-- Function to infinitely equip the "Pushups" tool
+local function autoEquipPushups()
+    local player = game.Players.LocalPlayer
+    local backpack = player:FindFirstChild("Backpack")
+
+    -- Loop to equip the "Pushups" tool while toggle is on
+    task.spawn(function()
+        while toggleStates["Auto Equip Pushups"] do
+            if backpack then
+                local tool = backpack:FindFirstChild("Pushups")
+                if tool and player.Character and player.Character:FindFirstChild("Humanoid") then
+                    player.Character.Humanoid:EquipTool(tool)
+                end
+            end
+            task.wait(0.1)
+        end
+    end)
+end
+
+-- Function to infinitely equip the "Sit-ups" tool
+local function autoEquipSitups()
+    local player = game.Players.LocalPlayer
+    local backpack = player:FindFirstChild("Backpack")
+
+    -- Loop to equip the "Sit-ups" tool while toggle is on
+    task.spawn(function()
+        while toggleStates["Auto Equip Situps"] do
+            if backpack then
+                local tool = backpack:FindFirstChild("Sit-ups")
+                if tool and player.Character and player.Character:FindFirstChild("Humanoid") then
+                    player.Character.Humanoid:EquipTool(tool)
+                end
+            end
+            task.wait(0.1)
+        end
+    end)
+end
+
+-- Function to infinitely equip the "Handstands" tool
+local function autoEquipHandstands()
+    local player = game.Players.LocalPlayer
+    local backpack = player:FindFirstChild("Backpack")
+
+    -- Loop to equip the "Handstands" tool while toggle is on
+    task.spawn(function()
+        while toggleStates["Auto Equip Handstands"] do
+            if backpack then
+                local tool = backpack:FindFirstChild("Handstand")
+                if tool and player.Character and player.Character:FindFirstChild("Humanoid") then
                     player.Character.Humanoid:EquipTool(tool)
                 end
             end
@@ -108,22 +165,30 @@ Tabs.AutoFarm:AddParagraph({ Title = "Tools", Content = "" })
 -- **Auto Equip Toggles**
 Tabs.AutoFarm:AddToggle("Auto Equip Weight", { Title = "Auto Equip Weight", Default = false }):OnChanged(function(state)
     toggleStates["Auto Equip Weight"] = state
-    autoEquipTool("Weight", "Auto Equip Weight")
+    if state then
+        autoEquipWeight()  -- Start equipping Weight tool when toggle is on
+    end
 end)
 
 Tabs.AutoFarm:AddToggle("Auto Equip Pushups", { Title = "Auto Equip Pushups", Default = false }):OnChanged(function(state)
     toggleStates["Auto Equip Pushups"] = state
-    autoEquipTool("Pushups", "Auto Equip Pushups")
+    if state then
+        autoEquipPushups()  -- Start equipping Pushups tool when toggle is on
+    end
 end)
 
 Tabs.AutoFarm:AddToggle("Auto Equip Situps", { Title = "Auto Equip Situps", Default = false }):OnChanged(function(state)
     toggleStates["Auto Equip Situps"] = state
-    autoEquipTool("Sit-ups", "Auto Equip Situps")
+    if state then
+        autoEquipSitups()  -- Start equipping Sit-ups tool when toggle is on
+    end
 end)
 
 Tabs.AutoFarm:AddToggle("Auto Equip Handstands", { Title = "Auto Equip Handstands", Default = false }):OnChanged(function(state)
     toggleStates["Auto Equip Handstands"] = state
-    autoEquipTool("Handstand", "Auto Equip Handstands")
+    if state then
+        autoEquipHandstands()  -- Start equipping Handstand tool when toggle is on
+    end
 end)
 
 -- **Rebirth Stats Paragraph**
