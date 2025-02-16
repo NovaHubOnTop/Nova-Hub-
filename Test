@@ -140,14 +140,43 @@ local rebirthUntilTarget = false
 local targetRebirths = 0
 local autoEatProteinEgg = false
 local eatEveryProteinEggs = false
-local totalRebirthsGained = 0
 local hideFrame = false
+local initialRebirths = 0
+local rebirthsGained = 0
+
+local player = game.Players.LocalPlayer
+local leaderstats = player:FindFirstChild("leaderstats")
+
+if leaderstats then
+    local rebirths = leaderstats:FindFirstChild("Rebirths")
+    if rebirths then
+        initialRebirths = rebirths.Value
+    end
+end
 
 -- **Rebirth Stats Paragraph**
-local rebirthStatsParagraph = Tabs.Rebirth:AddParagraph({
+local rebirthStats = Tabs.Rebirth:AddParagraph({
     Title = "Rebirth Stats",
     Content = "Amount Of Rebirth: 0\nAmount Of Rebirth Gained In Server: 0"
 })
+
+-- **Update Rebirth Stats Every 0.1 Seconds**
+task.spawn(function()
+    while true do
+        local currentRebirths = 0
+        if leaderstats then
+            local rebirths = leaderstats:FindFirstChild("Rebirths")
+            if rebirths then
+                currentRebirths = rebirths.Value
+            end
+        end
+
+        rebirthsGained = currentRebirths - initialRebirths
+        rebirthStats:SetDesc("Amount Of Rebirth: " .. currentRebirths .. "\nAmount Of Rebirth Gained In Server: " .. rebirthsGained)
+
+        task.wait(0.1)
+    end
+end)
 
 -- **Auto Rebirth Toggle**
 Tabs.Rebirth:AddToggle("Auto Rebirth (Infinitely)", { Title = "Auto Rebirth (Infinitely)", Default = false }):OnChanged(function(state)
@@ -156,7 +185,6 @@ Tabs.Rebirth:AddToggle("Auto Rebirth (Infinitely)", { Title = "Auto Rebirth (Inf
         task.spawn(function()
             while autoRebirth do
                 game:GetService("ReplicatedStorage"):WaitForChild("rEvents"):WaitForChild("rebirthRemote"):InvokeServer("rebirthRequest")
-                totalRebirthsGained = totalRebirthsGained + 1
                 task.wait(0.1)
             end
         end)
@@ -164,15 +192,14 @@ Tabs.Rebirth:AddToggle("Auto Rebirth (Infinitely)", { Title = "Auto Rebirth (Inf
 end)
 
 -- **Input Field for Target Rebirth Amount**
-local Input = Tabs.Rebirth:AddInput("Select Rebirth Target", {
+Tabs.Rebirth:AddInput("Select Rebirth Target", {
     Title = "Select Rebirth Target",
     Default = "0",
     Placeholder = "Enter Target Rebirths",
-    Numeric = true, -- Only allows numbers
-    Finished = true, -- Calls callback when you press enter
+    Numeric = true,
+    Finished = true,
     Callback = function(Value)
         targetRebirths = tonumber(Value) or 0
-        print("Target rebirths set to:", targetRebirths)
     end
 })
 
@@ -182,17 +209,13 @@ Tabs.Rebirth:AddToggle("Rebirth Until Target Amount", { Title = "Rebirth Until T
     if state then
         task.spawn(function()
             while rebirthUntilTarget do
-                local player = game.Players.LocalPlayer
-                local leaderstats = player:FindFirstChild("leaderstats")
                 if leaderstats then
-                    local currentRebirths = leaderstats:FindFirstChild("Rebirths")
-                    if currentRebirths and currentRebirths.Value >= targetRebirths then
+                    local rebirths = leaderstats:FindFirstChild("Rebirths")
+                    if rebirths and rebirths.Value >= targetRebirths then
                         rebirthUntilTarget = false
-                        print("Target rebirth amount reached!")
                         break
                     end
                     game:GetService("ReplicatedStorage"):WaitForChild("rEvents"):WaitForChild("rebirthRemote"):InvokeServer("rebirthRequest")
-                    totalRebirthsGained = totalRebirthsGained + 1
                 end
                 task.wait(0.1)
             end
@@ -205,11 +228,8 @@ Tabs.Rebirth:AddToggle("Auto Eat Protein Egg", { Title = "Auto Eat Protein Egg E
     autoEatProteinEgg = state
     if state then
         task.spawn(function()
-            local player = game.Players.LocalPlayer
-            local backpack = player:FindFirstChild("Backpack")
-
             while autoEatProteinEgg do
-                -- Equip & Use Protein Egg if found
+                local backpack = player:FindFirstChild("Backpack")
                 if backpack then
                     local tool = backpack:FindFirstChild("Protein Egg")
                     if tool then
@@ -219,7 +239,6 @@ Tabs.Rebirth:AddToggle("Auto Eat Protein Egg", { Title = "Auto Eat Protein Egg E
                     end
                 end
 
-                -- Wait 30 minutes (1800 seconds)
                 for i = 1, 1800 do
                     if not autoEatProteinEgg then break end
                     task.wait(1)
@@ -234,10 +253,8 @@ Tabs.Rebirth:AddToggle("Eat Every Protein Eggs", { Title = "Eat Every Protein Eg
     eatEveryProteinEggs = state
     if state then
         task.spawn(function()
-            local player = game.Players.LocalPlayer
-            local backpack = player:FindFirstChild("Backpack")
-
             while eatEveryProteinEggs do
+                local backpack = player:FindFirstChild("Backpack")
                 if backpack then
                     for _, tool in ipairs(backpack:GetChildren()) do
                         if tool:IsA("Tool") and tool.Name == "Protein Egg" then
@@ -247,41 +264,27 @@ Tabs.Rebirth:AddToggle("Eat Every Protein Eggs", { Title = "Eat Every Protein Eg
                         end
                     end
                 end
-                task.wait(1) -- Small delay to prevent excessive loops
+                task.wait(1)
             end
         end)
     end
 end)
 
--- **Hide Frame Toggle**
+-- **Hide All Frames in the Game**
 Tabs.Rebirth:AddToggle("Hide Frame", { Title = "Hide Frame", Default = false }):OnChanged(function(state)
     hideFrame = state
-    local player = game.Players.LocalPlayer
-    local playerGui = player:FindFirstChild("PlayerGui")
-
-    if playerGui then
-        -- Loop through all objects in PlayerGui and hide/show them
-        for _, object in ipairs(playerGui:GetChildren()) do
-            if object:IsA("Frame") then
-                object.Visible = not hideFrame -- Hide when ON, Show when OFF
+    local function toggleFrames(visibility)
+        for _, descendant in ipairs(game:GetDescendants()) do
+            if descendant:IsA("Frame") then
+                descendant.Visible = visibility
             end
         end
     end
-end)
 
-task.spawn(function()
-    while true do
-        local player = game.Players.LocalPlayer
-        local leaderstats = player:FindFirstChild("leaderstats")
-        if leaderstats then
-            local currentRebirths = leaderstats:FindFirstChild("Rebirths")
-            if currentRebirths then
-                local amountRebirth = currentRebirths.Value
-                SetDesc("Rebirth Stats", "Amount Of Rebirth: " .. amountRebirth)
-                SetDesc("Rebirth Stats", "Amount Of Rebirth Gained In Server: " .. totalRebirthsGained)
-            end
-        end
-        task.wait(0.1)
+    if hideFrame then
+        toggleFrames(false) -- Hide all frames
+    else
+        toggleFrames(true) -- Show all frames
     end
 end)
 
