@@ -248,9 +248,9 @@ Dropdown:OnChanged(function(selectedPlayerName)
         local agility = selectedPlayer:FindFirstChild("Agility") and selectedPlayer.Agility.Value or 0
         local kills = leaderstats and leaderstats.Kills and leaderstats.Kills.Value or 0
 
-        -- Safely update the paragraph with the player's stats using SetDescription
+        -- Safely update the paragraph with the player's stats using SetDesc
         if TargetStatsParagraph then
-            TargetStatsParagraph:SetDescription(string.format([[
+            TargetStatsParagraph:SetDesc(string.format([[
                 Amount Of Strength: %s
                 Amount Of Durability: %s
                 Amount Of Agility: %s
@@ -262,7 +262,7 @@ Dropdown:OnChanged(function(selectedPlayerName)
     else
         -- If player doesn't exist, set stats to 0
         if TargetStatsParagraph then
-            TargetStatsParagraph:SetDescription("Amount Of Strength: 0\nAmount Of Durability: 0\nAmount Of Agility: 0\nAmount Of Kills: 0")
+            TargetStatsParagraph:SetDesc("Amount Of Strength: 0\nAmount Of Durability: 0\nAmount Of Agility: 0\nAmount Of Kills: 0")
         end
     end
 end)
