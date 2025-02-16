@@ -185,70 +185,43 @@ Tabs.Rebirth:AddToggle("Rebirth Until Target Amount", { Title = "Rebirth Until T
     end
 end)
 
--- **Time Since Script Executed Paragraph**
-local scriptStartTime = os.time()
-local scriptExecutionLabel = Tabs.Stats:AddParagraph({
+-- **Initialize Time Variables**
+local timeSinceExecuted = 0
+
+-- **Create the Label for Execution Time**
+local executionTimeLabel = Tabs.Stats:AddParagraph({
     Title = "Time Since Script Executed",
-    Content = "00:00"
+    Content = "0 weeks, 0 days, 0 hours, 0 minutes, 0 seconds"
 })
 
-local function updateScriptExecutionTime()
-    local elapsed = os.time() - scriptStartTime
-    local minutes = math.floor(elapsed / 60)
-    local seconds = elapsed % 60
-    scriptExecutionLabel:Set({ Content = string.format("%02d:%02d", minutes, seconds) })
+-- **Function to Convert Time**
+local function convertTime(seconds)
+    local weeks = math.floor(seconds / (7 * 24 * 3600))
+    seconds = seconds - weeks * 7 * 24 * 3600
+    local days = math.floor(seconds / (24 * 3600))
+    seconds = seconds - days * 24 * 3600
+    local hours = math.floor(seconds / 3600)
+    seconds = seconds - hours * 3600
+    local minutes = math.floor(seconds / 60)
+    seconds = seconds - minutes * 60
+    return weeks, days, hours, minutes, seconds
 end
 
+-- **Function to Update Execution Time Label**
+local function updateExecutionTimeLabel()
+    local weeks, days, hours, minutes, seconds = convertTime(timeSinceExecuted)
+    local timeString = string.format("%d weeks, %d days, %d hours, %d minutes, %d seconds", weeks, days, hours, minutes, seconds)
+    executionTimeLabel:Set({ Content = timeString })
+end
+
+-- **Loop to Update the Label Every Second**
 task.spawn(function()
     while true do
-        updateScriptExecutionTime()
+        timeSinceExecuted = timeSinceExecuted + 1
+        updateExecutionTimeLabel()
         task.wait(1)
     end
 end)
-
--- **Timer Paragraph**
-local timerLabel = Tabs.Stats:AddParagraph({
-    Title = "Timer",
-    Content = "00:00"
-})
-local timerRunning = false
-local timerStartTime = 0
-
-local function updateTimer()
-    if timerRunning then
-        local elapsed = os.time() - timerStartTime
-        local minutes = math.floor(elapsed / 60)
-        local seconds = elapsed % 60
-        timerLabel:Set({ Content = string.format("%02d:%02d", minutes, seconds) })
-    end
-end
-
-task.spawn(function()
-    while true do
-        updateTimer()
-        task.wait(1)
-    end
-end)
-
--- **Start Timer Button**
-Tabs.Stats:AddButton({
-    Title = "Start Timer",
-    Callback = function()
-        if not timerRunning then
-            timerRunning = true
-            timerStartTime = os.time()
-        end
-    end
-})
-
--- **Stop Timer Button**
-Tabs.Stats:AddButton({
-    Title = "Stop Timer",
-    Callback = function()
-        timerRunning = false
-        timerLabel:Set({ Content = "00:00" })
-    end
-})
 
 -- **Select Target Dropdown**
 local selectedTarget = nil  
