@@ -440,18 +440,106 @@ task.spawn(function()
     end
 end)
 
+local Whitelist = {}  -- Table to hold the whitelisted players
+
+-- Add Whitelist Textbox
+local WhitelistInput = Tabs.Killing:AddInput("Whitelist", {
+    Title = "Whitelist",
+    Default = "",
+    Placeholder = "Enter player name to whitelist",
+    Numeric = false,
+    Finished = false,
+    Callback = function(Value)
+        if Value ~= "" and not table.find(Whitelist, Value) then
+            table.insert(Whitelist, Value)
+            print(Value .. " added to whitelist")
+        end
+    end
+})
+
+-- Add Unwhitelist Textbox
+local UnwhitelistInput = Tabs.Killing:AddInput("Unwhitelist", {
+    Title = "Unwhitelist",
+    Default = "",
+    Placeholder = "Enter player name to unwhitelist",
+    Numeric = false,
+    Finished = false,
+    Callback = function(Value)
+        if Value ~= "" then
+            for i, playerName in ipairs(Whitelist) do
+                if playerName == Value then
+                    table.remove(Whitelist, i)
+                    print(Value .. " removed from whitelist")
+                    break
+                end
+            end
+        end
+    end
+})
+
+-- Add Auto Kill Toggle
+local AutoKillToggle = Tabs.Killing:AddToggle("Auto Kill", {Title = "Auto Kill", Default = false})
+
+AutoKillToggle:OnChanged(function(enabled)
+    if enabled then
+        _G.autoPunchanim = true
+        local player = game.Players.LocalPlayer
+        local character = player.Character or player.CharacterAdded:Wait()
+        local punchTool = player.Backpack:FindFirstChild("Punch") or character:FindFirstChild("Punch")
+
+        if punchTool and punchTool.Parent ~= character then
+            punchTool.Parent = character
+        end
+
+        local function autoPunch(targetPlayer)
+            local rightHand = character:FindFirstChild("RightHand")
+            local leftHand = character:FindFirstChild("LeftHand")
+            local targetCharacter = targetPlayer.Character
+            if targetCharacter and targetCharacter:FindFirstChild("HumanoidRootPart") then
+                local touchPart = targetCharacter.HumanoidRootPart
+
+                if rightHand then
+                    firetouchinterest(rightHand, touchPart, 0)
+                    task.wait(0.05)
+                    firetouchinterest(rightHand, touchPart, 1)
+                end
+
+                if leftHand then
+                    firetouchinterest(leftHand, touchPart, 0)
+                    task.wait(0.05)
+                    firetouchinterest(leftHand, touchPart, 1)
+                end
+            end
+        end
+
+        task.spawn(function()
+            while _G.autoPunchanim do
+                for _, targetPlayer in pairs(game.Players:GetPlayers()) do
+                    if targetPlayer ~= player and not table.find(Whitelist, targetPlayer.Name) then
+                        autoPunch(targetPlayer)
+                    end
+                end
+                task.wait(0.5)
+            end
+        end)
+
+    else
+        _G.autoPunchanim = false
+    end
+end)
+
 -- Add the "Targeting" paragraph
 Tabs.Killing:AddParagraph({
     Title = "Targeting",
     Content = "" -- Empty content as per your request
 })
 
--- Create the "Select Target" dropdown with all players in the server
+-- Create the "Select Target" dropdown
 local SelectTargetDropdown = Tabs.Killing:AddDropdown("Select Target", {
     Title = "Select Target",
-    Values = {},
+    Values = {}, -- Start empty
     Multi = false,
-    Default = 1,
+    Default = nil,
 })
 
 -- Function to update the dropdown with player names
@@ -480,39 +568,32 @@ KillTargetToggle:OnChanged(function(enabled)
             punchTool.Parent = character
         end
 
-        -- Get the selected target from the dropdown
-        local targetName = SelectTargetDropdown:GetValue()
-        local targetPlayer = game.Players:FindFirstChild(targetName)
-
-        -- Function to handle auto punching with delay
-        local function autoPunch(targetPlayer)
-            local rightHand = character:FindFirstChild("RightHand")
-            local leftHand = character:FindFirstChild("LeftHand")
-            local targetCharacter = targetPlayer.Character
-            if targetCharacter and targetCharacter:FindFirstChild("HumanoidRootPart") then
-                local touchPart = targetCharacter.HumanoidRootPart
-
-                if rightHand then
-                    firetouchinterest(rightHand, touchPart, 0)
-                    task.wait(0.05) -- Short delay to simulate punch
-                    firetouchinterest(rightHand, touchPart, 1)
-                end
-
-                if leftHand then
-                    firetouchinterest(leftHand, touchPart, 0)
-                    task.wait(0.05)
-                    firetouchinterest(leftHand, touchPart, 1)
-                end
-            end
-        end
-
-        -- Continuously target the selected player when "Kill Target" is enabled
         task.spawn(function()
             while _G.autoPunchanim do
+                local targetName = SelectTargetDropdown:GetValue()
+                local targetPlayer = game.Players:FindFirstChild(targetName)
+
                 if targetPlayer and targetPlayer.Character then
-                    autoPunch(targetPlayer)
+                    local rightHand = character:FindFirstChild("RightHand")
+                    local leftHand = character:FindFirstChild("LeftHand")
+                    local targetCharacter = targetPlayer.Character
+                    if targetCharacter and targetCharacter:FindFirstChild("HumanoidRootPart") then
+                        local touchPart = targetCharacter.HumanoidRootPart
+
+                        if rightHand then
+                            firetouchinterest(rightHand, touchPart, 0)
+                            task.wait(0.05)
+                            firetouchinterest(rightHand, touchPart, 1)
+                        end
+
+                        if leftHand then
+                            firetouchinterest(leftHand, touchPart, 0)
+                            task.wait(0.05)
+                            firetouchinterest(leftHand, touchPart, 1)
+                        end
+                    end
                 end
-                task.wait(0.5) -- Wait before the next round of targeting
+                task.wait(0.5)
             end
         end)
 
@@ -522,52 +603,14 @@ KillTargetToggle:OnChanged(function(enabled)
 end)
 
 -- Update the dropdown every time a player joins or leaves the game
-game.Players.PlayerAdded:Connect(function()
-    updateTargetDropdown()
-end)
-
-game.Players.PlayerRemoving:Connect(function()
-    updateTargetDropdown()
-end)
+game.Players.PlayerAdded:Connect(updateTargetDropdown)
+game.Players.PlayerRemoving:Connect(updateTargetDropdown)
 
 Tabs.Killing:AddParagraph({
     Title = "Auto Punching",
     Content = "" 
 })
 
-local Toggle = Tabs.Killing:AddToggle("Auto Punch", {Title = "Auto Punch", Default = false})
-
-Toggle:OnChanged(function()
-    local player = game:GetService("Players").LocalPlayer
-    local backpack = player.Backpack
-    local punchTool = backpack:FindFirstChild("Punch")
-
-    if Toggle.Value then
-        -- Equip the Punch tool infinitely
-        if not punchTool then
-            -- Equip Punch tool if it's not already equipped
-            local tool = player:FindFirstChild("Punch")
-            if tool then
-                tool.Parent = backpack
-            end
-        end
-
-        -- Use the Punch tool infinitely (assuming there’s an event to trigger punching)
-        while Toggle.Value do
-            if punchTool then
-                -- Simulate using the tool (this part may need adjustment based on how "Punch" works)
-                punchTool:Activate() -- or call a custom function if needed
-            end
-            wait(0.1) -- Repeat every 0.1 seconds
-        end
-    else
-        -- Stop using the tool when the toggle is off
-        if punchTool then
-            -- You can also destroy or reset the tool, depending on your needs
-            punchTool.Parent = nil
-        end
-    end
-end)
 
 local Toggle = Tabs.Killing:AddToggle("Auto Punch [No Animation]", {Title = "Auto Punch [No Animation]", Default = false })
 
