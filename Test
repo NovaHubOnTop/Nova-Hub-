@@ -20,7 +20,7 @@ local Tabs = {
     Stats = Window:AddTab({ Title = "Stats", Icon = "sparkle" }),
     Crystal = Window:AddTab({ Title = "Crystal", Icon = "gem" }),
     Killing = Window:AddTab({ Title = "Killing", Icon = "sword" }),
-    Teleport = Window:AddTab({ Title = "Teleport", Icon = "map-pin-x" }),
+    Teleport = Window:AddTab({ Title = "Teleport", Icon = "asterisk" }),
     Misc = Window:AddTab({ Title = "Misc", Icon = "settings" })
 }
 
