@@ -718,3 +718,38 @@ Tabs.Misc:AddToggle("Zoom Bypasser", {
 })
 
 local AutoSpinWheelToggle = false
+
+local crystals = {
+    "Blue Crystal", "Green Crystal", "Frozen Crystal", "Mythical Crystal",
+    "Inferno Crystal", "Legends Crystal", "Muscle Elite Crystal",
+    "Galaxy Oracle Crystal", "Sky Eclipse Crystal", "Jungle Crystal"
+}
+
+local Dropdown = Tabs.Crystal:AddDropdown("Select Crystal", {
+    Title = "Select Crystal",
+    Values = crystals,
+    Multi = false,
+    Default = crystals[1] or "",
+})
+
+local AutoCrystalToggle = false
+
+Tabs.Crystal:AddToggle("Auto Crystal", {
+    Title = "Auto Crystal",
+    Description = "Automatically open selected crystal",
+    Default = false,
+    Callback = function(state)
+        AutoCrystalToggle = state
+        while AutoCrystalToggle do
+            local selectedCrystal = Dropdown.Value
+            if selectedCrystal then
+                local args = {
+                    [1] = "openCrystal",
+                    [2] = selectedCrystal
+                }
+                game:GetService("ReplicatedStorage"):WaitForChild("rEvents"):WaitForChild("openCrystalRemote"):InvokeServer(unpack(args))
+            end
+            wait(1)  -- Repeat every second
+        end
+    end
+})
