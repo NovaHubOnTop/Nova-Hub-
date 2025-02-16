@@ -3,7 +3,7 @@ local SaveManager = loadstring(game:HttpGet("https://raw.githubusercontent.com/d
 local InterfaceManager = loadstring(game:HttpGet("https://raw.githubusercontent.com/dawid-scripts/Fluent/master/Addons/InterfaceManager.lua"))()
 
 local Window = NovaHub:CreateWindow({
-    Title = "Muscle Legend Private Script" .. Fluent.Version,
+    Title = "Muscle Legend 111Private Script" .. Fluent.Version,
     SubTitle = "by Encrypted",
     TabWidth = 160,
     Size = UDim2.fromOffset(580, 460),
