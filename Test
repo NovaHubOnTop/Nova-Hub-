@@ -141,6 +141,14 @@ local rebirthUntilTarget = false
 local targetRebirths = 0
 local autoEatProteinEgg = false
 local eatEveryProteinEggs = false
+local totalRebirthsGained = 0
+local hideFrame = false
+
+-- **Rebirth Stats Paragraph**
+Tabs.Rebirth:AddParagraph({
+    Title = "Rebirth Stats",
+    Content = "Amount Of Rebirth: 0\nAmount Of Rebirth Gained In Server: 0"
+})
 
 -- **Auto Rebirth Toggle**
 Tabs.Rebirth:AddToggle("Auto Rebirth (Infinitely)", { Title = "Auto Rebirth (Infinitely)", Default = false }):OnChanged(function(state)
@@ -149,6 +157,7 @@ Tabs.Rebirth:AddToggle("Auto Rebirth (Infinitely)", { Title = "Auto Rebirth (Inf
         task.spawn(function()
             while autoRebirth do
                 game:GetService("ReplicatedStorage"):WaitForChild("rEvents"):WaitForChild("rebirthRemote"):InvokeServer("rebirthRequest")
+                totalRebirthsGained = totalRebirthsGained + 1
                 task.wait(0.1)
             end
         end)
@@ -184,6 +193,7 @@ Tabs.Rebirth:AddToggle("Rebirth Until Target Amount", { Title = "Rebirth Until T
                         break
                     end
                     game:GetService("ReplicatedStorage"):WaitForChild("rEvents"):WaitForChild("rebirthRemote"):InvokeServer("rebirthRequest")
+                    totalRebirthsGained = totalRebirthsGained + 1
                 end
                 task.wait(0.1)
             end
@@ -244,25 +254,35 @@ Tabs.Rebirth:AddToggle("Eat Every Protein Eggs", { Title = "Eat Every Protein Eg
     end
 end)
 
-local hideFrame = false
-
-Tabs.Rebirth:AddToggle("Hide Frame", { Title = "Hide Frame", Default = false }):OnChanged(function(state)
+-- **Hide Frame Toggle**
+Tabs.Main:AddToggle("Hide Frame", { Title = "Hide Frame", Default = false }):OnChanged(function(state)
     hideFrame = state
     local player = game.Players.LocalPlayer
     local playerGui = player:FindFirstChild("PlayerGui")
 
     if playerGui then
-        local gameGui = playerGui:FindFirstChild("gameGui")
-        if gameGui then
-            local statsMenu = gameGui:FindFirstChild("statsMenu")
-            if statsMenu then
-                for _, child in ipairs(statsMenu:GetChildren()) do
-                    if child:IsA("GuiObject") then
-                        child.Visible = not hideFrame -- Hide when toggle is ON, Show when OFF
-                    end
-                end
+        -- Loop through all objects in PlayerGui and hide/show them
+        for _, object in ipairs(playerGui:GetChildren()) do
+            if object:IsA("Frame") then
+                object.Visible = not hideFrame -- Hide when ON, Show when OFF
             end
         end
+    end
+end)
+
+task.spawn(function()
+    while true do
+        local player = game.Players.LocalPlayer
+        local leaderstats = player:FindFirstChild("leaderstats")
+        if leaderstats then
+            local currentRebirths = leaderstats:FindFirstChild("Rebirths")
+            if currentRebirths then
+                local amountRebirth = currentRebirths.Value
+                SetDesc("Rebirth Stats", "Amount Of Rebirth: " .. amountRebirth)
+                SetDesc("Rebirth Stats", "Amount Of Rebirth Gained In Server: " .. totalRebirthsGained)
+            end
+        end
+        task.wait(0.1)
     end
 end)
 
