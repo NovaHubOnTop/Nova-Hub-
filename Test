@@ -188,7 +188,7 @@ end)
 -- Create "Select Target" dropdown
 local Dropdown = Tabs.Stats:AddDropdown("Select Target", {
     Title = "Select Target",
-    Values = {},
+    Values = {}, -- Start with an empty list
     Multi = false,
     Default = 1,
 })
@@ -199,12 +199,17 @@ local function updateDropdown()
     for _, player in ipairs(game.Players:GetPlayers()) do
         table.insert(playerNames, player.Name)
     end
-    -- Set the dropdown values to the updated player names
-    Dropdown:SetValues(playerNames)
-
-    -- Set default to the first player in the list (if any)
+    
+    -- Safely set values if the dropdown allows it
+    if Dropdown and Dropdown.SetValues then
+        Dropdown:SetValues(playerNames)
+    else
+        warn("Dropdown:SetValues method not available")
+    end
+    
+    -- Set the default to the first player in the list (if any)
     if #playerNames > 0 then
-        Dropdown:SetValue(playerNames[1])
+        Dropdown:SetValue(playerNames[1])  -- Update the value
     else
         Dropdown:SetValue("")  -- No players in game
     end
