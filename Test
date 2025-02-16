@@ -227,17 +227,24 @@ Tabs.Rebirth:AddToggle("Eat Every Protein Eggs", { Title = "Eat Every Protein Eg
     end
 end)
 
--- **Hide All Frames in the Game**
 Tabs.Rebirth:AddToggle("Hide Frame", { Title = "Hide Frame", Default = false }):OnChanged(function(state)
-    local function toggleFrames(visibility)
-        for _, descendant in ipairs(game:GetDescendants()) do
-            if descendant:IsA("Frame") then
-                descendant.Visible = visibility
-            end
-        end
+    local replicatedStorage = game:GetService("ReplicatedStorage")
+    
+    -- Reference the frames in ReplicatedStorage
+    local strengthFrame = replicatedStorage:FindFirstChild("strengthFrame")
+    local durabilityFrame = replicatedStorage:FindFirstChild("durabilityFrame")
+    local agilityFrame = replicatedStorage:FindFirstChild("agilityFrame")
+    
+    -- If the frames exist, toggle their visibility
+    if strengthFrame then
+        strengthFrame.Visible = not state  -- Set to false when on, true when off
     end
-
-    toggleFrames(state)
+    if durabilityFrame then
+        durabilityFrame.Visible = not state  -- Set to false when on, true when off
+    end
+    if agilityFrame then
+        agilityFrame.Visible = not state  -- Set to false when on, true when off
+    end
 end)
 
 
