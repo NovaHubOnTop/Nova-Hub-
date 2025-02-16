@@ -440,9 +440,36 @@ task.spawn(function()
     end
 end)
 
-local Toggle = Tabs.Killing:AddToggle("Auto Kill", {Title = "Auto Kill", Default = false})
+-- Add the "Targeting" paragraph
+Tabs.Killing:AddParagraph({
+    Title = "Targeting",
+    Content = "" -- Empty content as per your request
+})
 
-Toggle:OnChanged(function(enabled)
+-- Create the "Select Target" dropdown with all players in the server
+local SelectTargetDropdown = Tabs.Killing:AddDropdown("Select Target", {
+    Title = "Select Target",
+    Values = {},
+    Multi = false,
+    Default = 1,
+})
+
+-- Function to update the dropdown with player names
+local function updateTargetDropdown()
+    local playerNames = {}
+    for _, player in pairs(game.Players:GetPlayers()) do
+        table.insert(playerNames, player.Name)
+    end
+    SelectTargetDropdown:SetValues(playerNames)
+end
+
+-- Update dropdown initially
+updateTargetDropdown()
+
+-- Add the "Kill Target" toggle
+local KillTargetToggle = Tabs.Killing:AddToggle("Kill Target", {Title = "Kill Target", Default = false})
+
+KillTargetToggle:OnChanged(function(enabled)
     if enabled then
         _G.autoPunchanim = true
         local player = game.Players.LocalPlayer
@@ -452,6 +479,10 @@ Toggle:OnChanged(function(enabled)
         if punchTool and punchTool.Parent ~= character then
             punchTool.Parent = character
         end
+
+        -- Get the selected target from the dropdown
+        local targetName = SelectTargetDropdown:GetValue()
+        local targetPlayer = game.Players:FindFirstChild(targetName)
 
         -- Function to handle auto punching with delay
         local function autoPunch(targetPlayer)
@@ -475,30 +506,66 @@ Toggle:OnChanged(function(enabled)
             end
         end
 
-        -- Function to target players at timed intervals
-        local function targetPlayers()
-            local players = game.Players:GetPlayers()
-            local i = 1
-
-            -- Cycle through players and call autoPunch with a delay
-            for _, targetPlayer in pairs(players) do
-                if targetPlayer ~= player then
-                    task.delay(i * 0.5, autoPunch, targetPlayer) -- Delay for each player based on the index
-                    i = i + 1
-                end
-            end
-        end
-
-        -- Repeatedly target players every 0.5 seconds
+        -- Continuously target the selected player when "Kill Target" is enabled
         task.spawn(function()
             while _G.autoPunchanim do
-                targetPlayers()
+                if targetPlayer and targetPlayer.Character then
+                    autoPunch(targetPlayer)
+                end
                 task.wait(0.5) -- Wait before the next round of targeting
             end
         end)
 
     else
         _G.autoPunchanim = false
+    end
+end)
+
+-- Update the dropdown every time a player joins or leaves the game
+game.Players.PlayerAdded:Connect(function()
+    updateTargetDropdown()
+end)
+
+game.Players.PlayerRemoving:Connect(function()
+    updateTargetDropdown()
+end)
+
+Tabs.Killing:AddParagraph({
+    Title = "Auto Punching",
+    Content = "" 
+})
+
+local Toggle = Tabs.Killing:AddToggle("Auto Punch", {Title = "Auto Punch", Default = false})
+
+Toggle:OnChanged(function()
+    local player = game:GetService("Players").LocalPlayer
+    local backpack = player.Backpack
+    local punchTool = backpack:FindFirstChild("Punch")
+
+    if Toggle.Value then
+        -- Equip the Punch tool infinitely
+        if not punchTool then
+            -- Equip Punch tool if it's not already equipped
+            local tool = player:FindFirstChild("Punch")
+            if tool then
+                tool.Parent = backpack
+            end
+        end
+
+        -- Use the Punch tool infinitely (assuming there’s an event to trigger punching)
+        while Toggle.Value do
+            if punchTool then
+                -- Simulate using the tool (this part may need adjustment based on how "Punch" works)
+                punchTool:Activate() -- or call a custom function if needed
+            end
+            wait(0.1) -- Repeat every 0.1 seconds
+        end
+    else
+        -- Stop using the tool when the toggle is off
+        if punchTool then
+            -- You can also destroy or reset the tool, depending on your needs
+            punchTool.Parent = nil
+        end
     end
 end)
 
@@ -521,7 +588,7 @@ Toggle:OnChanged(function(state)
                 game.Players.LocalPlayer.muscleEvent:FireServer("punch", "rightHand")
                 game.Players.LocalPlayer.muscleEvent:FireServer("punch", "leftHand")
                 
-                wait() -- Adjust the delay as needed for timing between punches
+                wait(0.1) -- Adjust the delay as needed for timing between punches
             else
                 _G.autoPunchanim = false -- Stop the loop if tool is not found
             end
