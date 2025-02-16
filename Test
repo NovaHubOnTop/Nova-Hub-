@@ -185,3 +185,87 @@ Tabs.Rebirth:AddToggle("Rebirth Until Target Amount", { Title = "Rebirth Until T
     end
 end)
 
+-- Create "Select Target" dropdown
+local Dropdown = Tabs.Stats:AddDropdown("Select Target", {
+    Title = "Select Target",
+    Values = {}, -- Start with an empty list
+    Multi = false,
+    Default = 1,
+})
+
+-- Create the paragraph for target stats
+local TargetStatsParagraph = Tabs.Stats:AddParagraph({
+    Title = "Target Stats",
+    Content = "Amount Of Strength: 0\nAmount Of Durability: 0\nAmount Of Agility: 0\nAmount Of Kills: 0",
+})
+
+-- Function to abbreviate numbers for readability (e.g., 1000 becomes 1K)
+local function abbreviateNumber(number)
+    if number >= 1e6 then
+        return string.format("%.1fM", number / 1e6)
+    elseif number >= 1e3 then
+        return string.format("%.1fK", number / 1e3)
+    else
+        return tostring(number)
+    end
+end
+
+-- Populate the dropdown with player names
+local function updateDropdown()
+    local playerNames = {}
+    for _, player in ipairs(game.Players:GetPlayers()) do
+        table.insert(playerNames, player.Name)
+    end
+    
+    -- Safely set values if the dropdown allows it
+    if Dropdown and Dropdown.SetValues then
+        Dropdown:SetValues(playerNames)
+    else
+        warn("Dropdown:SetValues method not available")
+    end
+    
+    -- Set the default to the first player in the list (if any)
+    if #playerNames > 0 then
+        Dropdown:SetValue(playerNames[1])  -- Update the value
+    else
+        Dropdown:SetValue("")  -- No players in game
+    end
+end
+
+-- Call updateDropdown whenever players join/leave
+game.Players.PlayerAdded:Connect(updateDropdown)
+game.Players.PlayerRemoving:Connect(updateDropdown)
+
+-- Handle dropdown changes
+Dropdown:OnChanged(function(selectedPlayerName)
+    -- Find the selected player
+    local selectedPlayer = game.Players:FindFirstChild(selectedPlayerName)
+    if selectedPlayer then
+        -- Retrieve the player's leaderstats
+        local leaderstats = selectedPlayer:FindFirstChild("leaderstats")
+        local strength = leaderstats and leaderstats.Strength and leaderstats.Strength.Value or 0
+        local durability = selectedPlayer:FindFirstChild("Durability") and selectedPlayer.Durability.Value or 0
+        local agility = selectedPlayer:FindFirstChild("Agility") and selectedPlayer.Agility.Value or 0
+        local kills = leaderstats and leaderstats.Kills and leaderstats.Kills.Value or 0
+
+        -- Safely update the paragraph with the player's stats using SetDescription
+        if TargetStatsParagraph then
+            TargetStatsParagraph:SetDescription(string.format([[
+                Amount Of Strength: %s
+                Amount Of Durability: %s
+                Amount Of Agility: %s
+                Amount Of Kills: %s
+            ]], abbreviateNumber(strength), abbreviateNumber(durability), abbreviateNumber(agility), abbreviateNumber(kills)))
+        else
+            warn("TargetStatsParagraph is not defined!")
+        end
+    else
+        -- If player doesn't exist, set stats to 0
+        if TargetStatsParagraph then
+            TargetStatsParagraph:SetDescription("Amount Of Strength: 0\nAmount Of Durability: 0\nAmount Of Agility: 0\nAmount Of Kills: 0")
+        end
+    end
+end)
+
+-- Initial population of the dropdown when the script runs
+updateDropdown()
