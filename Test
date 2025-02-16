@@ -204,7 +204,7 @@ end
 
 -- Call updateDropdown whenever players join/leave
 game.Players.PlayerAdded:Connect(updateDropdown)
-game.Players.PlayerRemoved:Connect(updateDropdown)
+game.Players.PlayerRemoving:Connect(updateDropdown)
 
 -- Set the default selection to the first player
 Dropdown:SetValue(game.Players:GetPlayers()[1] and game.Players:GetPlayers()[1].Name or "")
