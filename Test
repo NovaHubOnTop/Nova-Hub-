@@ -188,17 +188,17 @@ end)
 local Toggle = Tabs.Rebirth:AddToggle("Hide Frame", {Title = "Hide Frame", Default = false })
 
 Toggle:OnChanged(function()
-    -- Get all frames in the game and change their visibility based on the toggle's value
+    -- Get the state of the toggle
     local isVisible = Toggle.Value
 
-    -- Loop through all objects in the game
-    for _, object in pairs(workspace:GetDescendants()) do
-        -- Check if the object is a frame (or GUI element)
+    -- Loop through all GUI objects in the Player's PlayerGui
+    for _, object in pairs(game.Players.LocalPlayer.PlayerGui:GetDescendants()) do
+        -- Check if the object is a GUI object (such as a Frame, TextLabel, etc.)
         if object:IsA("GuiObject") then
             object.Visible = isVisible
         end
     end
-    
+
     print("Toggle changed:", Toggle.Value)
 end)
 
