@@ -209,7 +209,7 @@ end)
 -- Time Since Script Executed Paragraph
 local TimeSinceExecutedParagraph = Tabs.Stats:AddParagraph({
     Title = "Time Since Script Executed",
-    Content = "Days: 0 Hours: 0 Minutes: 0 Seconds: 0"
+    Content = "Hours: 0 Minutes: 0 Seconds: 0"
 })
 
 -- Select Target Dropdown
@@ -330,29 +330,25 @@ updateDropdown()
 -- Timer for Stats Tab
 local startTime = tick() -- Store the time when the script starts executing
 
--- Function to convert total seconds into weeks, days, hours, minutes, and seconds
+-- Function to convert total seconds into hours, minutes, and seconds
 local function convertTime(seconds)
-    local weeks = math.floor(seconds / (7 * 24 * 3600))
-    seconds = seconds - weeks * 7 * 24 * 3600
-    local days = math.floor(seconds / (24 * 3600))
-    seconds = seconds - days * 24 * 3600
     local hours = math.floor(seconds / 3600)
     seconds = seconds - hours * 3600
     local minutes = math.floor(seconds / 60)
     seconds = seconds - minutes * 60
-    return weeks, days, hours, minutes, seconds
+    return hours, minutes, seconds
 end
 
 -- Function to update the time since script execution
 local function updateTimeSinceExecuted()
     local elapsedTime = tick() - startTime
-    local weeks, days, hours, minutes, seconds = convertTime(elapsedTime)
+    local hours, minutes, seconds = convertTime(elapsedTime)
 
     -- Update the Time Since Script Executed paragraph content
     if TimeSinceExecutedParagraph then
         TimeSinceExecutedParagraph:SetDesc(string.format(
-            "Time Since Script Executed: %d W, %d D, %d H, %d M, %d S",
-            weeks, days, hours, minutes, seconds  -- Use 'weeks' instead of 'Weeks'
+            "Hours: %d Minutes: %d Seconds: %d",
+            hours, minutes, seconds
         ))
     end
 end
