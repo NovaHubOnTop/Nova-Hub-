@@ -393,3 +393,52 @@ while true do
     updateTimeSinceExecuted()
     wait(1)  -- Update every second
 end
+
+local Toggle = Tabs.Killing:AddToggle("Auto Kill", {Title = "Auto Kill", Default = false })
+
+Toggle:OnChanged(function(state)
+    _G.autoPunchanim = state -- Update control variable
+
+    if state then
+        local player = game.Players.LocalPlayer
+        local playerName = player.Name
+        local function punchLoop()
+            while _G.autoPunchanim do
+                local punchTool =
+                    player.Backpack:FindFirstChild("Punch") or
+                    game.Workspace:FindFirstChild(playerName) and game.Workspace:FindFirstChild(playerName):FindFirstChild("Punch")
+
+                if punchTool then
+                    if punchTool.Parent ~= game.Workspace:FindFirstChild(playerName) then
+                        punchTool.Parent = game.Workspace:FindFirstChild(playerName) -- Equip the tool
+                    end
+                    game.Players.LocalPlayer.muscleEvent:FireServer("punch", "rightHand")
+                    game.Players.LocalPlayer.muscleEvent:FireServer("punch", "leftHand")
+                else
+                    warn("Punch tool not found")
+                end
+                wait() -- Adjust delay as needed
+            end
+        end
+
+        local function touchLoop()
+            while _G.autoPunchanim do
+                for _, target in pairs(game.Players:GetPlayers()) do
+                    if target ~= player and target.Character and target.Character:FindFirstChild("HumanoidRootPart") then
+                        -- Fire touch interest with both hands
+                        firetouchinterest(player.Character.RightHand, target.Character.HumanoidRootPart, 1)
+                        firetouchinterest(player.Character.LeftHand, target.Character.HumanoidRootPart, 1)
+                        wait()
+                        firetouchinterest(player.Character.RightHand, target.Character.HumanoidRootPart, 0)
+                        firetouchinterest(player.Character.LeftHand, target.Character.HumanoidRootPart, 0)
+                    end
+                end
+                wait()
+            end
+        end
+
+        -- Run both loops
+        spawn(punchLoop)
+        spawn(touchLoop)
+    end
+end)
