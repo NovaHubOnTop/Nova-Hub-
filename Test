@@ -187,16 +187,19 @@ end)
 
 -- **Time Since Script Executed Paragraph**
 local scriptStartTime = os.time()
-local scriptExecutionLabel = Tabs.Stats:AddParagraph({
-    Title = "Time Since Script Executed",
-    Content = "00:00"
-})
+local scriptExecutionLabel  
 
 local function updateScriptExecutionTime()
     local elapsed = os.time() - scriptStartTime
     local minutes = math.floor(elapsed / 60)
     local seconds = elapsed % 60
-    scriptExecutionLabel:SetContent(string.format("%02d:%02d", minutes, seconds))
+    if scriptExecutionLabel then
+        scriptExecutionLabel:Remove()
+    end
+    scriptExecutionLabel = Tabs.Stats:AddParagraph({
+        Title = "Time Since Script Executed",
+        Content = string.format("%02d:%02d", minutes, seconds)
+    })
 end
 
 task.spawn(function()
@@ -207,11 +210,7 @@ task.spawn(function()
 end)
 
 -- **Timer Paragraph**
-local timerLabel = Tabs.Stats:AddParagraph({
-    Title = "Timer",
-    Content = "00:00"
-})
-
+local timerLabel  
 local timerRunning = false
 local timerStartTime = 0
 
@@ -220,7 +219,13 @@ local function updateTimer()
         local elapsed = os.time() - timerStartTime
         local minutes = math.floor(elapsed / 60)
         local seconds = elapsed % 60
-        timerLabel:SetContent(string.format("%02d:%02d", minutes, seconds))
+        if timerLabel then
+            timerLabel:Remove()
+        end
+        timerLabel = Tabs.Stats:AddParagraph({
+            Title = "Timer",
+            Content = string.format("%02d:%02d", minutes, seconds)
+        })
     end
 end
 
@@ -247,13 +252,18 @@ Tabs.Stats:AddButton({
     Title = "Stop Timer",
     Callback = function()
         timerRunning = false
-        timerLabel:SetContent("00:00")
+        if timerLabel then
+            timerLabel:Remove()
+        end
+        timerLabel = Tabs.Stats:AddParagraph({
+            Title = "Timer",
+            Content = "00:00"
+        })
     end
 })
 
 -- **Select Target Dropdown**
 local selectedTarget = nil  
-
 local targetDropdown = Tabs.Stats:AddDropdown("Select Target", {
     Title = "Select Target",
     Values = {},  
@@ -277,40 +287,41 @@ end
 populateTargetDropdown()  
 
 -- **Track Selected Target's Stats Paragraph**
-local targetStatsLabel = Tabs.Stats:AddParagraph({
-    Title = "Selected Target Stats",
-    Content = "Amount Of Strength: 0\nAmount Of Durability: 0\nAmount Of Agility: 0\nAmount Of Kill: 0\nGood Karma: 0\nBad Karma: 0"
-})
+local targetStatsLabel  
 
 local function updateTargetStats(player)
-    if not player then
-        targetStatsLabel:SetContent("Amount Of Strength: 0\nAmount Of Durability: 0\nAmount Of Agility: 0\nAmount Of Kill: 0\nGood Karma: 0\nBad Karma: 0")
-        return
+    if targetStatsLabel then
+        targetStatsLabel:Remove()
     end
 
-    local leaderstats = player:FindFirstChild("leaderstats")
     local statsText = "Amount Of Strength: 0\nAmount Of Durability: 0\nAmount Of Agility: 0\nAmount Of Kill: 0\nGood Karma: 0\nBad Karma: 0"
 
-    if leaderstats then
-        local strength = leaderstats:FindFirstChild("Strength")
-        local durability = player:FindFirstChild("Durability")
-        local agility = player:FindFirstChild("Agility")
-        local kills = leaderstats:FindFirstChild("Kills")
-        local goodKarma = player:FindFirstChild("goodKarma")
-        local evilKarma = player:FindFirstChild("evilKarma")
+    if player then
+        local leaderstats = player:FindFirstChild("leaderstats")
+        if leaderstats then
+            local strength = leaderstats:FindFirstChild("Strength")
+            local durability = player:FindFirstChild("Durability")
+            local agility = player:FindFirstChild("Agility")
+            local kills = leaderstats:FindFirstChild("Kills")
+            local goodKarma = player:FindFirstChild("goodKarma")
+            local evilKarma = player:FindFirstChild("evilKarma")
 
-        statsText = string.format(
-            "Amount Of Strength: %s\nAmount Of Durability: %s\nAmount Of Agility: %s\nAmount Of Kill: %s\nGood Karma: %s\nBad Karma: %s",
-            abbreviateNumber(strength and strength.Value or 0),
-            abbreviateNumber(durability and durability.Value or 0),
-            abbreviateNumber(agility and agility.Value or 0),
-            abbreviateNumber(kills and kills.Value or 0),
-            abbreviateNumber(goodKarma and goodKarma.Value or 0),
-            abbreviateNumber(evilKarma and evilKarma.Value or 0)
-        )
+            statsText = string.format(
+                "Amount Of Strength: %s\nAmount Of Durability: %s\nAmount Of Agility: %s\nAmount Of Kill: %s\nGood Karma: %s\nBad Karma: %s",
+                abbreviateNumber(strength and strength.Value or 0),
+                abbreviateNumber(durability and durability.Value or 0),
+                abbreviateNumber(agility and agility.Value or 0),
+                abbreviateNumber(kills and kills.Value or 0),
+                abbreviateNumber(goodKarma and goodKarma.Value or 0),
+                abbreviateNumber(evilKarma and evilKarma.Value or 0)
+            )
+        end
     end
 
-    targetStatsLabel:SetContent(statsText)
+    targetStatsLabel = Tabs.Stats:AddParagraph({
+        Title = "Selected Target Stats",
+        Content = statsText
+    })
 end
 
 -- **Auto-Update Selected Target's Stats**
