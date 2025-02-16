@@ -135,7 +135,6 @@ Tabs.AutoFarm:AddToggle("Auto Equip Handstands", { Title = "Auto Equip Handstand
     autoEquipTool("Handstand", "Auto Equip Handstands")
 end)
 
-
 local autoRebirth = false
 local rebirthUntilTarget = false
 local targetRebirths = 0
@@ -285,6 +284,7 @@ task.spawn(function()
         task.wait(0.1)
     end
 end)
+
 
 -- Time Since Script Executed Paragraph
 local TimeSinceExecutedParagraph = Tabs.Stats:AddParagraph({
