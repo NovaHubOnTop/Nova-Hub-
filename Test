@@ -188,24 +188,28 @@ end)
 local Toggle = Tabs.Rebirth:AddToggle("Hide Frame", {Title = "Hide Frame", Default = false })
 
 Toggle:OnChanged(function()
-    -- Get the state of the toggle
     local isVisible = Toggle.Value
 
-    -- Loop through all GUI objects in the Player's PlayerGui
-    for _, object in pairs(game.Players.LocalPlayer.PlayerGui:GetDescendants()) do
-        -- Check if the object is a GUI object (such as a Frame, TextLabel, etc.)
-        if object:IsA("GuiObject") then
-            object.Visible = isVisible
+    -- Find the statsList object (adjust this path if necessary)
+    local statsList = game.Players.LocalPlayer.PlayerGui:FindFirstChild("statsList")
+
+    if statsList then
+        -- Loop through all children of statsList and set their visibility
+        for _, child in pairs(statsList:GetChildren()) do
+            if child:IsA("GuiObject") then
+                child.Visible = isVisible
+            end
         end
     end
 
     print("Toggle changed:", Toggle.Value)
 end)
 
+
 -- Time Since Script Executed Paragraph
 local TimeSinceExecutedParagraph = Tabs.Stats:AddParagraph({
     Title = "Time Since Script Executed",
-    Content = "0 weeks, 0 days, 0 hours, 0 minutes, 0 seconds"
+    Content = "Days: 0 Hours: 0 Minutes: 0 Seconds: 0"
 })
 
 -- Select Target Dropdown
@@ -347,8 +351,8 @@ local function updateTimeSinceExecuted()
     -- Update the Time Since Script Executed paragraph content
     if TimeSinceExecutedParagraph then
         TimeSinceExecutedParagraph:SetDesc(string.format(
-            "Time Since Script Executed: %d weeks, %d days, %d hours, %d minutes, %d seconds",
-            weeks, days, hours, minutes, seconds
+            "Time Since Script Executed: %d W, %d D, %d H, %d M, %d S",
+            weeks, days, hours, minutes, seconds  -- Use 'weeks' instead of 'Weeks'
         ))
     end
 end
