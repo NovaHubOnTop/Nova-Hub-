@@ -14,13 +14,13 @@ local Window = NovaHub:CreateWindow({
 
 -- Create Tabs
 local Tabs = {
-    Main = Window:AddTab({ Title = "Main", Icon = "" }),
-    AutoFarm = Window:AddTab({ Title = "Auto Farm", Icon = "" }),
-    Rebirth = Window:AddTab({ Title = "Rebirth", Icon = "" }),
-    Stats = Window:AddTab({ Title = "Stats", Icon = "" }),
-    Crystal = Window:AddTab({ Title = "Crystal", Icon = "" }),
-    Killing = Window:AddTab({ Title = "Killing", Icon = "" }),
-    Teleport = Window:AddTab({ Title = "Teleport", Icon = "" }),
+    Main = Window:AddTab({ Title = "Main", Icon = "scan-face" }),
+    AutoFarm = Window:AddTab({ Title = "Auto Farm", Icon = "biceps-flexed" }),
+    Rebirth = Window:AddTab({ Title = "Rebirth", Icon = "rotate-ccw" }),
+    Stats = Window:AddTab({ Title = "Stats", Icon = "sparkles" }),
+    Crystal = Window:AddTab({ Title = "Crystal", Icon = "gem" }),
+    Killing = Window:AddTab({ Title = "Killing", Icon = "sword" }),
+    Teleport = Window:AddTab({ Title = "Teleport", Icon = "map-pin-x" }),
     Misc = Window:AddTab({ Title = "Misc", Icon = "" })
 }
 
