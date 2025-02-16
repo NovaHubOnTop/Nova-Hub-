@@ -187,19 +187,16 @@ end)
 
 -- **Time Since Script Executed Paragraph**
 local scriptStartTime = os.time()
-local scriptExecutionLabel  
+local scriptExecutionLabel = Tabs.Stats:AddParagraph({
+    Title = "Time Since Script Executed",
+    Content = "00:00"
+})
 
 local function updateScriptExecutionTime()
     local elapsed = os.time() - scriptStartTime
     local minutes = math.floor(elapsed / 60)
     local seconds = elapsed % 60
-    if scriptExecutionLabel then
-        scriptExecutionLabel:Remove()
-    end
-    scriptExecutionLabel = Tabs.Stats:AddParagraph({
-        Title = "Time Since Script Executed",
-        Content = string.format("%02d:%02d", minutes, seconds)
-    })
+    scriptExecutionLabel:Set({ Content = string.format("%02d:%02d", minutes, seconds) })
 end
 
 task.spawn(function()
@@ -210,7 +207,10 @@ task.spawn(function()
 end)
 
 -- **Timer Paragraph**
-local timerLabel  
+local timerLabel = Tabs.Stats:AddParagraph({
+    Title = "Timer",
+    Content = "00:00"
+})
 local timerRunning = false
 local timerStartTime = 0
 
@@ -219,13 +219,7 @@ local function updateTimer()
         local elapsed = os.time() - timerStartTime
         local minutes = math.floor(elapsed / 60)
         local seconds = elapsed % 60
-        if timerLabel then
-            timerLabel:Remove()
-        end
-        timerLabel = Tabs.Stats:AddParagraph({
-            Title = "Timer",
-            Content = string.format("%02d:%02d", minutes, seconds)
-        })
+        timerLabel:Set({ Content = string.format("%02d:%02d", minutes, seconds) })
     end
 end
 
@@ -252,13 +246,7 @@ Tabs.Stats:AddButton({
     Title = "Stop Timer",
     Callback = function()
         timerRunning = false
-        if timerLabel then
-            timerLabel:Remove()
-        end
-        timerLabel = Tabs.Stats:AddParagraph({
-            Title = "Timer",
-            Content = "00:00"
-        })
+        timerLabel:Set({ Content = "00:00" })
     end
 })
 
@@ -287,13 +275,12 @@ end
 populateTargetDropdown()  
 
 -- **Track Selected Target's Stats Paragraph**
-local targetStatsLabel  
+local targetStatsLabel = Tabs.Stats:AddParagraph({
+    Title = "Selected Target Stats",
+    Content = "Amount Of Strength: 0\nAmount Of Durability: 0\nAmount Of Agility: 0\nAmount Of Kill: 0\nGood Karma: 0\nBad Karma: 0"
+})
 
 local function updateTargetStats(player)
-    if targetStatsLabel then
-        targetStatsLabel:Remove()
-    end
-
     local statsText = "Amount Of Strength: 0\nAmount Of Durability: 0\nAmount Of Agility: 0\nAmount Of Kill: 0\nGood Karma: 0\nBad Karma: 0"
 
     if player then
@@ -318,10 +305,7 @@ local function updateTargetStats(player)
         end
     end
 
-    targetStatsLabel = Tabs.Stats:AddParagraph({
-        Title = "Selected Target Stats",
-        Content = statsText
-    })
+    targetStatsLabel:Set({ Content = statsText })
 end
 
 -- **Auto-Update Selected Target's Stats**
