@@ -441,3 +441,29 @@ AutoKillToggle:OnChanged(function(state)
         end)
     end
 end)
+
+
+local Toggle = Tabs.Killing:AddToggle("Auto Punch", {Title = "Auto Punch", Default = false })
+
+Toggle:OnChanged(function()
+    if Toggle.Value then
+        task.spawn(function()
+            while Toggle.Value do
+                -- Equip the Punch tool
+                local player = game:GetService("Players").LocalPlayer
+                local backpack = player:FindFirstChild("Backpack")
+                if backpack then
+                    local tool = backpack:FindFirstChild("Punch")
+                    if tool then
+                        tool.Parent = player.Character
+                    end
+                end
+
+                -- Use the Punch tool
+                game:GetService("Players").LocalPlayer:WaitForChild("muscleEvent"):FireServer("rep")
+
+                task.wait(0.1) -- Adjust delay as needed
+            end
+        end)
+    end
+end)
