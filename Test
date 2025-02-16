@@ -199,15 +199,20 @@ local function updateDropdown()
     for _, player in ipairs(game.Players:GetPlayers()) do
         table.insert(playerNames, player.Name)
     end
+    -- Set the dropdown values to the updated player names
     Dropdown:SetValues(playerNames)
+
+    -- Set default to the first player in the list (if any)
+    if #playerNames > 0 then
+        Dropdown:SetValue(playerNames[1])
+    else
+        Dropdown:SetValue("")  -- No players in game
+    end
 end
 
 -- Call updateDropdown whenever players join/leave
 game.Players.PlayerAdded:Connect(updateDropdown)
 game.Players.PlayerRemoving:Connect(updateDropdown)
-
--- Set the default selection to the first player
-Dropdown:SetValue(game.Players:GetPlayers()[1] and game.Players:GetPlayers()[1].Name or "")
 
 -- Handle dropdown changes
 Dropdown:OnChanged(function(selectedPlayerName)
@@ -235,3 +240,6 @@ local TargetStatsParagraph = Tabs.Stats:AddParagraph({
     Title = "Target Stats",
     Content = "Amount Of Strength: 0\nAmount Of Durability: 0\nAmount Of Agility: 0\nAmount Of Kills: 0",
 })
+
+-- Initial population of the dropdown when the script runs
+updateDropdown()
