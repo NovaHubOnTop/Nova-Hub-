@@ -226,8 +226,8 @@ Dropdown:OnChanged(function(selectedPlayerName)
     if selectedPlayer then
         local leaderstats = selectedPlayer:FindFirstChild("leaderstats")
         local strength = leaderstats and leaderstats.Strength and leaderstats.Strength.Value or 0
-        local durability = selectedPlayer.Durability and selectedPlayer.Durability.Value or 0
-        local agility = selectedPlayer.Agility and selectedPlayer.Agility.Value or 0
+        local durability = selectedPlayer:FindFirstChild("Durability") and selectedPlayer.Durability.Value or 0
+        local agility = selectedPlayer:FindFirstChild("Agility") and selectedPlayer.Agility.Value or 0
         local kills = leaderstats and leaderstats.Kills and leaderstats.Kills.Value or 0
 
         -- Update the paragraph content
