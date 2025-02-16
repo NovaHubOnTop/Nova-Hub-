@@ -1,11 +1,9 @@
 -- Whitelist for specific usernames
 local whitelistedUsers = {
-   "Sub2LeopardGod",
+   "",
    "Mrbignewcoming3",
-   "Hi_dorihi",  --whitelisted
-   "EpicDeevv",
-   "EpicDeevvIV999",
-   "robloxlovejonathan2",
+   "",
+   "",
 }
 
 -- Function to check if player is whitelisted
