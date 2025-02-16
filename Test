@@ -440,65 +440,7 @@ task.spawn(function()
     end
 end)
 
-local Toggle = Tabs.Killing:AddToggle("Auto Kill", {Title = "Auto Kill", Default = false})
 
-Toggle:OnChanged(function(bool)
-    if bool then
-        _G.autoPunchanim = true
-        local player = game.Players.LocalPlayer
-
-        task.spawn(function()
-            while _G.autoPunchanim do
-                local character = player.Character
-                if character then
-                    local punchTool = player.Backpack:FindFirstChild("Punch") or character:FindFirstChild("Punch")
-                    
-                    if punchTool then
-                        -- Ensure tool is equipped
-                        if punchTool.Parent ~= character then
-                            punchTool.Parent = character
-                        end
-
-                        -- Fire punch events
-                        player.muscleEvent:FireServer("punch", "rightHand")
-                        player.muscleEvent:FireServer("punch", "leftHand")
-
-                        -- Target all players
-                        for _, targetPlayer in pairs(game.Players:GetPlayers()) do
-                            if targetPlayer ~= player then
-                                local targetCharacter = targetPlayer.Character
-                                if targetCharacter and targetCharacter:FindFirstChild("HumanoidRootPart") then
-                                    local rightHand = character:FindFirstChild("RightHand")
-                                    local leftHand = character:FindFirstChild("LeftHand")
-                                    local touchPart = targetCharacter.HumanoidRootPart
-
-                                    -- Right Hand attack
-                                    if rightHand then
-                                        firetouchinterest(rightHand, touchPart, 0)
-                                        task.wait(0.5)
-                                        firetouchinterest(rightHand, touchPart, 1)
-                                    end
-
-                                    -- Left Hand attack
-                                    if leftHand then
-                                        firetouchinterest(leftHand, touchPart, 0)
-                                        task.wait(0.5)
-                                        firetouchinterest(leftHand, touchPart, 1)
-                                    end
-                                end
-                            end
-                        end
-                    else
-                        _G.autoPunchanim = false -- Stop if tool not found
-                    end
-                end
-                task.wait(0.5) -- Increased wait time to avoid overlap issues
-            end
-        end)
-    else
-        _G.autoPunchanim = false
-    end
-end)
 
 local Toggle = Tabs.Killing:AddToggle("Auto Punch [No Animation]", {Title = "Auto Punch [No Animation]", Default = false })
 
