@@ -185,47 +185,21 @@ Tabs.Rebirth:AddToggle("Rebirth Until Target Amount", { Title = "Rebirth Until T
     end
 end)
 
-local startTime = tick() -- Store the time when the script starts executing
+-- **Stats Tab**
 
--- Update the content every second
-while true do
-    -- Calculate the elapsed time
-    local elapsedTime = tick() - startTime
-    local days = math.floor(elapsedTime / 86400) -- 86400 seconds in a day
-    local hours = math.floor((elapsedTime % 86400) / 3600) -- 3600 seconds in an hour
-    local minutes = math.floor((elapsedTime % 3600) / 60) -- 60 seconds in a minute
-    local seconds = math.floor(elapsedTime % 60)
+-- Time Since Script Executed Paragraph
+local TimeSinceExecutedParagraph = Tabs.Stats:AddParagraph({
+    Title = "Time Since Script Executed",
+    Content = "0d 0h 0m 0s"
+})
 
-    -- Update the content with the formatted time
-    Tabs.Stats:SetDesc("Amount Of Time Since Script Executed:", string.format("%dd %dh %dm %ds", days, hours, minutes, seconds))
-
-    wait(1) -- Wait for 1 second before updating again
-end
-
-local startTime = nil
-local running = false
-
--- Add the Timer paragraph
-Tabs.Stats:AddParagraph({
+-- Timer Paragraph
+local TimerParagraph = Tabs.Stats:AddParagraph({
     Title = "Timer",
     Content = "0d 0h 0m 0s"
 })
 
--- Function to update the timer display
-local function updateTimer()
-    if running and startTime then
-        local elapsedTime = tick() - startTime
-        local days = math.floor(elapsedTime / 86400)
-        local hours = math.floor((elapsedTime % 86400) / 3600)
-        local minutes = math.floor((elapsedTime % 3600) / 60)
-        local seconds = math.floor(elapsedTime % 60)
-
-        -- Update the paragraph content
-        Tabs.Stats:SetDesc("Timer", string.format("%dd %dh %dm %ds", days, hours, minutes, seconds))
-    end
-end
-
--- Add the Start Timer button
+-- Start Timer Button
 Tabs.Stats:AddButton({
     Title = "Start Timer",
     Description = "Starts the timer",
@@ -238,116 +212,33 @@ Tabs.Stats:AddButton({
     end
 })
 
--- Add the Stop Timer button
+-- Stop Timer Button
 Tabs.Stats:AddButton({
     Title = "Stop Timer",
     Description = "Stops and resets the timer",
     Callback = function()
         running = false
         startTime = nil  -- Reset the timer
-        Tabs.Stats:SetDesc("Timer", "0d 0h 0m 0s")
+        TimerParagraph:SetDesc("0d 0h 0m 0s")
         print("Timer stopped and reset.")
     end
 })
 
--- Continuously update the timer every second if it's running
-while true do
-    updateTimer()
-    wait(1)  -- Update every second
-end
-
--- Create "Select Target" dropdown
+-- Select Target Dropdown
 local Dropdown = Tabs.Stats:AddDropdown("Select Target", {
     Title = "Select Target",
-    Values = {}, -- Start with an empty list
+    Values = {},  -- Start with an empty list
     Multi = false,
     Default = 1,
 })
 
--- Create the paragraph for target stats
+-- Target Stats Paragraph
 local TargetStatsParagraph = Tabs.Stats:AddParagraph({
     Title = "Target Stats",
     Content = "Amount Of Strength: 0\nAmount Of Durability: 0\nAmount Of Agility: 0\nAmount Of Kills: 0",
 })
 
--- Function to abbreviate numbers for readability (e.g., 1000 becomes 1K, 1M, 1B, 1T, 1QA)
-local function abbreviateNumber(number)
-    if number >= 1e15 then
-        return string.format("%.1fQA", number / 1e15)  -- Quadrillion (QA)
-    elseif number >= 1e12 then
-        return string.format("%.1fT", number / 1e12)   -- Trillion (T)
-    elseif number >= 1e9 then
-        return string.format("%.1fB", number / 1e9)    -- Billion (B)
-    elseif number >= 1e6 then
-        return string.format("%.1fM", number / 1e6)    -- Million (M)
-    elseif number >= 1e3 then
-        return string.format("%.1fK", number / 1e3)    -- Thousand (K)
-    else
-        return tostring(number)  -- No abbreviation
-    end
-end
-
--- Populate the dropdown with player names
-local function updateDropdown()
-    local playerNames = {}
-    for _, player in ipairs(game.Players:GetPlayers()) do
-        table.insert(playerNames, player.Name)
-    end
-    
-    -- Safely set values if the dropdown allows it
-    if Dropdown and Dropdown.SetValues then
-        Dropdown:SetValues(playerNames)
-    else
-        warn("Dropdown:SetValues method not available")
-    end
-    
-    -- Set the default to the first player in the list (if any)
-    if #playerNames > 0 then
-        Dropdown:SetValue(playerNames[1])  -- Update the value
-    else
-        Dropdown:SetValue("")  -- No players in game
-    end
-end
-
--- Call updateDropdown whenever players join/leave
-game.Players.PlayerAdded:Connect(updateDropdown)
-game.Players.PlayerRemoving:Connect(updateDropdown)
-
--- Handle dropdown changes
-Dropdown:OnChanged(function(selectedPlayerName)
-    -- Find the selected player
-    local selectedPlayer = game.Players:FindFirstChild(selectedPlayerName)
-    if selectedPlayer then
-        -- Retrieve the player's leaderstats
-        local leaderstats = selectedPlayer:FindFirstChild("leaderstats")
-        local strength = leaderstats and leaderstats.Strength and leaderstats.Strength.Value or 0
-        local durability = selectedPlayer:FindFirstChild("Durability") and selectedPlayer.Durability.Value or 0
-        local agility = selectedPlayer:FindFirstChild("Agility") and selectedPlayer.Agility.Value or 0
-        local kills = leaderstats and leaderstats.Kills and leaderstats.Kills.Value or 0
-
-        -- Safely update the paragraph with the player's stats using SetDesc
-        if TargetStatsParagraph then
-            TargetStatsParagraph:SetDesc(string.format([[
-                Amount Of Strength: %s
-                Amount Of Durability: %s
-                Amount Of Agility: %s
-                Amount Of Kills: %s
-            ]], abbreviateNumber(strength), abbreviateNumber(durability), abbreviateNumber(agility), abbreviateNumber(kills)))
-        else
-            warn("TargetStatsParagraph is not defined!")
-        end
-    else
-        -- If player doesn't exist, set stats to 0
-        if TargetStatsParagraph then
-            TargetStatsParagraph:SetDesc("Amount Of Strength: 0\nAmount Of Durability: 0\nAmount Of Agility: 0\nAmount Of Kills: 0")
-        end
-    end
-end)
-
--- Initial population of the dropdown when the script runs
-updateDropdown()
-
--- Create the paragraph for your stats
+-- Your Stats Paragraph
 local YourStatsParagraph = Tabs.Stats:AddParagraph({
     Title = "Your Stats",
     Content = "Amount Of Strength: 0\nAmount Of Durability: 0\nAmount Of Agility: 0\nAmount Of Kills: 0",
@@ -389,3 +280,88 @@ game:GetService("RunService").Heartbeat:Connect(function()
         ]], abbreviateNumber(strength), abbreviateNumber(durability), abbreviateNumber(agility), abbreviateNumber(kills)))
     end
 end)
+
+-- Function to update the dropdown with player names
+local function updateDropdown()
+    local playerNames = {}
+    for _, player in ipairs(game.Players:GetPlayers()) do
+        table.insert(playerNames, player.Name)
+    end
+
+    -- Safely set values if the dropdown allows it
+    if Dropdown and Dropdown.SetValues then
+        Dropdown:SetValues(playerNames)
+    else
+        warn("Dropdown:SetValues method not available")
+    end
+
+    -- Set the default to the first player in the list (if any)
+    if #playerNames > 0 then
+        Dropdown:SetValue(playerNames[1])  -- Update the value
+    else
+        Dropdown:SetValue("")  -- No players in game
+    end
+end
+
+-- Call updateDropdown whenever players join/leave
+game.Players.PlayerAdded:Connect(updateDropdown)
+game.Players.PlayerRemoving:Connect(updateDropdown)
+
+-- Handle dropdown changes
+Dropdown:OnChanged(function(selectedPlayerName)
+    -- Find the selected player
+    local selectedPlayer = game.Players:FindFirstChild(selectedPlayerName)
+    if selectedPlayer then
+        -- Retrieve the player's leaderstats
+        local leaderstats = selectedPlayer:FindFirstChild("leaderstats")
+        local strength = leaderstats and leaderstats.Strength and leaderstats.Strength.Value or 0
+        local durability = selectedPlayer:FindFirstChild("Durability") and selectedPlayer.Durability.Value or 0
+        local agility = selectedPlayer:FindFirstChild("Agility") and selectedPlayer.Agility.Value or 0
+        local kills = leaderstats and leaderstats.Kills and leaderstats.Kills.Value or 0
+
+        -- Safely update the paragraph with the player's stats using SetDesc
+        if TargetStatsParagraph then
+            TargetStatsParagraph:SetDesc(string.format([[
+                Amount Of Strength: %s
+                Amount Of Durability: %s
+                Amount Of Agility: %s
+                Amount Of Kills: %s
+            ]], abbreviateNumber(strength), abbreviateNumber(durability), abbreviateNumber(agility), abbreviateNumber(kills)))
+        end
+    else
+        -- If player doesn't exist, set stats to 0
+        if TargetStatsParagraph then
+            TargetStatsParagraph:SetDesc("Amount Of Strength: 0\nAmount Of Durability: 0\nAmount Of Agility: 0\nAmount Of Kills: 0")
+        end
+    end
+end)
+
+-- Initial population of the dropdown when the script runs
+updateDropdown()
+
+-- Timer for Stats Tab
+local startTime = tick() -- Store the time when the script starts executing
+local running = false
+
+-- Function to update the timer and time since script execution
+local function updateTimer()
+    if running and startTime then
+        local elapsedTime = tick() - startTime
+        local days = math.floor(elapsedTime / 86400)
+        local hours = math.floor((elapsedTime % 86400) / 3600)
+        local minutes = math.floor((elapsedTime % 3600) / 60)
+        local seconds = math.floor(elapsedTime % 60)
+
+        -- Update the Timer paragraph content
+        TimerParagraph:SetDesc(string.format("%dd %dh %dm %ds", days, hours, minutes, seconds))
+
+        -- Update the Time Since Script Executed paragraph content
+        TimeSinceExecutedParagraph:SetDesc(string.format("%dd %dh %dm %ds", days, hours, minutes, seconds))
+    end
+end
+
+-- Continuously update the timer every second if it's running
+while true do
+    updateTimer()
+    wait(1)  -- Update every second
+end
