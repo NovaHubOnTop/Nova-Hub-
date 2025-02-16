@@ -185,7 +185,22 @@ Tabs.Rebirth:AddToggle("Rebirth Until Target Amount", { Title = "Rebirth Until T
     end
 end)
 
--- **Stats Tab**
+local Toggle = Tabs.Rebirth:AddToggle("Hide Frame", {Title = "Hide Frame", Default = false })
+
+Toggle:OnChanged(function()
+    -- Get all frames in the game and change their visibility based on the toggle's value
+    local isVisible = Toggle.Value
+
+    -- Loop through all objects in the game
+    for _, object in pairs(workspace:GetDescendants()) do
+        -- Check if the object is a frame (or GUI element)
+        if object:IsA("GuiObject") then
+            object.Visible = isVisible
+        end
+    end
+    
+    print("Toggle changed:", Toggle.Value)
+end)
 
 -- Time Since Script Executed Paragraph
 local TimeSinceExecutedParagraph = Tabs.Stats:AddParagraph({
