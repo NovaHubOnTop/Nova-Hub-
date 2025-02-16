@@ -16,7 +16,7 @@ local Window = NovaHub:CreateWindow({
 local Tabs = {
     Main = Window:AddTab({ Title = "Main", Icon = "scan-face" }),
     AutoFarm = Window:AddTab({ Title = "Auto Farm", Icon = "biceps-flexed" }),
-    Rebirth = Window:AddTab({ Title = "Rebirth", Icon = "rotate-ccw" }),
+    Rebirth = Window:AddTab({ Title = "Rebirth", Icon = "Refresg" }),
     Stats = Window:AddTab({ Title = "Stats", Icon = "Star" }),
     Crystal = Window:AddTab({ Title = "Crystal", Icon = "gem" }),
     Killing = Window:AddTab({ Title = "Killing", Icon = "sword" }),
