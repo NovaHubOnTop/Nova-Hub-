@@ -144,7 +144,7 @@ local totalRebirthsGained = 0
 local hideFrame = false
 
 -- **Rebirth Stats Paragraph**
-Tabs.Rebirth:AddParagraph({
+local rebirthStatsParagraph = Tabs.Rebirth:AddParagraph({
     Title = "Rebirth Stats",
     Content = "Amount Of Rebirth: 0\nAmount Of Rebirth Gained In Server: 0"
 })
@@ -254,7 +254,7 @@ Tabs.Rebirth:AddToggle("Eat Every Protein Eggs", { Title = "Eat Every Protein Eg
 end)
 
 -- **Hide Frame Toggle**
-Tabs.Main:AddToggle("Hide Frame", { Title = "Hide Frame", Default = false }):OnChanged(function(state)
+Tabs.Rebirth:AddToggle("Hide Frame", { Title = "Hide Frame", Default = false }):OnChanged(function(state)
     hideFrame = state
     local player = game.Players.LocalPlayer
     local playerGui = player:FindFirstChild("PlayerGui")
