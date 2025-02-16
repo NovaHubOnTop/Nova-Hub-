@@ -205,8 +205,8 @@ local function abbreviateNumber(value)
     end
 end
 
--- **Create Time Since Script Executed Label**
-local timeLabel = Tabs.Stats:AddLabel("Time Since Script Executed: 0 weeks, 0 days, 0 hours, 0 minutes, 0 seconds")
+-- **Create Time Since Script Executed Paragraph**
+local timeParagraph = Tabs.Stats:AddParagraph("Time Since Script Executed: 0 weeks, 0 days, 0 hours, 0 minutes, 0 seconds")
 
 -- Function to convert total seconds into weeks, days, hours, minutes, and seconds
 local function convertTime(seconds)
@@ -221,10 +221,10 @@ local function convertTime(seconds)
     return weeks, days, hours, minutes, seconds
 end
 
--- **Function to Update Time Label**
-local function updateTimeLabel()
+-- **Function to Update Time Paragraph**
+local function updateTimeParagraph()
     local weeks, days, hours, minutes, seconds = convertTime(timeSpent)
-    timeLabel.Text = string.format("Time Since Script Executed: %d weeks, %d days, %d hours, %d minutes, %d seconds", weeks, days, hours, minutes, seconds)
+    timeParagraph.Text = string.format("Time Since Script Executed: %d weeks, %d days, %d hours, %d minutes, %d seconds", weeks, days, hours, minutes, seconds)
 end
 
 -- **Start a Loop to Update Time Every Second**
@@ -232,7 +232,7 @@ spawn(function()
     while true do
         wait(1)  -- Wait for 1 second before updating again
         timeSpent = timeSpent + 1  -- Increment the time spent by 1 second
-        updateTimeLabel()  -- Update the label with the new time
+        updateTimeParagraph()  -- Update the paragraph with the new time
     end
 end)
 
@@ -250,7 +250,7 @@ local targetDropdown = Tabs.Stats:AddDropdown("Select Target", {
     Callback = function(selected)
         selectedTarget = game.Players:FindFirstChild(selected)
         if selectedTarget then
-            createPlayerLabels(selectedTarget)
+            createPlayerParagraphs(selectedTarget)
         end
     end
 })
@@ -266,72 +266,72 @@ end
 
 populateTargetDropdown()
 
--- **Function to Create Labels for Selected Player**
-local function createPlayerLabels(player)
-    -- **Clear Old Labels if Switching Players**
+-- **Function to Create Paragraphs for Selected Player**
+local function createPlayerParagraphs(player)
+    -- **Clear Old Paragraphs if Switching Players**
     if playerData[player.Name] then
-        for _, label in pairs(playerData[player.Name]) do
-            label:Remove()
+        for _, paragraph in pairs(playerData[player.Name]) do
+            paragraph:Remove()
         end
     end
 
     local leaderstats = player:FindFirstChild("leaderstats")
     if not leaderstats then return end  -- Prevent errors if stats don't exist
 
-    -- **Create Labels**
+    -- **Create Paragraphs for Player Stats**
     playerData[player.Name] = {
-        StrengthLabel = Tabs.Stats:AddLabel("Strength: " .. abbreviateNumber(leaderstats:FindFirstChild("Strength") and leaderstats.Strength.Value or 0)),
-        DurabilityLabel = Tabs.Stats:AddLabel("Durability: " .. abbreviateNumber(player:FindFirstChild("Durability") and player.Durability.Value or 0)),
-        KillsLabel = Tabs.Stats:AddLabel("Kills: " .. abbreviateNumber(leaderstats:FindFirstChild("Kills") and leaderstats.Kills.Value or 0)),
-        BrawlsLabel = Tabs.Stats:AddLabel("Brawls: " .. abbreviateNumber(leaderstats:FindFirstChild("Brawls") and leaderstats.Brawls.Value or 0)),
-        AgilityLabel = Tabs.Stats:AddLabel("Agility: " .. abbreviateNumber(player:FindFirstChild("Agility") and player.Agility.Value or 0)),
-        EvilKarmaLabel = Tabs.Stats:AddLabel("Evil Karma: " .. abbreviateNumber(player:FindFirstChild("evilKarma") and player.evilKarma.Value or 0)),
-        GoodKarmaLabel = Tabs.Stats:AddLabel("Good Karma: " .. abbreviateNumber(player:FindFirstChild("goodKarma") and player.goodKarma.Value or 0)),
-        MapLabel = Tabs.Stats:AddLabel("Map: " .. (player:FindFirstChild("currentMap") and player.currentMap.Value or "N/A")),
-        KingTimeLabel = Tabs.Stats:AddLabel("King Time: " .. abbreviateNumber(player:FindFirstChild("muscleKingTime") and player.muscleKingTime.Value or 0)),
-        PremiumLabel = Tabs.Stats:AddLabel("Premium: " .. (player.MembershipType == Enum.MembershipType.Premium and "true" or "false"))
+        StrengthParagraph = Tabs.Stats:AddParagraph("Strength: " .. abbreviateNumber(leaderstats:FindFirstChild("Strength") and leaderstats.Strength.Value or 0)),
+        DurabilityParagraph = Tabs.Stats:AddParagraph("Durability: " .. abbreviateNumber(player:FindFirstChild("Durability") and player.Durability.Value or 0)),
+        KillsParagraph = Tabs.Stats:AddParagraph("Kills: " .. abbreviateNumber(leaderstats:FindFirstChild("Kills") and leaderstats.Kills.Value or 0)),
+        BrawlsParagraph = Tabs.Stats:AddParagraph("Brawls: " .. abbreviateNumber(leaderstats:FindFirstChild("Brawls") and leaderstats.Brawls.Value or 0)),
+        AgilityParagraph = Tabs.Stats:AddParagraph("Agility: " .. abbreviateNumber(player:FindFirstChild("Agility") and player.Agility.Value or 0)),
+        EvilKarmaParagraph = Tabs.Stats:AddParagraph("Evil Karma: " .. abbreviateNumber(player:FindFirstChild("evilKarma") and player.evilKarma.Value or 0)),
+        GoodKarmaParagraph = Tabs.Stats:AddParagraph("Good Karma: " .. abbreviateNumber(player:FindFirstChild("goodKarma") and player.goodKarma.Value or 0)),
+        MapParagraph = Tabs.Stats:AddParagraph("Map: " .. (player:FindFirstChild("currentMap") and player.currentMap.Value or "N/A")),
+        KingTimeParagraph = Tabs.Stats:AddParagraph("King Time: " .. abbreviateNumber(player:FindFirstChild("muscleKingTime") and player.muscleKingTime.Value or 0)),
+        PremiumParagraph = Tabs.Stats:AddParagraph("Premium: " .. (player.MembershipType == Enum.MembershipType.Premium and "true" or "false"))
     }
 
-    -- **Auto-Update Labels When Stats Change**
+    -- **Auto-Update Paragraphs When Stats Change**
     if leaderstats:FindFirstChild("Strength") then
         leaderstats.Strength.Changed:Connect(function()
-            playerData[player.Name].StrengthLabel.Text = "Strength: " .. abbreviateNumber(leaderstats.Strength.Value)
+            playerData[player.Name].StrengthParagraph.Text = "Strength: " .. abbreviateNumber(leaderstats.Strength.Value)
         end)
     end
 
     if leaderstats:FindFirstChild("Kills") then
         leaderstats.Kills.Changed:Connect(function()
-            playerData[player.Name].KillsLabel.Text = "Kills: " .. abbreviateNumber(leaderstats.Kills.Value)
+            playerData[player.Name].KillsParagraph.Text = "Kills: " .. abbreviateNumber(leaderstats.Kills.Value)
         end)
     end
 
     if leaderstats:FindFirstChild("Brawls") then
         leaderstats.Brawls.Changed:Connect(function()
-            playerData[player.Name].BrawlsLabel.Text = "Brawls: " .. abbreviateNumber(leaderstats.Brawls.Value)
+            playerData[player.Name].BrawlsParagraph.Text = "Brawls: " .. abbreviateNumber(leaderstats.Brawls.Value)
         end)
     end
 
     if player:FindFirstChild("Durability") then
         player.Durability.Changed:Connect(function()
-            playerData[player.Name].DurabilityLabel.Text = "Durability: " .. abbreviateNumber(player.Durability.Value)
+            playerData[player.Name].DurabilityParagraph.Text = "Durability: " .. abbreviateNumber(player.Durability.Value)
         end)
     end
 
     if player:FindFirstChild("Agility") then
         player.Agility.Changed:Connect(function()
-            playerData[player.Name].AgilityLabel.Text = "Agility: " .. abbreviateNumber(player.Agility.Value)
+            playerData[player.Name].AgilityParagraph.Text = "Agility: " .. abbreviateNumber(player.Agility.Value)
         end)
     end
 
     if player:FindFirstChild("evilKarma") then
         player.evilKarma.Changed:Connect(function()
-            playerData[player.Name].EvilKarmaLabel.Text = "Evil Karma: " .. abbreviateNumber(player.evilKarma.Value)
+            playerData[player.Name].EvilKarmaParagraph.Text = "Evil Karma: " .. abbreviateNumber(player.evilKarma.Value)
         end)
     end
 
     if player:FindFirstChild("goodKarma") then
         player.goodKarma.Changed:Connect(function()
-            playerData[player.Name].GoodKarmaLabel.Text = "Good Karma: " .. abbreviateNumber(player.goodKarma.Value)
+            playerData[player.Name].GoodKarmaParagraph.Text = "Good Karma: " .. abbreviateNumber(player.goodKarma.Value)
         end)
     end
 end
