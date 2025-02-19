@@ -37,7 +37,7 @@ local function AutoRebirthUntilTargetLoop()
                 AutoRebirthUntilTarget = false
             end
         end
-        task.wait(1)
+        task.wait(0.1)
     end
 end
 
@@ -253,37 +253,36 @@ local badKarmaLabel = OPtab:AddLabel("Bad Karma: " .. AbbreviateNumber(0))
 local player = game.Players.LocalPlayer
 local leaderstats = player:WaitForChild("leaderstats")  -- Ensure leaderstats is loaded
 
--- Update stats function to handle changes
+-- Store the initial values of stats
+local initialStats = {
+    Strength = leaderstats.Strength.Value,
+    Durability = leaderstats.Durability.Value,
+    Agility = leaderstats.Agility.Value,
+    Kills = leaderstats.Kills.Value,
+    goodKarma = player:FindFirstChild("goodKarma") and player.goodKarma.Value or 0,
+    evilKarma = player:FindFirstChild("evilKarma") and player.evilKarma.Value or 0
+}
+
+-- Update stats function to handle changes and calculate the gain
 local function updateStats()
-    if leaderstats:FindFirstChild("Strength") then
-        local strength = leaderstats.Strength.Value
-        strengthLabel.Text = "Strength: " .. AbbreviateNumber(strength)
-    end
+    -- Calculate the stats gained
+    local strengthGained = leaderstats.Strength.Value - initialStats.Strength
+    strengthLabel.Text = "Strength: " .. AbbreviateNumber(strengthGained)
 
-    if leaderstats:FindFirstChild("Durability") then
-        local durability = leaderstats.Durability.Value
-        durabilityLabel.Text = "Durability: " .. AbbreviateNumber(durability)
-    end
+    local durabilityGained = leaderstats.Durability.Value - initialStats.Durability
+    durabilityLabel.Text = "Durability: " .. AbbreviateNumber(durabilityGained)
 
-    if leaderstats:FindFirstChild("Agility") then
-        local agility = leaderstats.Agility.Value
-        agilityLabel.Text = "Agility: " .. AbbreviateNumber(agility)
-    end
+    local agilityGained = leaderstats.Agility.Value - initialStats.Agility
+    agilityLabel.Text = "Agility: " .. AbbreviateNumber(agilityGained)
 
-    if leaderstats:FindFirstChild("Kills") then
-        local kills = leaderstats.Kills.Value
-        killLabel.Text = "Kill: " .. AbbreviateNumber(kills)
-    end
+    local killsGained = leaderstats.Kills.Value - initialStats.Kills
+    killLabel.Text = "Kill: " .. AbbreviateNumber(killsGained)
 
-    if player:FindFirstChild("goodKarma") then
-        local goodKarma = player.goodKarma.Value
-        goodKarmaLabel.Text = "Good Karma: " .. AbbreviateNumber(goodKarma)
-    end
+    local goodKarmaGained = player:FindFirstChild("goodKarma") and player.goodKarma.Value - initialStats.goodKarma or 0
+    goodKarmaLabel.Text = "Good Karma: " .. AbbreviateNumber(goodKarmaGained)
 
-    if player:FindFirstChild("evilKarma") then
-        local badKarma = player.evilKarma.Value
-        badKarmaLabel.Text = "Bad Karma: " .. AbbreviateNumber(badKarma)
-    end
+    local badKarmaGained = player:FindFirstChild("evilKarma") and player.evilKarma.Value - initialStats.evilKarma or 0
+    badKarmaLabel.Text = "Bad Karma: " .. AbbreviateNumber(badKarmaGained)
 end
 
 -- Update stats initially
