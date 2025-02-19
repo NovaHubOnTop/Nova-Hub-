@@ -8,8 +8,10 @@ local window = library:AddWindow("BLX Clan Script | Made By Encrypted", {
 
 local OPtab = window:AddTab("OP Things")
 local OP_Auto_Rebirth_Enabled = false
+local AutoRebirthUntilTarget = false
 local RebirthTarget = 0
 
+-- Choose Rebirth Target
 OPtab:AddTextBox("Choose Rebirth Target", function(text)
     local target = tonumber(text)
     if target then
@@ -17,6 +19,7 @@ OPtab:AddTextBox("Choose Rebirth Target", function(text)
     end
 end)
 
+-- Auto Rebirth Until Target Amount
 OPtab:AddSwitch("Auto Rebirth Until Target Amount", function(state)
     AutoRebirthUntilTarget = state
     if state then
@@ -30,9 +33,8 @@ local function AutoRebirthUntilTargetLoop()
     
     while AutoRebirthUntilTarget do
         if leaderstats and leaderstats:FindFirstChild("Rebirths") then
-            local currentRebirths = leaderstats.Rebirths.Value
-            if currentRebirths < RebirthTargetAmount then
-                game:GetService("ReplicatedStorage"):WaitForChild("rEvents"):WaitForChild("rebirthRemote"):InvokeServer("rebirthRequest")
+            if leaderstats.Rebirths.Value < RebirthTarget then
+                game:GetService("ReplicatedStorage").rEvents.rebirthRemote:InvokeServer("rebirthRequest")
             else
                 AutoRebirthUntilTarget = false
             end
@@ -41,12 +43,12 @@ local function AutoRebirthUntilTargetLoop()
     end
 end
 
+-- Normal Auto Rebirth
 OPtab:AddSwitch("Auto Rebirth (Normal Auto Rebirth)", function(enabled)
     OP_Auto_Rebirth_Enabled = enabled
 
     if enabled then
-        local player = game:GetService("Players").LocalPlayer
-        local leaderstats = player:FindFirstChild("leaderstats")
+        local player = game.Players.LocalPlayer
 
         if player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
             player.Character.HumanoidRootPart.CFrame = CFrame.new(-8652.867, 29.2667, 2089.261)
@@ -54,38 +56,22 @@ OPtab:AddSwitch("Auto Rebirth (Normal Auto Rebirth)", function(enabled)
 
         task.spawn(function()
             while OP_Auto_Rebirth_Enabled do
-                local args = { [1] = "useMachine", [2] = workspace:WaitForChild("machinesFolder"):WaitForChild("Jungle Bar Lift"):WaitForChild("interactSeat") }
-                game:GetService("ReplicatedStorage"):WaitForChild("rEvents"):WaitForChild("machineInteractRemote"):InvokeServer(unpack(args))
+                game:GetService("ReplicatedStorage").rEvents.machineInteractRemote:InvokeServer("useMachine", workspace.machinesFolder["Jungle Bar Lift"].interactSeat)
                 task.wait(0.5)
             end
         end)
 
         task.spawn(function()
             while OP_Auto_Rebirth_Enabled do
-                local args = { [1] = "rep" }
-                game.Players.LocalPlayer:WaitForChild("muscleEvent"):FireServer(unpack(args))
+                game.Players.LocalPlayer.muscleEvent:FireServer("rep")
                 task.wait(0.1)
-            end
-        end)
-
-        task.spawn(function()
-            while OP_Auto_Rebirth_Enabled do
-                if leaderstats and leaderstats:FindFirstChild("Rebirths") then
-                    local currentRebirths = leaderstats.Rebirths.Value
-                    if currentRebirths < RebirthTarget then
-                        game:GetService("ReplicatedStorage"):WaitForChild("rEvents"):WaitForChild("rebirthRemote"):InvokeServer("rebirthRequest")
-                    else
-                        OP_Auto_Rebirth_Enabled = false
-                    end
-                end
-                task.wait(1)
             end
         end)
     end
 end)
 
+-- OP Auto Rebirth
 local OPAutoRebirth = false
-local petName = "Swift Samurai"
 
 OPtab:AddSwitch("OP Auto Rebirth (Packs Needed)", function(state)
     OPAutoRebirth = state
@@ -98,26 +84,22 @@ local function EquipPets(petName)
     local player = game.Players.LocalPlayer
     local petsFolder = player.petsFolder.Unique
 
-    for i = 1, 8 do
-        game:GetService("ReplicatedStorage").rEvents.equipPetEvent:FireServer("equipPet", petsFolder[petName])
+    if petsFolder and petsFolder:FindFirstChild(petName) then
+        for i = 1, 8 do
+            game:GetService("ReplicatedStorage").rEvents.equipPetEvent:FireServer("equipPet", petsFolder[petName])
+        end
     end
 end
 
-local function UnequipPets(petName)
-    local player = game.Players.LocalPlayer
-    local petsFolder = player.petsFolder.Unique
-
-    for i = 1, 8 do
-        game:GetService("ReplicatedStorage").rEvents.equipPetEvent:FireServer("unequipPet", petsFolder[petName])
-    end
+local function UnequipAllPets()
+    game:GetService("ReplicatedStorage").rEvents.equipPetEvent:FireServer("unequipAllPets")
 end
 
 function OPAutoRebirthLoop()
     while OPAutoRebirth do
-        EquipPets(petName)
+        EquipPets("Swift Samurai")
 
-        local args = { [1] = "rep" }
-        game.Players.LocalPlayer:WaitForChild("muscleEvent"):FireServer(unpack(args))
+        game.Players.LocalPlayer.muscleEvent:FireServer("rep")
 
         local leaderstats = game.Players.LocalPlayer:FindFirstChild("leaderstats")
         local requiredStrength = 5000 * (leaderstats.Rebirths.Value + 1)
@@ -126,79 +108,38 @@ function OPAutoRebirthLoop()
             task.wait(0.1)
         end
 
-        UnequipPets(petName)
+        UnequipAllPets()
         EquipPets("Tribal Overlord")
-        game:GetService("ReplicatedStorage"):WaitForChild("rEvents"):WaitForChild("rebirthRemote"):InvokeServer("rebirthRequest")
+        game:GetService("ReplicatedStorage").rEvents.rebirthRemote:InvokeServer("rebirthRequest")
         
-        UnequipPets("Tribal Overlord")
-        EquipPets(petName)
+        UnequipAllPets()
+        EquipPets("Swift Samurai")
 
         task.wait(0.1)
     end
 end
 
-local OP_Auto_Farm_Enabled = false
-
-OPtab:AddSwitch("OP Auto Farm (Packs Needed)", function(enabled)
-    OP_Auto_Farm_Enabled = enabled
-
-    if enabled then
-        local player = game:GetService("Players").LocalPlayer
-        local petFolder = player:FindFirstChild("petsFolder") and player.petsFolder:FindFirstChild("Unique")
-
-        if petFolder then
-            local equippedCount = 0
-            for _, pet in pairs(petFolder:GetChildren()) do
-                if pet.Name == "Swift Samurai" and equippedCount < 8 then
-                    game:GetService("ReplicatedStorage").rEvents.equipPetEvent:FireServer("equipPet", pet)
-                    equippedCount = equippedCount + 1
-                end
-            end
-        end
-
-        if player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
-            player.Character.HumanoidRootPart.CFrame = CFrame.new(-8652.867, 29.2667, 2089.261)
-        end
-
-        task.spawn(function()
-            while OP_Auto_Farm_Enabled do
-                local args = { [1] = "useMachine", [2] = workspace:WaitForChild("machinesFolder"):WaitForChild("Jungle Bar Lift"):WaitForChild("interactSeat") }
-                game:GetService("ReplicatedStorage"):WaitForChild("rEvents"):WaitForChild("machineInteractRemote"):InvokeServer(unpack(args))
-                task.wait(0.5)
-            end
-        end)
-
-        task.spawn(function()
-            while OP_Auto_Farm_Enabled do
-                local args = { [1] = "rep" }
-                game:GetService("Players").LocalPlayer:WaitForChild("muscleEvent"):FireServer(unpack(args))
-                task.wait(0.0001)
-            end
-        end)
-    end
-end)
-
+-- Hide UI Frame
 local HideFrame = false
 
 OPtab:AddSwitch("Hide Frame", function(state)
     HideFrame = state
     local replicatedStorage = game:GetService("ReplicatedStorage")
 
-    local strengthFrame = replicatedStorage:FindFirstChild("strengthFrame")
-    local durabilityFrame = replicatedStorage:FindFirstChild("durabilityFrame")
-    local agilityFrame = replicatedStorage:FindFirstChild("agilityFrame")
+    local frames = {
+        replicatedStorage:FindFirstChild("strengthFrame"),
+        replicatedStorage:FindFirstChild("durabilityFrame"),
+        replicatedStorage:FindFirstChild("agilityFrame")
+    }
 
-    if strengthFrame then
-        strengthFrame.Visible = not state
-    end
-    if durabilityFrame then
-        durabilityFrame.Visible = not state
-    end
-    if agilityFrame then
-        agilityFrame.Visible = not state
+    for _, frame in pairs(frames) do
+        if frame then
+            frame.Visible = not state
+        end
     end
 end)
 
+-- Auto Eat Protein Egg
 local AutoEatProteinEgg = false
 
 OPtab:AddSwitch("Auto Eat Protein Egg Every 30 Minutes", function(state)
@@ -214,8 +155,7 @@ local function EquipProteinEggAndRep()
 
     local proteinEgg = backpack:FindFirstChild("Protein Egg")
     if proteinEgg then
-        local args = { [1] = "rep" }
-        game.Players.LocalPlayer:WaitForChild("muscleEvent"):FireServer(unpack(args))
+        game.Players.LocalPlayer.muscleEvent:FireServer("rep")
     end
 end
 
@@ -226,75 +166,41 @@ local function AutoEatProteinEggLoop()
     end
 end
 
+-- Stats Display
 local function AbbreviateNumber(number)
-    if number >= 1e15 then
-        return string.format("%.1f Qa", number / 1e15)
-    elseif number >= 1e12 then
-        return string.format("%.1f T", number / 1e12)
-    elseif number >= 1e9 then
-        return string.format("%.1f B", number / 1e9)
-    elseif number >= 1e6 then
-        return string.format("%.1f M", number / 1e6)
-    elseif number >= 1e3 then
-        return string.format("%.1f K", number / 1e3)
-    else
-        return tostring(number)
+    if number >= 1e15 then return string.format("%.1f Qa", number / 1e15)
+    elseif number >= 1e12 then return string.format("%.1f T", number / 1e12)
+    elseif number >= 1e9 then return string.format("%.1f B", number / 1e9)
+    elseif number >= 1e6 then return string.format("%.1f M", number / 1e6)
+    elseif number >= 1e3 then return string.format("%.1f K", number / 1e3)
+    else return tostring(number)
     end
 end
 
 OPtab:AddLabel("Stats Gained In Server:")
-local strengthLabel = OPtab:AddLabel("Strength: " .. AbbreviateNumber(0))
-local durabilityLabel = OPtab:AddLabel("Durability: " .. AbbreviateNumber(0))
-local agilityLabel = OPtab:AddLabel("Agility: " .. AbbreviateNumber(0))
-local killLabel = OPtab:AddLabel("Kill: " .. AbbreviateNumber(0))
-local goodKarmaLabel = OPtab:AddLabel("Good Karma: " .. AbbreviateNumber(0))
-local badKarmaLabel = OPtab:AddLabel("Bad Karma: " .. AbbreviateNumber(0))
+local strengthLabel = OPtab:AddLabel("Strength: 0")
+local durabilityLabel = OPtab:AddLabel("Durability: 0")
+local agilityLabel = OPtab:AddLabel("Agility: 0")
+local killLabel = OPtab:AddLabel("Kill: 0")
+local goodKarmaLabel = OPtab:AddLabel("Good Karma: 0")
+local badKarmaLabel = OPtab:AddLabel("Bad Karma: 0")
 
 local player = game.Players.LocalPlayer
 local leaderstats = player:WaitForChild("leaderstats")
 
--- Ensure all stats exist before using them
-local strength = leaderstats:WaitForChild("Strength")
-local durability = leaderstats:WaitForChild("Durability")
-local agility = leaderstats:WaitForChild("Agility")
-local kills = leaderstats:WaitForChild("Kills")
-
-local goodKarma = player:FindFirstChild("goodKarma") or Instance.new("IntValue", player)
-local badKarma = player:FindFirstChild("evilKarma") or Instance.new("IntValue", player)
-
--- Store the initial values of stats
-local initialStats = {
-    Strength = strength.Value,
-    Durability = durability.Value,
-    Agility = agility.Value,
-    Kills = kills.Value,
-    goodKarma = goodKarma.Value,
-    evilKarma = badKarma.Value
-}
-
--- Update stats function
 local function updateStats()
-    strengthLabel.Text = "Strength: " .. AbbreviateNumber(strength.Value - initialStats.Strength)
-    durabilityLabel.Text = "Durability: " .. AbbreviateNumber(durability.Value - initialStats.Durability)
-    agilityLabel.Text = "Agility: " .. AbbreviateNumber(agility.Value - initialStats.Agility)
-    killLabel.Text = "Kill: " .. AbbreviateNumber(kills.Value - initialStats.Kills)
-    goodKarmaLabel.Text = "Good Karma: " .. AbbreviateNumber(goodKarma.Value - initialStats.goodKarma)
-    badKarmaLabel.Text = "Bad Karma: " .. AbbreviateNumber(badKarma.Value - initialStats.evilKarma)
+    strengthLabel.Text = "Strength: " .. AbbreviateNumber(leaderstats.Strength.Value)
+    durabilityLabel.Text = "Durability: " .. AbbreviateNumber(leaderstats.Durability.Value)
+    agilityLabel.Text = "Agility: " .. AbbreviateNumber(leaderstats.Agility.Value)
+    killLabel.Text = "Kill: " .. AbbreviateNumber(leaderstats.Kills.Value)
+    goodKarmaLabel.Text = "Good Karma: " .. AbbreviateNumber(player.goodKarma.Value)
+    badKarmaLabel.Text = "Bad Karma: " .. AbbreviateNumber(player.evilKarma.Value)
 end
 
--- Connect to leaderstats changes
-strength.Changed:Connect(updateStats)
-durability.Changed:Connect(updateStats)
-agility.Changed:Connect(updateStats)
-kills.Changed:Connect(updateStats)
-
--- Connect to karma changes
-if goodKarma then
-    goodKarma.Changed:Connect(updateStats)
-end
-if badKarma then
-    badKarma.Changed:Connect(updateStats)
-end
-
--- Initial update
+leaderstats.Strength.Changed:Connect(updateStats)
+leaderstats.Durability.Changed:Connect(updateStats)
+leaderstats.Agility.Changed:Connect(updateStats)
+leaderstats.Kills.Changed:Connect(updateStats)
+player.goodKarma.Changed:Connect(updateStats)
+player.evilKarma.Changed:Connect(updateStats)
 updateStats()
