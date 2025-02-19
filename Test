@@ -285,25 +285,19 @@ local function updateStats()
     badKarmaLabel.Text = "Bad Karma: " .. AbbreviateNumber(badKarmaGained)
 end
 
+-- Connect to leaderstats and karma changes
+leaderstats.Strength.Changed:Connect(updateStats)
+leaderstats.Durability.Changed:Connect(updateStats)
+leaderstats.Agility.Changed:Connect(updateStats)
+leaderstats.Kills.Changed:Connect(updateStats)
+
+-- Karma value changes
+if player:FindFirstChild("goodKarma") then
+    player.goodKarma.Changed:Connect(updateStats)
+end
+if player:FindFirstChild("evilKarma") then
+    player.evilKarma.Changed:Connect(updateStats)
+end
+
 -- Update stats initially
 updateStats()
-
--- Connect to changes in leaderstats or karma
-leaderstats.ChildAdded:Connect(function(child)
-    if child:IsA("IntValue") then
-        updateStats()
-    end
-end)
-
-leaderstats.ChildRemoved:Connect(function(child)
-    if child:IsA("IntValue") then
-        updateStats()
-    end
-end)
-
--- Also listen to karma changes
-player.ChildAdded:Connect(function(child)
-    if child.Name == "goodKarma" or child.Name == "evilKarma" then
-        updateStats()
-    end
-end)
