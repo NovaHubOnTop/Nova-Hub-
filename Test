@@ -1,12 +1,12 @@
-local library = loadstring(game:HttpGet("https://raw.githubusercontent.com/memejames/elerium-v2-ui-library//main/Library", true))()
+local library = loadstring(game:HttpGet("https://raw.githubusercontent.com/memejames/elerium-v2-ui-library/main/Library", true))()
 
 local window = library:AddWindow("BLX Clan Script | Made By Encrypted", {
-	main_color = Color3.fromRGB(194, 218, 184), -- Color
-	min_size = Vector2.new(600, 500), -- Size of the gui
-	can_resize = false, -- true or false
+    main_color = Color3.fromRGB(194, 218, 184), -- Color
+    min_size = Vector2.new(600, 500), -- Size of the GUI
+    can_resize = false, -- true or false
 })
 
-local OPtab = window:AddTab("OP Things") 
+local OPtab = window:AddTab("OP Things")
 local OP_Auto_Rebirth_Enabled = false
 local RebirthTarget = 0  -- Default target
 
@@ -19,7 +19,7 @@ OPtab:AddTextBox("Chose Rebirth Target", function(text)
 end)
 
 -- Toggle for Auto Rebirth
-local switch = OPtab:AddSwitch("Auto Rebirth (Normal Auto Rebirth)", function(bool)
+OPtab:AddSwitch("Auto Rebirth (Normal Auto Rebirth)", function(bool)
     OP_Auto_Rebirth_Enabled = bool
 
     if bool then
@@ -73,7 +73,7 @@ local OPAutoRebirth = false -- Toggle state
 local petName = "Swift Samurai" -- The name of the pet to equip/unequip
 
 -- Toggle creation
-local switch = OPtab:AddSwitch("OP Auto Rebirth (Packs Needed)", function(state)
+OPtab:AddSwitch("OP Auto Rebirth (Packs Needed)", function(state)
     OPAutoRebirth = state
     if state then
         task.spawn(OPAutoRebirthLoop)  -- Start the loop when enabled
@@ -84,7 +84,7 @@ end)
 local function EquipPets(petName)
     local player = game.Players.LocalPlayer
     local petsFolder = player.petsFolder.Unique
-    
+
     -- Equip 8 pets with the same name
     for i = 1, 8 do
         game:GetService("ReplicatedStorage").rEvents.equipPetEvent:FireServer("equipPet", petsFolder[petName])
@@ -134,10 +134,9 @@ function OPAutoRebirthLoop()
     end
 end
 
-
 local OP_Auto_Farm_Enabled = false
 
-local switch = OPtab:AddSwitch("OP Auto Farm (Packs Needed)", function(bool)
+OPtab:AddSwitch("OP Auto Farm (Packs Needed)", function(bool)
     OP_Auto_Farm_Enabled = bool
 
     if bool then
@@ -185,8 +184,7 @@ end)
 
 local HideFrame = false -- Toggle state
 
--- Toggle creation
-local switch = OPtab:AddSwitch("Hide Frame", function(state)
+OPtab:AddSwitch("Hide Frame", function(state)
     HideFrame = state
     local replicatedStorage = game:GetService("ReplicatedStorage")
 
@@ -211,7 +209,7 @@ local AutoEatProteinEgg = false  -- Toggle state
 local proteinEggTool = "Protein Egg"  -- Tool name
 
 -- Toggle creation
-local switch = OPtab:AddSwitch("Auto Eat Protein Egg Every 30 Minutes", function(state)
+OPtab:AddSwitch("Auto Eat Protein Egg Every 30 Minutes", function(state)
     AutoEatProteinEgg = state
     if state then
         task.spawn(AutoEatProteinEggLoop)
@@ -224,24 +222,70 @@ local function EquipProteinEggAndRep()
     local backpack = player.Backpack
 
     -- Equip Protein Egg tool
-    local proteinEgg = backpack:FindFirstChild(proteinEggTool)
+    local proteinEgg = backpack:FindFirstChild("Protein Egg")
     if proteinEgg then
         -- Fire the strength rep event
         local args = { [1] = "rep" }
-        player:WaitForChild("muscleEvent"):FireServer(unpack(args))
+        game.Players.LocalPlayer:WaitForChild("muscleEvent"):FireServer(unpack(args))
     end
 end
 
--- Function to repeatedly equip "Protein Egg" and do strength rep every 30 minutes
-function AutoEatProteinEggLoop()
+-- Loop to automatically eat protein egg every 30 minutes
+local function AutoEatProteinEggLoop()
     while AutoEatProteinEgg do
-        -- Equip and fire strength rep event
         EquipProteinEggAndRep()
-
-        -- Wait for 30 minutes (1800 seconds) before doing it again
-        task.wait(1800)  -- 30 minutes
+        task.wait(1800)  -- Wait for 30 minutes (1800 seconds) before repeating
     end
 end
+
+local AutoRebirthUntilTarget = false -- Toggle state
+local RebirthTargetAmount = 0 -- Target Rebirth amount
+
+-- Textbox for entering the Rebirth Target amount
+OPtab:AddTextBox("Rebirth Target Amount", function(text)
+    local targetAmount = tonumber(text)
+    if targetAmount then
+        RebirthTargetAmount = targetAmount
+    end
+end)
+
+-- Toggle creation for Auto Rebirth Until Target Amount
+OPtab:AddSwitch("Auto Rebirth Until Target Amount", function(state)
+    AutoRebirthUntilTarget = state
+    if state then
+        task.spawn(AutoRebirthUntilTargetLoop)
+    end
+end)
+
+-- Function to handle Auto Rebirth until target amount is reached
+local function AutoRebirthUntilTargetLoop()
+    local player = game.Players.LocalPlayer
+    local leaderstats = player:WaitForChild("leaderstats")
+    
+    while AutoRebirthUntilTarget do
+        if leaderstats and leaderstats:FindFirstChild("Rebirths") then
+            local currentRebirths = leaderstats.Rebirths.Value
+            if currentRebirths < RebirthTargetAmount then
+                game:GetService("ReplicatedStorage"):WaitForChild("rEvents"):WaitForChild("rebirthRemote"):InvokeServer("rebirthRequest")
+            else
+                AutoRebirthUntilTarget = false  -- Stop once the target rebirth count is reached
+            end
+        end
+        task.wait(1)  -- Check rebirths every second
+    end
+end
+
+-- Hide the frame if needed
+OPtab:AddSwitch("Hide Frames", function(state)
+    HideFrame = state
+    local frames = game:GetService("ReplicatedStorage"):GetChildren()
+    
+    for _, frame in pairs(frames) do
+        if frame:IsA("Frame") then
+            frame.Visible = not state
+        end
+    end
+end)
 
 -- Function to abbreviate large numbers
 local function AbbreviateNumber(number)
