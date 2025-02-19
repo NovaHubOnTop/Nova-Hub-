@@ -1,58 +1,49 @@
 local library = loadstring(game:HttpGet("https://raw.githubusercontent.com/memejames/elerium-v2-ui-library/main/Library", true))()
 
 local window = library:AddWindow("BLX Clan Script | Made By Encrypted", {
-    main_color = Color3.fromRGB(194, 218, 184), -- Color
-    min_size = Vector2.new(600, 500), -- Size of the GUI
-    can_resize = false, -- true or false
+    main_color = Color3.fromRGB(194, 218, 184),
+    min_size = Vector2.new(600, 500),
+    can_resize = false,
 })
 
 local OPtab = window:AddTab("OP Things")
 local OP_Auto_Rebirth_Enabled = false
-local RebirthTarget = 0  -- Default target
+local RebirthTarget = 0
 
--- Textbox to choose the rebirth target
-OPtab:AddTextBox("Chose Rebirth Target", function(text)
+OPtab:AddTextBox("Choose Rebirth Target", function(text)
     local target = tonumber(text)
     if target then
         RebirthTarget = target
     end
 end)
 
--- Toggle for Auto Rebirth
-OPtab:AddSwitch("Auto Rebirth (Normal Auto Rebirth)", function(bool)
-    OP_Auto_Rebirth_Enabled = bool
+OPtab:AddSwitch("Auto Rebirth (Normal Auto Rebirth)", function(enabled)
+    OP_Auto_Rebirth_Enabled = enabled
 
-    if bool then
+    if enabled then
         local player = game:GetService("Players").LocalPlayer
         local leaderstats = player:FindFirstChild("leaderstats")
 
-        -- Teleport to the target position
         if player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
             player.Character.HumanoidRootPart.CFrame = CFrame.new(-8652.867, 29.2667, 2089.261)
         end
 
-        -- Machine interaction loop
         task.spawn(function()
             while OP_Auto_Rebirth_Enabled do
-                local args = {
-                    [1] = "useMachine",
-                    [2] = workspace:WaitForChild("machinesFolder"):WaitForChild("Jungle Bar Lift"):WaitForChild("interactSeat")
-                }
+                local args = { [1] = "useMachine", [2] = workspace:WaitForChild("machinesFolder"):WaitForChild("Jungle Bar Lift"):WaitForChild("interactSeat") }
                 game:GetService("ReplicatedStorage"):WaitForChild("rEvents"):WaitForChild("machineInteractRemote"):InvokeServer(unpack(args))
-                task.wait(0.5)  -- Prevents overloading the server
+                task.wait(0.5)
             end
         end)
 
-        -- Muscle event loop
         task.spawn(function()
             while OP_Auto_Rebirth_Enabled do
                 local args = { [1] = "rep" }
-                game:GetService("Players").LocalPlayer:WaitForChild("muscleEvent"):FireServer(unpack(args))
+                game.Players.LocalPlayer:WaitForChild("muscleEvent"):FireServer(unpack(args))
                 task.wait(0.1)
             end
         end)
 
-        -- Rebirth loop
         task.spawn(function()
             while OP_Auto_Rebirth_Enabled do
                 if leaderstats and leaderstats:FindFirstChild("Rebirths") then
@@ -60,87 +51,74 @@ OPtab:AddSwitch("Auto Rebirth (Normal Auto Rebirth)", function(bool)
                     if currentRebirths < RebirthTarget then
                         game:GetService("ReplicatedStorage"):WaitForChild("rEvents"):WaitForChild("rebirthRemote"):InvokeServer("rebirthRequest")
                     else
-                        OP_Auto_Rebirth_Enabled = false  -- Stop once the target is reached
+                        OP_Auto_Rebirth_Enabled = false
                     end
                 end
-                task.wait(1)  -- Check rebirth count every second
+                task.wait(1)
             end
         end)
     end
 end)
 
-local OPAutoRebirth = false -- Toggle state
-local petName = "Swift Samurai" -- The name of the pet to equip/unequip
+local OPAutoRebirth = false
+local petName = "Swift Samurai"
 
--- Toggle creation
 OPtab:AddSwitch("OP Auto Rebirth (Packs Needed)", function(state)
     OPAutoRebirth = state
     if state then
-        task.spawn(OPAutoRebirthLoop)  -- Start the loop when enabled
+        task.spawn(OPAutoRebirthLoop)
     end
 end)
 
--- Function to equip 8 pets with the same name
 local function EquipPets(petName)
     local player = game.Players.LocalPlayer
     local petsFolder = player.petsFolder.Unique
 
-    -- Equip 8 pets with the same name
     for i = 1, 8 do
         game:GetService("ReplicatedStorage").rEvents.equipPetEvent:FireServer("equipPet", petsFolder[petName])
     end
 end
 
--- Function to unequip 8 pets with the same name
 local function UnequipPets(petName)
     local player = game.Players.LocalPlayer
     local petsFolder = player.petsFolder.Unique
 
-    -- Unequip 8 pets with the same name
     for i = 1, 8 do
         game:GetService("ReplicatedStorage").rEvents.equipPetEvent:FireServer("unequipPet", petsFolder[petName])
     end
 end
 
--- Main loop to handle the Auto Rebirth process
 function OPAutoRebirthLoop()
     while OPAutoRebirth do
-        -- Equip 8 pets with the same name
         EquipPets(petName)
 
-        -- Do the strength rep event
         local args = { [1] = "rep" }
         game.Players.LocalPlayer:WaitForChild("muscleEvent"):FireServer(unpack(args))
 
-        -- Wait until the player reaches the required strength for rebirth
         local leaderstats = game.Players.LocalPlayer:FindFirstChild("leaderstats")
-        local requiredStrength = 5000 * (leaderstats.Rebirths.Value + 1)  -- 5000 strength per rebirth
+        local requiredStrength = 5000 * (leaderstats.Rebirths.Value + 1)
+
         while game.Players.LocalPlayer.Strength.Value < requiredStrength do
-            task.wait(0.1) -- Wait until the strength reaches the required value
+            task.wait(0.1)
         end
 
-        -- Once the strength requirement is met, unequip the pets and do the rebirth
         UnequipPets(petName)
-
-        -- Equip new pets and do the rebirth
-        EquipPets("Tribal Overlord")  -- Equip the new pets after rebirth
+        EquipPets("Tribal Overlord")
         game:GetService("ReplicatedStorage"):WaitForChild("rEvents"):WaitForChild("rebirthRemote"):InvokeServer("rebirthRequest")
         
-        -- Unequip the new pets and equip back the original pets
         UnequipPets("Tribal Overlord")
         EquipPets(petName)
 
-        task.wait(0.1)  -- Adjust the wait time as needed
+        task.wait(0.1)
     end
 end
 
 local OP_Auto_Farm_Enabled = false
 
-OPtab:AddSwitch("OP Auto Farm (Packs Needed)", function(bool)
-    OP_Auto_Farm_Enabled = bool
+OPtab:AddSwitch("OP Auto Farm (Packs Needed)", function(enabled)
+    OP_Auto_Farm_Enabled = enabled
 
-    if bool then
-        -- Equip 8 pets with the name "Swift Samurai"
+    if enabled then
         local player = game:GetService("Players").LocalPlayer
         local petFolder = player:FindFirstChild("petsFolder") and player.petsFolder:FindFirstChild("Unique")
 
@@ -154,24 +132,18 @@ OPtab:AddSwitch("OP Auto Farm (Packs Needed)", function(bool)
             end
         end
 
-        -- Teleport to the target position
         if player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
             player.Character.HumanoidRootPart.CFrame = CFrame.new(-8652.867, 29.2667, 2089.261)
         end
 
-        -- Machine interaction loop
         task.spawn(function()
             while OP_Auto_Farm_Enabled do
-                local args = {
-                    [1] = "useMachine",
-                    [2] = workspace:WaitForChild("machinesFolder"):WaitForChild("Jungle Bar Lift"):WaitForChild("interactSeat")
-                }
+                local args = { [1] = "useMachine", [2] = workspace:WaitForChild("machinesFolder"):WaitForChild("Jungle Bar Lift"):WaitForChild("interactSeat") }
                 game:GetService("ReplicatedStorage"):WaitForChild("rEvents"):WaitForChild("machineInteractRemote"):InvokeServer(unpack(args))
-                task.wait(0.5) -- Prevents overloading the server
+                task.wait(0.5)
             end
         end)
 
-        -- Muscle event loop
         task.spawn(function()
             while OP_Auto_Farm_Enabled do
                 local args = { [1] = "rep" }
@@ -182,18 +154,16 @@ OPtab:AddSwitch("OP Auto Farm (Packs Needed)", function(bool)
     end
 end)
 
-local HideFrame = false -- Toggle state
+local HideFrame = false
 
 OPtab:AddSwitch("Hide Frame", function(state)
     HideFrame = state
     local replicatedStorage = game:GetService("ReplicatedStorage")
 
-    -- Find frames
     local strengthFrame = replicatedStorage:FindFirstChild("strengthFrame")
     local durabilityFrame = replicatedStorage:FindFirstChild("durabilityFrame")
     local agilityFrame = replicatedStorage:FindFirstChild("agilityFrame")
 
-    -- Toggle visibility
     if strengthFrame then
         strengthFrame.Visible = not state
     end
@@ -205,10 +175,8 @@ OPtab:AddSwitch("Hide Frame", function(state)
     end
 end)
 
-local AutoEatProteinEgg = false  -- Toggle state
-local proteinEggTool = "Protein Egg"  -- Tool name
+local AutoEatProteinEgg = false
 
--- Toggle creation
 OPtab:AddSwitch("Auto Eat Protein Egg Every 30 Minutes", function(state)
     AutoEatProteinEgg = state
     if state then
@@ -216,32 +184,27 @@ OPtab:AddSwitch("Auto Eat Protein Egg Every 30 Minutes", function(state)
     end
 end)
 
--- Function to equip "Protein Egg" tool and do the strength rep event
 local function EquipProteinEggAndRep()
     local player = game.Players.LocalPlayer
     local backpack = player.Backpack
 
-    -- Equip Protein Egg tool
     local proteinEgg = backpack:FindFirstChild("Protein Egg")
     if proteinEgg then
-        -- Fire the strength rep event
         local args = { [1] = "rep" }
         game.Players.LocalPlayer:WaitForChild("muscleEvent"):FireServer(unpack(args))
     end
 end
 
--- Loop to automatically eat protein egg every 30 minutes
 local function AutoEatProteinEggLoop()
     while AutoEatProteinEgg do
         EquipProteinEggAndRep()
-        task.wait(1800)  -- Wait for 30 minutes (1800 seconds) before repeating
+        task.wait(1800)
     end
 end
 
-local AutoRebirthUntilTarget = false -- Toggle state
-local RebirthTargetAmount = 0 -- Target Rebirth amount
+local AutoRebirthUntilTarget = false
+local RebirthTargetAmount = 0
 
--- Textbox for entering the Rebirth Target amount
 OPtab:AddTextBox("Rebirth Target Amount", function(text)
     local targetAmount = tonumber(text)
     if targetAmount then
@@ -249,7 +212,6 @@ OPtab:AddTextBox("Rebirth Target Amount", function(text)
     end
 end)
 
--- Toggle creation for Auto Rebirth Until Target Amount
 OPtab:AddSwitch("Auto Rebirth Until Target Amount", function(state)
     AutoRebirthUntilTarget = state
     if state then
@@ -257,7 +219,6 @@ OPtab:AddSwitch("Auto Rebirth Until Target Amount", function(state)
     end
 end)
 
--- Function to handle Auto Rebirth until target amount is reached
 local function AutoRebirthUntilTargetLoop()
     local player = game.Players.LocalPlayer
     local leaderstats = player:WaitForChild("leaderstats")
@@ -268,18 +229,17 @@ local function AutoRebirthUntilTargetLoop()
             if currentRebirths < RebirthTargetAmount then
                 game:GetService("ReplicatedStorage"):WaitForChild("rEvents"):WaitForChild("rebirthRemote"):InvokeServer("rebirthRequest")
             else
-                AutoRebirthUntilTarget = false  -- Stop once the target rebirth count is reached
+                AutoRebirthUntilTarget = false
             end
         end
-        task.wait(1)  -- Check rebirths every second
+        task.wait(1)
     end
 end
 
--- Hide the frame if needed
 OPtab:AddSwitch("Hide Frames", function(state)
     HideFrame = state
     local frames = game:GetService("ReplicatedStorage"):GetChildren()
-    
+
     for _, frame in pairs(frames) do
         if frame:IsA("Frame") then
             frame.Visible = not state
@@ -287,67 +247,66 @@ OPtab:AddSwitch("Hide Frames", function(state)
     end
 end)
 
--- Function to abbreviate large numbers
-local function AbbreviateNumber(number)
-    if number >= 1e15 then
-        return string.format("%.1f Qa", number / 1e15)  -- Quadrillion
-    elseif number >= 1e12 then
-        return string.format("%.1f T", number / 1e12)   -- Trillion
-    elseif number >= 1e9 then
-        return string.format("%.1f B", number / 1e9)    -- Billion
-    elseif number >= 1e6 then
-        return string.format("%.1f M", number / 1e6)    -- Million
+local function Abbreviate(number)
+    if number >= 1e6 then
+        return string.format("%.1fm", number / 1e6)
     elseif number >= 1e3 then
-        return string.format("%.1f K", number / 1e3)    -- Thousand
+        return string.format("%.1fk", number / 1e3)
     else
-        return tostring(number)  -- No abbreviation for numbers less than 1,000
+        return tostring(number)
     end
 end
 
--- Add labels with abbreviated stats
-OPtab:AddLabel("Stats Gained In Server:")
-local strengthLabel = OPtab:AddLabel("Strength: " .. AbbreviateNumber(0))
-local durabilityLabel = OPtab:AddLabel("Durability: " .. AbbreviateNumber(0))
-local agilityLabel = OPtab:AddLabel("Agility: " .. AbbreviateNumber(0))
-local killLabel = OPtab:AddLabel("Kill: " .. AbbreviateNumber(0))
-local goodKarmaLabel = OPtab:AddLabel("Good Karma: " .. AbbreviateNumber(0))
-local badKarmaLabel = OPtab:AddLabel("Bad Karma: " .. AbbreviateNumber(0))
+local StatsTab = window:AddTab("Stats")
 
--- Update the labels whenever stats change
-game.Players.LocalPlayer.Stats.Changed:Connect(function()
-    -- Update strength
-    if game.Players.LocalPlayer:FindFirstChild("leaderstats") then
-        local strength = game.Players.LocalPlayer.leaderstats.Strength.Value
-        strengthLabel.Text = "Strength: " .. AbbreviateNumber(strength)
+local StatsSection = StatsTab:AddSection("Player Stats")
+
+StatsSection:AddLabel("Strength: 0")
+StatsSection:AddLabel("Durability: 0")
+StatsSection:AddLabel("Agility: 0")
+StatsSection:AddLabel("Kills: 0")
+
+local function UpdateStats()
+    local player = game.Players.LocalPlayer
+    local stats = player:WaitForChild("leaderstats")
+    local strength = stats:FindFirstChild("Strength") and stats.Strength.Value or 0
+    local durability = stats:FindFirstChild("Durability") and stats.Durability.Value or 0
+    local agility = stats:FindFirstChild("Agility") and stats.Agility.Value or 0
+    local kills = stats:FindFirstChild("Kills") and stats.Kills.Value or 0
+
+    StatsSection:UpdateLabel("Strength: " .. Abbreviate(strength))
+    StatsSection:UpdateLabel("Durability: " .. Abbreviate(durability))
+    StatsSection:UpdateLabel("Agility: " .. Abbreviate(agility))
+    StatsSection:UpdateLabel("Kills: " .. Abbreviate(kills))
+end
+
+task.spawn(function()
+    while true do
+        UpdateStats()
+        task.wait(0.1)
     end
+end)
 
-    -- Update durability
-    if game.Players.LocalPlayer:FindFirstChild("Durability") then
-        local durability = game.Players.LocalPlayer.Durability.Value
-        durabilityLabel.Text = "Durability: " .. AbbreviateNumber(durability)
-    end
+local KarmaTab = window:AddTab("Karma Stats")
 
-    -- Update agility
-    if game.Players.LocalPlayer:FindFirstChild("Agility") then
-        local agility = game.Players.LocalPlayer.Agility.Value
-        agilityLabel.Text = "Agility: " .. AbbreviateNumber(agility)
-    end
+local KarmaSection = KarmaTab:AddSection("Karma Stats")
 
-    -- Update kill count
-    if game.Players.LocalPlayer:FindFirstChild("leaderstats") then
-        local kills = game.Players.LocalPlayer.leaderstats.Kills.Value
-        killLabel.Text = "Kill: " .. AbbreviateNumber(kills)
-    end
+KarmaSection:AddLabel("Evil Karma: 0")
+KarmaSection:AddLabel("Good Karma: 0")
 
-    -- Update Good Karma
-    if game.Players.LocalPlayer:FindFirstChild("goodKarma") then
-        local goodKarma = game.Players.LocalPlayer.goodKarma.Value
-        goodKarmaLabel.Text = "Good Karma: " .. AbbreviateNumber(goodKarma)
-    end
+local function UpdateKarmaStats()
+    local player = game.Players.LocalPlayer
+    local stats = player:WaitForChild("leaderstats")
+    local evilKarma = stats:FindFirstChild("evilKarma") and stats.evilKarma.Value or 0
+    local goodKarma = stats:FindFirstChild("goodKarma") and stats.goodKarma.Value or 0
 
-    -- Update Bad Karma
-    if game.Players.LocalPlayer:FindFirstChild("evilKarma") then
-        local badKarma = game.Players.LocalPlayer.evilKarma.Value
-        badKarmaLabel.Text = "Bad Karma: " .. AbbreviateNumber(badKarma)
+    KarmaSection:UpdateLabel("Evil Karma: " .. evilKarma)
+    KarmaSection:UpdateLabel("Good Karma: " .. goodKarma)
+end
+
+task.spawn(function()
+    while true do
+        UpdateKarmaStats()
+        task.wait(0.1)
     end
 end)
