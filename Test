@@ -2,7 +2,7 @@ local library = loadstring(game:HttpGet("https://raw.githubusercontent.com/memej
 
 local window = library:AddWindow("BLX Clan Script | Made By Encrypted", {
 	main_color = Color3.fromRGB(194, 218, 184), -- Color
-	min_size = Vector2.new(250, 346), -- Size of the gui
+	min_size = Vector2.new(600, 500), -- Size of the gui
 	can_resize = false, -- true or false
 })
 
@@ -69,78 +69,68 @@ local switch = OPtab:AddSwitch("Auto Rebirth (Normal Auto Rebirth)", function(bo
     end
 end)
 
-local OP_AutoRebirth = false -- Toggle state
+local OPAutoRebirth = false -- Toggle state
+local petName = "Swift Samurai" -- The name of the pet to equip/unequip
 
 -- Toggle creation
-local switch = OPtab:AddSwitch("OP Auto Rebirth (Packs Needed)", function(bool)
-    OP_AutoRebirth = bool
-    if bool then
-        task.spawn(AutoRebirthLoop)
+local switch = OPtab:AddSwitch("OP Auto Rebirth (Packs Needed)", function(state)
+    OPAutoRebirth = state
+    if state then
+        task.spawn(OPAutoRebirthLoop)  -- Start the loop when enabled
     end
 end)
 
--- Function to equip 8 pets
+-- Function to equip 8 pets with the same name
 local function EquipPets(petName)
+    local player = game.Players.LocalPlayer
+    local petsFolder = player.petsFolder.Unique
+    
+    -- Equip 8 pets with the same name
     for i = 1, 8 do
-        game:GetService("ReplicatedStorage").rEvents.equipPetEvent:FireServer("equipPet", game:GetService("Players").LocalPlayer.petsFolder.Unique[petName])
+        game:GetService("ReplicatedStorage").rEvents.equipPetEvent:FireServer("equipPet", petsFolder[petName])
     end
 end
 
--- Function to unequip 8 pets
+-- Function to unequip 8 pets with the same name
 local function UnequipPets(petName)
+    local player = game.Players.LocalPlayer
+    local petsFolder = player.petsFolder.Unique
+
+    -- Unequip 8 pets with the same name
     for i = 1, 8 do
-        game:GetService("ReplicatedStorage").rEvents.equipPetEvent:FireServer("unequipPet", game:GetService("Players").LocalPlayer.petsFolder.Unique[petName])
+        game:GetService("ReplicatedStorage").rEvents.equipPetEvent:FireServer("unequipPet", petsFolder[petName])
     end
 end
 
--- Function to get current strength
-local function GetStrength()
-    local leaderstats = game:GetService("Players").LocalPlayer:FindFirstChild("leaderstats")
-    return leaderstats and leaderstats:FindFirstChild("Strength") and leaderstats.Strength.Value or 0
-end
+-- Main loop to handle the Auto Rebirth process
+function OPAutoRebirthLoop()
+    while OPAutoRebirth do
+        -- Equip 8 pets with the same name
+        EquipPets(petName)
 
--- Function to get current rebirths
-local function GetRebirths()
-    local leaderstats = game:GetService("Players").LocalPlayer:FindFirstChild("leaderstats")
-    return leaderstats and leaderstats:FindFirstChild("Rebirths") and leaderstats.Rebirths.Value or 0
-end
+        -- Do the strength rep event
+        local args = { [1] = "rep" }
+        game.Players.LocalPlayer:WaitForChild("muscleEvent"):FireServer(unpack(args))
 
--- Strength farming loop
-function AutoRebirthLoop()
-    EquipPets("Swift Samurai") -- Equip Swift Samurai at the start
-
-    while OP_AutoRebirth do
-        -- Fire strength event as fast as possible
-        game:GetService("Players").LocalPlayer:WaitForChild("muscleEvent"):FireServer("rep")
-        task.wait(0.00001)
-
-        -- Calculate required Strength to rebirth
-        local currentRebirths = GetRebirths()
-        local requiredStrength = (currentRebirths * 5000) + 5000
-        local currentStrength = GetStrength()
-
-        -- If strength is enough, perform rebirth sequence
-        if currentStrength >= requiredStrength then
-            -- Unequip Swift Samurai
-            UnequipPets("Swift Samurai")
-            task.wait(0.1) -- Short delay to ensure proper unequip
-
-            -- Equip Tribal Overlord
-            EquipPets("Tribal Overlord")
-            task.wait(0.1) -- Short delay before rebirth
-
-            -- Perform rebirth event
-            for i = 1, 8 do
-                game:GetService("ReplicatedStorage"):WaitForChild("rEvents"):WaitForChild("rebirthRemote"):InvokeServer("rebirthRequest")
-            end
-
-            -- Unequip Tribal Overlord
-            UnequipPets("Tribal Overlord")
-            task.wait(0.1)
-
-            -- Re-equip Swift Samurai to continue farming
-            EquipPets("Swift Samurai")
+        -- Wait until the player reaches the required strength for rebirth
+        local leaderstats = game.Players.LocalPlayer:FindFirstChild("leaderstats")
+        local requiredStrength = 5000 * (leaderstats.Rebirths.Value + 1)  -- 5000 strength per rebirth
+        while game.Players.LocalPlayer.Strength.Value < requiredStrength do
+            task.wait(0.1) -- Wait until the strength reaches the required value
         end
+
+        -- Once the strength requirement is met, unequip the pets and do the rebirth
+        UnequipPets(petName)
+
+        -- Equip new pets and do the rebirth
+        EquipPets("Tribal Overlord")  -- Equip the new pets after rebirth
+        game:GetService("ReplicatedStorage"):WaitForChild("rEvents"):WaitForChild("rebirthRemote"):InvokeServer("rebirthRequest")
+        
+        -- Unequip the new pets and equip back the original pets
+        UnequipPets("Tribal Overlord")
+        EquipPets(petName)
+
+        task.wait(0.1)  -- Adjust the wait time as needed
     end
 end
 
@@ -253,47 +243,67 @@ function AutoEatProteinEggLoop()
     end
 end
 
-local player = game:GetService("Players").LocalPlayer
-local leaderstats = player:FindFirstChild("leaderstats")
+-- Function to abbreviate large numbers
+local function AbbreviateNumber(number)
+    if number >= 1e15 then
+        return string.format("%.1f Qa", number / 1e15)  -- Quadrillion
+    elseif number >= 1e12 then
+        return string.format("%.1f T", number / 1e12)   -- Trillion
+    elseif number >= 1e9 then
+        return string.format("%.1f B", number / 1e9)    -- Billion
+    elseif number >= 1e6 then
+        return string.format("%.1f M", number / 1e6)    -- Million
+    elseif number >= 1e3 then
+        return string.format("%.1f K", number / 1e3)    -- Thousand
+    else
+        return tostring(number)  -- No abbreviation for numbers less than 1,000
+    end
+end
 
--- Creating labels
-OPtab:AddLabel("Stats Gained In Server")
-local StrengthLabel = OPtab:AddLabel("Strength: 0")
-local DurabilityLabel = OPtab:AddLabel("Durability: 0")
-local AgilityLabel = OPtab:AddLabel("Agility: 0")
-local KillLabel = OPtab:AddLabel("Kill: 0")
-local GoodKarmaLabel = OPtab:AddLabel("Good Karma: 0")
-local BadKarmaLabel = OPtab:AddLabel("Bad Karma: 0")
+-- Add labels with abbreviated stats
+OPtab:AddLabel("Stats Gained In Server:")
+local strengthLabel = OPtab:AddLabel("Strength: " .. AbbreviateNumber(0))
+local durabilityLabel = OPtab:AddLabel("Durability: " .. AbbreviateNumber(0))
+local agilityLabel = OPtab:AddLabel("Agility: " .. AbbreviateNumber(0))
+local killLabel = OPtab:AddLabel("Kill: " .. AbbreviateNumber(0))
+local goodKarmaLabel = OPtab:AddLabel("Good Karma: " .. AbbreviateNumber(0))
+local badKarmaLabel = OPtab:AddLabel("Bad Karma: " .. AbbreviateNumber(0))
 
--- Storing initial values
-local initialStrength = leaderstats and leaderstats:FindFirstChild("Strength") and leaderstats.Strength.Value or 0
-local initialDurability = player:FindFirstChild("Durability") and player.Durability.Value or 0
-local initialAgility = player:FindFirstChild("Agility") and player.Agility.Value or 0
-local initialKills = leaderstats and leaderstats:FindFirstChild("Kills") and leaderstats.Kills.Value or 0
-local initialGoodKarma = player:FindFirstChild("goodKarma") and player.goodKarma.Value or 0
-local initialEvilKarma = player:FindFirstChild("evilKarma") and player.evilKarma.Value or 0
+-- Update the labels whenever stats change
+game.Players.LocalPlayer.Stats.Changed:Connect(function()
+    -- Update strength
+    if game.Players.LocalPlayer:FindFirstChild("leaderstats") then
+        local strength = game.Players.LocalPlayer.leaderstats.Strength.Value
+        strengthLabel.Text = "Strength: " .. AbbreviateNumber(strength)
+    end
 
--- Function to update labels dynamically
-task.spawn(function()
-    while true do
-        if leaderstats then
-            -- Get current values
-            local currentStrength = leaderstats:FindFirstChild("Strength") and leaderstats.Strength.Value or initialStrength
-            local currentDurability = player:FindFirstChild("Durability") and player.Durability.Value or initialDurability
-            local currentAgility = player:FindFirstChild("Agility") and player.Agility.Value or initialAgility
-            local currentKills = leaderstats:FindFirstChild("Kills") and leaderstats.Kills.Value or initialKills
-            local currentGoodKarma = player:FindFirstChild("goodKarma") and player.goodKarma.Value or initialGoodKarma
-            local currentEvilKarma = player:FindFirstChild("evilKarma") and player.evilKarma.Value or initialEvilKarma
+    -- Update durability
+    if game.Players.LocalPlayer:FindFirstChild("Durability") then
+        local durability = game.Players.LocalPlayer.Durability.Value
+        durabilityLabel.Text = "Durability: " .. AbbreviateNumber(durability)
+    end
 
-            -- Update the labels
-            StrengthLabel.Text = "Strength: " .. (currentStrength - initialStrength)
-            DurabilityLabel.Text = "Durability: " .. (currentDurability - initialDurability)
-            AgilityLabel.Text = "Agility: " .. (currentAgility - initialAgility)
-            KillLabel.Text = "Kill: " .. (currentKills - initialKills)
-            GoodKarmaLabel.Text = "Good Karma: " .. (currentGoodKarma - initialGoodKarma)
-            BadKarmaLabel.Text = "Bad Karma: " .. (currentEvilKarma - initialEvilKarma)
-        end
+    -- Update agility
+    if game.Players.LocalPlayer:FindFirstChild("Agility") then
+        local agility = game.Players.LocalPlayer.Agility.Value
+        agilityLabel.Text = "Agility: " .. AbbreviateNumber(agility)
+    end
 
-        task.wait(0.1) -- Updates every 0.1 seconds
+    -- Update kill count
+    if game.Players.LocalPlayer:FindFirstChild("leaderstats") then
+        local kills = game.Players.LocalPlayer.leaderstats.Kills.Value
+        killLabel.Text = "Kill: " .. AbbreviateNumber(kills)
+    end
+
+    -- Update Good Karma
+    if game.Players.LocalPlayer:FindFirstChild("goodKarma") then
+        local goodKarma = game.Players.LocalPlayer.goodKarma.Value
+        goodKarmaLabel.Text = "Good Karma: " .. AbbreviateNumber(goodKarma)
+    end
+
+    -- Update Bad Karma
+    if game.Players.LocalPlayer:FindFirstChild("evilKarma") then
+        local badKarma = game.Players.LocalPlayer.evilKarma.Value
+        badKarmaLabel.Text = "Bad Karma: " .. AbbreviateNumber(badKarma)
     end
 end)
