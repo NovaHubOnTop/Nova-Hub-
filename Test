@@ -226,14 +226,6 @@ local function AutoEatProteinEggLoop()
     end
 end
 
-
-
-
-
-
-
-
-
 local function AbbreviateNumber(number)
     if number >= 1e15 then
         return string.format("%.1f Qa", number / 1e15)
@@ -258,34 +250,61 @@ local killLabel = OPtab:AddLabel("Kill: " .. AbbreviateNumber(0))
 local goodKarmaLabel = OPtab:AddLabel("Good Karma: " .. AbbreviateNumber(0))
 local badKarmaLabel = OPtab:AddLabel("Bad Karma: " .. AbbreviateNumber(0))
 
-game.Players.LocalPlayer.Stats.Changed:Connect(function()
-    if game.Players.LocalPlayer:FindFirstChild("leaderstats") then
-        local strength = game.Players.LocalPlayer.leaderstats.Strength.Value
+local player = game.Players.LocalPlayer
+local leaderstats = player:WaitForChild("leaderstats")  -- Ensure leaderstats is loaded
+
+-- Update stats function to handle changes
+local function updateStats()
+    if leaderstats:FindFirstChild("Strength") then
+        local strength = leaderstats.Strength.Value
         strengthLabel.Text = "Strength: " .. AbbreviateNumber(strength)
     end
 
-    if game.Players.LocalPlayer:FindFirstChild("Durability") then
-        local durability = game.Players.LocalPlayer.Durability.Value
+    if leaderstats:FindFirstChild("Durability") then
+        local durability = leaderstats.Durability.Value
         durabilityLabel.Text = "Durability: " .. AbbreviateNumber(durability)
     end
 
-    if game.Players.LocalPlayer:FindFirstChild("Agility") then
-        local agility = game.Players.LocalPlayer.Agility.Value
+    if leaderstats:FindFirstChild("Agility") then
+        local agility = leaderstats.Agility.Value
         agilityLabel.Text = "Agility: " .. AbbreviateNumber(agility)
     end
 
-    if game.Players.LocalPlayer:FindFirstChild("leaderstats") then
-        local kills = game.Players.LocalPlayer.leaderstats.Kills.Value
+    if leaderstats:FindFirstChild("Kills") then
+        local kills = leaderstats.Kills.Value
         killLabel.Text = "Kill: " .. AbbreviateNumber(kills)
     end
 
-    if game.Players.LocalPlayer:FindFirstChild("goodKarma") then
-        local goodKarma = game.Players.LocalPlayer.goodKarma.Value
+    if player:FindFirstChild("goodKarma") then
+        local goodKarma = player.goodKarma.Value
         goodKarmaLabel.Text = "Good Karma: " .. AbbreviateNumber(goodKarma)
     end
 
-    if game.Players.LocalPlayer:FindFirstChild("evilKarma") then
-        local badKarma = game.Players.LocalPlayer.evilKarma.Value
+    if player:FindFirstChild("evilKarma") then
+        local badKarma = player.evilKarma.Value
         badKarmaLabel.Text = "Bad Karma: " .. AbbreviateNumber(badKarma)
+    end
+end
+
+-- Update stats initially
+updateStats()
+
+-- Connect to changes in leaderstats or karma
+leaderstats.ChildAdded:Connect(function(child)
+    if child:IsA("IntValue") then
+        updateStats()
+    end
+end)
+
+leaderstats.ChildRemoved:Connect(function(child)
+    if child:IsA("IntValue") then
+        updateStats()
+    end
+end)
+
+-- Also listen to karma changes
+player.ChildAdded:Connect(function(child)
+    if child.Name == "goodKarma" or child.Name == "evilKarma" then
+        updateStats()
     end
 end)
