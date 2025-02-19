@@ -17,6 +17,30 @@ OPtab:AddTextBox("Choose Rebirth Target", function(text)
     end
 end)
 
+OPtab:AddSwitch("Auto Rebirth Until Target Amount", function(state)
+    AutoRebirthUntilTarget = state
+    if state then
+        task.spawn(AutoRebirthUntilTargetLoop)
+    end
+end)
+
+local function AutoRebirthUntilTargetLoop()
+    local player = game.Players.LocalPlayer
+    local leaderstats = player:WaitForChild("leaderstats")
+    
+    while AutoRebirthUntilTarget do
+        if leaderstats and leaderstats:FindFirstChild("Rebirths") then
+            local currentRebirths = leaderstats.Rebirths.Value
+            if currentRebirths < RebirthTargetAmount then
+                game:GetService("ReplicatedStorage"):WaitForChild("rEvents"):WaitForChild("rebirthRemote"):InvokeServer("rebirthRequest")
+            else
+                AutoRebirthUntilTarget = false
+            end
+        end
+        task.wait(1)
+    end
+end
+
 OPtab:AddSwitch("Auto Rebirth (Normal Auto Rebirth)", function(enabled)
     OP_Auto_Rebirth_Enabled = enabled
 
@@ -202,111 +226,66 @@ local function AutoEatProteinEggLoop()
     end
 end
 
-local AutoRebirthUntilTarget = false
-local RebirthTargetAmount = 0
 
-OPtab:AddTextBox("Rebirth Target Amount", function(text)
-    local targetAmount = tonumber(text)
-    if targetAmount then
-        RebirthTargetAmount = targetAmount
-    end
-end)
 
-OPtab:AddSwitch("Auto Rebirth Until Target Amount", function(state)
-    AutoRebirthUntilTarget = state
-    if state then
-        task.spawn(AutoRebirthUntilTargetLoop)
-    end
-end)
 
-local function AutoRebirthUntilTargetLoop()
-    local player = game.Players.LocalPlayer
-    local leaderstats = player:WaitForChild("leaderstats")
-    
-    while AutoRebirthUntilTarget do
-        if leaderstats and leaderstats:FindFirstChild("Rebirths") then
-            local currentRebirths = leaderstats.Rebirths.Value
-            if currentRebirths < RebirthTargetAmount then
-                game:GetService("ReplicatedStorage"):WaitForChild("rEvents"):WaitForChild("rebirthRemote"):InvokeServer("rebirthRequest")
-            else
-                AutoRebirthUntilTarget = false
-            end
-        end
-        task.wait(1)
-    end
-end
 
-OPtab:AddSwitch("Hide Frames", function(state)
-    HideFrame = state
-    local frames = game:GetService("ReplicatedStorage"):GetChildren()
 
-    for _, frame in pairs(frames) do
-        if frame:IsA("Frame") then
-            frame.Visible = not state
-        end
-    end
-end)
 
-local function Abbreviate(number)
-    if number >= 1e6 then
-        return string.format("%.1fm", number / 1e6)
+
+
+local function AbbreviateNumber(number)
+    if number >= 1e15 then
+        return string.format("%.1f Qa", number / 1e15)
+    elseif number >= 1e12 then
+        return string.format("%.1f T", number / 1e12)
+    elseif number >= 1e9 then
+        return string.format("%.1f B", number / 1e9)
+    elseif number >= 1e6 then
+        return string.format("%.1f M", number / 1e6)
     elseif number >= 1e3 then
-        return string.format("%.1fk", number / 1e3)
+        return string.format("%.1f K", number / 1e3)
     else
         return tostring(number)
     end
 end
 
-local StatsTab = window:AddTab("Stats")
+OPtab:AddLabel("Stats Gained In Server:")
+local strengthLabel = OPtab:AddLabel("Strength: " .. AbbreviateNumber(0))
+local durabilityLabel = OPtab:AddLabel("Durability: " .. AbbreviateNumber(0))
+local agilityLabel = OPtab:AddLabel("Agility: " .. AbbreviateNumber(0))
+local killLabel = OPtab:AddLabel("Kill: " .. AbbreviateNumber(0))
+local goodKarmaLabel = OPtab:AddLabel("Good Karma: " .. AbbreviateNumber(0))
+local badKarmaLabel = OPtab:AddLabel("Bad Karma: " .. AbbreviateNumber(0))
 
-local StatsSection = StatsTab:AddSection("Player Stats")
-
-StatsSection:AddLabel("Strength: 0")
-StatsSection:AddLabel("Durability: 0")
-StatsSection:AddLabel("Agility: 0")
-StatsSection:AddLabel("Kills: 0")
-
-local function UpdateStats()
-    local player = game.Players.LocalPlayer
-    local stats = player:WaitForChild("leaderstats")
-    local strength = stats:FindFirstChild("Strength") and stats.Strength.Value or 0
-    local durability = stats:FindFirstChild("Durability") and stats.Durability.Value or 0
-    local agility = stats:FindFirstChild("Agility") and stats.Agility.Value or 0
-    local kills = stats:FindFirstChild("Kills") and stats.Kills.Value or 0
-
-    StatsSection:UpdateLabel("Strength: " .. Abbreviate(strength))
-    StatsSection:UpdateLabel("Durability: " .. Abbreviate(durability))
-    StatsSection:UpdateLabel("Agility: " .. Abbreviate(agility))
-    StatsSection:UpdateLabel("Kills: " .. Abbreviate(kills))
-end
-
-task.spawn(function()
-    while true do
-        UpdateStats()
-        task.wait(0.1)
+game.Players.LocalPlayer.Stats.Changed:Connect(function()
+    if game.Players.LocalPlayer:FindFirstChild("leaderstats") then
+        local strength = game.Players.LocalPlayer.leaderstats.Strength.Value
+        strengthLabel.Text = "Strength: " .. AbbreviateNumber(strength)
     end
-end)
 
-local KarmaTab = window:AddTab("Karma Stats")
+    if game.Players.LocalPlayer:FindFirstChild("Durability") then
+        local durability = game.Players.LocalPlayer.Durability.Value
+        durabilityLabel.Text = "Durability: " .. AbbreviateNumber(durability)
+    end
 
-local KarmaSection = KarmaTab:AddSection("Karma Stats")
+    if game.Players.LocalPlayer:FindFirstChild("Agility") then
+        local agility = game.Players.LocalPlayer.Agility.Value
+        agilityLabel.Text = "Agility: " .. AbbreviateNumber(agility)
+    end
 
-KarmaSection:AddLabel("Evil Karma: 0")
-KarmaSection:AddLabel("Good Karma: 0")
+    if game.Players.LocalPlayer:FindFirstChild("leaderstats") then
+        local kills = game.Players.LocalPlayer.leaderstats.Kills.Value
+        killLabel.Text = "Kill: " .. AbbreviateNumber(kills)
+    end
 
-local function UpdateKarmaStats()
-    local player = game.Players.LocalPlayer
-    local stats = player:WaitForChild("leaderstats")
-    local evilKarma = stats:FindFirstChild("evilKarma") and stats.evilKarma.Value or 0
-    local goodKarma = stats:FindFirstChild("goodKarma") and stats.goodKarma.Value or 0
+    if game.Players.LocalPlayer:FindFirstChild("goodKarma") then
+        local goodKarma = game.Players.LocalPlayer.goodKarma.Value
+        goodKarmaLabel.Text = "Good Karma: " .. AbbreviateNumber(goodKarma)
+    end
 
-    KarmaSection:UpdateLabel("Evil Karma: " .. evilKarma)
-    KarmaSection:UpdateLabel("Good Karma: " .. goodKarma)
-end
-
-task.spawn(function()
-    while true do
-        UpdateKarmaStats()
-        task.wait(0.1)
+    if game.Players.LocalPlayer:FindFirstChild("evilKarma") then
+        local badKarma = game.Players.LocalPlayer.evilKarma.Value
+        badKarmaLabel.Text = "Bad Karma: " .. AbbreviateNumber(badKarma)
     end
 end)
