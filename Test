@@ -40,24 +40,6 @@ local function AutoRebirthUntilTargetLoop()
     end
 end
 
--- Normal Auto Rebirth
-local OP_Auto_Rebirth_Enabled = false
-
-OPtab:AddSwitch("Auto Rebirth (Normal Auto Rebirth)", function(enabled)
-    OP_Auto_Rebirth_Enabled = enabled
-
-    if enabled then
-        local player = game.Players.LocalPlayer
-        task.spawn(function()
-            while OP_Auto_Rebirth_Enabled do
-                game:GetService("ReplicatedStorage").rEvents.machineInteractRemote:InvokeServer("useMachine", workspace.machinesFolder["Jungle Bar Lift"].interactSeat)
-                game.Players.LocalPlayer.muscleEvent:FireServer("rep")
-                task.wait(0.1)
-            end
-        end)
-    end
-end)
-
 -- OP Auto Rebirth
 local OPAutoRebirth = false
 
@@ -87,8 +69,13 @@ function OPAutoRebirthLoop()
     while OPAutoRebirth do
         EquipMultiplePets("Swift Samurai")
 
-        game.Players.LocalPlayer.muscleEvent:FireServer("rep")
+        -- Do reps
+        for i = 1, 50 do
+            game.Players.LocalPlayer.muscleEvent:FireServer("rep")
+            task.wait(0.1)
+        end
 
+        -- Check strength before rebirth
         local leaderstats = game.Players.LocalPlayer:FindFirstChild("leaderstats")
         local requiredStrength = 5000 * (leaderstats.Rebirths.Value + 1)
 
@@ -96,33 +83,20 @@ function OPAutoRebirthLoop()
             task.wait(0.1)
         end
 
+        -- Unequip all pets and equip Tribal Overlord pets before rebirth
         game:GetService("ReplicatedStorage").rEvents.equipPetEvent:FireServer("unequipAllPets")
         EquipMultiplePets("Tribal Overlord")
+
+        -- Rebirth
         game:GetService("ReplicatedStorage").rEvents.rebirthRemote:InvokeServer("rebirthRequest")
         
+        -- Re-equip Swift Samurai pets after rebirth
         game:GetService("ReplicatedStorage").rEvents.equipPetEvent:FireServer("unequipAllPets")
         EquipMultiplePets("Swift Samurai")
 
         task.wait(0.1)
     end
 end
-
--- OP Auto Farm
-local OP_Auto_Farm_Enabled = false
-
-OPtab:AddSwitch("OP Auto Farm (Packs Needed)", function(enabled)
-    OP_Auto_Farm_Enabled = enabled
-
-    if enabled then
-        task.spawn(function()
-            while OP_Auto_Farm_Enabled do
-                game:GetService("ReplicatedStorage").rEvents.machineInteractRemote:InvokeServer("useMachine", workspace.machinesFolder["Jungle Bar Lift"].interactSeat)
-                game.Players.LocalPlayer.muscleEvent:FireServer("rep")
-                task.wait(0.1)
-            end
-        end)
-    end
-end)
 
 -- Hide UI Frame
 local HideFrame = false
@@ -154,50 +128,97 @@ local function AutoEatProteinEggLoop()
     end
 end
 
--- Stats Gained Display
-local function AbbreviateNumber(number)
-    if number >= 1e15 then return string.format("%.1f Qa", number / 1e15)
-    elseif number >= 1e12 then return string.format("%.1f T", number / 1e12)
-    elseif number >= 1e9 then return string.format("%.1f B", number / 1e9)
-    elseif number >= 1e6 then return string.format("%.1f M", number / 1e6)
-    elseif number >= 1e3 then return string.format("%.1f K", number / 1e3)
-    else return tostring(number)
+-- Helper function to abbreviate large numbers
+local function abbreviateNumber(value)
+    if value >= 1e15 then
+        return string.format("%.1fQa", value / 1e15)
+    elseif value >= 1e12 then
+        return string.format("%.1fT", value / 1e12)
+    elseif value >= 1e9 then
+        return string.format("%.1fB", value / 1e9)
+    elseif value >= 1e6 then
+        return string.format("%.1fM", value / 1e6)
+    elseif value >= 1e3 then
+        return string.format("%.1fK", value / 1e3)
+    else
+        return tostring(value)
     end
 end
 
-OPtab:AddLabel("Stats Gained In Server:")
-local strengthLabel = OPtab:AddLabel("Strength: 0")
-local durabilityLabel = OPtab:AddLabel("Durability: 0")
-local agilityLabel = OPtab:AddLabel("Agility: 0")
-local killLabel = OPtab:AddLabel("Kill: 0")
-local goodKarmaLabel = OPtab:AddLabel("Good Karma: 0")
-local badKarmaLabel = OPtab:AddLabel("Bad Karma: 0")
+-- Function to create labels for the local player's stats
+local function createMyLabels()
+    local player = game.Players.LocalPlayer
+    if not player then return end
 
-local player = game.Players.LocalPlayer
-local leaderstats = player:WaitForChild("leaderstats")
+    local leaderstats = player:FindFirstChild("leaderstats")
+    if not leaderstats then return end
 
-local initialStats = {
-    Strength = leaderstats.Strength.Value,
-    Durability = leaderstats.Durability.Value,
-    Agility = leaderstats.Agility.Value,
-    Kills = leaderstats.Kills.Value,
-    GoodKarma = player.goodKarma.Value,
-    BadKarma = player.evilKarma.Value
-}
+    -- Create labels for the stats we want to track
+    local labels = {
+        StrengthGainedLabel = OPtab:AddLabel("Amount of strength gained in this server: 0"),
+        DurabilityGainedLabel = OPtab:AddLabel("Amount of durability gained in this server: 0"),
+        AgilityGainedLabel = OPtab:AddLabel("Amount of agility gained in this server: 0"),
+        KillsGainedLabel = OPtab:AddLabel("Amount of kills gained in this server: 0"),
+        GoodKarmaGainedLabel = OPtab:AddLabel("Amount of Good Karma gained in this server: 0"),
+        BadKarmaGainedLabel = OPtab:AddLabel("Amount of Bad Karma gained in this server: 0"),
+    }
 
-local function updateStats()
-    strengthLabel.Text = "Strength: " .. AbbreviateNumber(leaderstats.Strength.Value - initialStats.Strength)
-    durabilityLabel.Text = "Durability: " .. AbbreviateNumber(leaderstats.Durability.Value - initialStats.Durability)
-    agilityLabel.Text = "Agility: " .. AbbreviateNumber(leaderstats.Agility.Value - initialStats.Agility)
-    killLabel.Text = "Kill: " .. AbbreviateNumber(leaderstats.Kills.Value - initialStats.Kills)
-    goodKarmaLabel.Text = "Good Karma: " .. AbbreviateNumber(player.goodKarma.Value - initialStats.GoodKarma)
-    badKarmaLabel.Text = "Bad Karma: " .. AbbreviateNumber(player.evilKarma.Value - initialStats.BadKarma)
+    -- Assume playerData is already defined in your main script
+    playerData[player.Name] = labels
+
+    -- Capture the initial values when you join the server
+    local initialStrength = leaderstats.Strength and leaderstats.Strength.Value or 0
+    local initialDurability = player:FindFirstChild("Durability") and player.Durability.Value or 0
+    local initialAgility = player:FindFirstChild("Agility") and player.Agility.Value or 0
+    local initialKills = leaderstats.Kills and leaderstats.Kills.Value or 0
+    local initialGoodKarma = player:FindFirstChild("goodKarma") and player.goodKarma.Value or 0
+    local initialBadKarma = player:FindFirstChild("badKarma") and player.badKarma.Value or 0
+
+    -- Function to update labels based on stat changes
+    local function updateLabels()
+        local strengthGained = leaderstats.Strength and leaderstats.Strength.Value - initialStrength or 0
+        local durabilityGained = player:FindFirstChild("Durability") and player.Durability.Value - initialDurability or 0
+        local agilityGained = player:FindFirstChild("Agility") and player.Agility.Value - initialAgility or 0
+        local killsGained = leaderstats.Kills and leaderstats.Kills.Value - initialKills or 0
+        local goodKarmaGained = player:FindFirstChild("goodKarma") and player.goodKarma.Value - initialGoodKarma or 0
+        local badKarmaGained = player:FindFirstChild("badKarma") and player.badKarma.Value - initialBadKarma or 0
+
+        labels.StrengthGainedLabel.Text = "Amount of strength gained in this server: " .. abbreviateNumber(strengthGained)
+        labels.DurabilityGainedLabel.Text = "Amount of durability gained in this server: " .. abbreviateNumber(durabilityGained)
+        labels.AgilityGainedLabel.Text = "Amount of agility gained in this server: " .. abbreviateNumber(agilityGained)
+        labels.KillsGainedLabel.Text = "Amount of kills gained in this server: " .. abbreviateNumber(killsGained)
+        labels.GoodKarmaGainedLabel.Text = "Amount of Good Karma gained in this server: " .. abbreviateNumber(goodKarmaGained)
+        labels.BadKarmaGainedLabel.Text = "Amount of Bad Karma gained in this server: " .. abbreviateNumber(badKarmaGained)
+    end
+
+    -- Connect change events to update the labels when your stats change
+    if leaderstats.Strength then
+        leaderstats.Strength.Changed:Connect(updateLabels)
+    end
+
+    if player:FindFirstChild("Durability") then
+        player.Durability.Changed:Connect(updateLabels)
+    end
+
+    if player:FindFirstChild("Agility") then
+        player.Agility.Changed:Connect(updateLabels)
+    end
+
+    if leaderstats.Kills then
+        leaderstats.Kills.Changed:Connect(updateLabels)
+    end
+
+    if player:FindFirstChild("goodKarma") then
+        player.goodKarma.Changed:Connect(updateLabels)
+    end
+
+    if player:FindFirstChild("badKarma") then
+        player.badKarma.Changed:Connect(updateLabels)
+    end
+
+    -- Initial update
+    updateLabels()
 end
 
-leaderstats.Strength.Changed:Connect(updateStats)
-leaderstats.Durability.Changed:Connect(updateStats)
-leaderstats.Agility.Changed:Connect(updateStats)
-leaderstats.Kills.Changed:Connect(updateStats)
-player.goodKarma.Changed:Connect(updateStats)
-player.evilKarma.Changed:Connect(updateStats)
-updateStats()
+-- Call the function to start tracking your own stats
+createMyLabels()
